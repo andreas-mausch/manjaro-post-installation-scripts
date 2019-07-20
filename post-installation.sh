@@ -24,9 +24,8 @@ done
 
 for argument in "$@"
 do
-  echo "Executing script: ${argument}"
   scriptFile=${scripts[$argument]}
-  echo "bash ${scriptFile}"
+  echo "Executing ${argument}"
 
   if [ -z "${scriptFile}" ];
   then
