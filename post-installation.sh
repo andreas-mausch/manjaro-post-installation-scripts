@@ -4,6 +4,9 @@ shopt -s globstar
 
 sudo echo sudo access granted
 
+# Update the pacman database
+sudo pacman -Syy
+
 declare -A scripts
 
 scriptFiles=(./scripts/**/script.sh)
