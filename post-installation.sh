@@ -2,6 +2,8 @@
 
 shopt -s globstar
 
+sudo echo sudo access granted
+
 declare -A scripts
 
 scriptFiles=(./scripts/**/script.sh)
