@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+set -e
+
 shopt -s globstar
 
 sudo echo sudo access granted
 
 # Update the pacman database
+echo "Updating pacman database.."
 sudo pacman -Syy
 
 declare -A scripts
@@ -19,9 +22,17 @@ do
   scripts[${scriptName}]=${scriptFile}
 done
 
-for KEY in "${!scripts[@]}"; do
-  # Print the KEY value
-  echo "Key: $KEY"
-  # Print the VALUE attached to that KEY
-  echo "Value: ${scripts[$KEY]}"
+for argument in "$@"
+do
+  echo "Executing script: ${argument}"
+  scriptFile=${scripts[$argument]}
+  echo "bash ${scriptFile}"
+
+  if [ -z "${scriptFile}" ];
+  then
+    echo "ERROR: Couldn't find script ${argument}"
+    exit 1
+  fi
+
+  . ${scriptFile}
 done
