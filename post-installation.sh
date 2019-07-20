@@ -33,5 +33,8 @@ do
     exit 1
   fi
 
-  . ${scriptFile}
+  folder=$(dirname ${scriptFile})
+  filename=$(basename ${scriptFile})
+  cd ${folder}
+  source ${filename}
 done
