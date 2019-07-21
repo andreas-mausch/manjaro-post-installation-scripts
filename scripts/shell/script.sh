@@ -13,3 +13,5 @@ cd ./oh-my-fish
 ./bin/install --offline --noninteractive
 cd ..
 rm -rf ./oh-my-fish
+
+fish -c 'omf install eclm'
