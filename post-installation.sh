@@ -4,9 +4,6 @@ set -e
 
 shopt -s globstar
 
-sudo echo sudo access granted
-
-# Update the pacman database
 echo "Updating pacman database.."
 sudo pacman -Syy
 
