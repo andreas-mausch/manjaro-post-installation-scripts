@@ -15,3 +15,5 @@ cd ..
 rm -rf ./oh-my-fish
 
 fish -c 'omf install eclm'
+
+cp ./fish_variables ~/.config/fish/fish_variables
