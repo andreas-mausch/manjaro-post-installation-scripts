@@ -33,5 +33,6 @@ do
   folder=$(dirname ${scriptFile})
   filename=$(basename ${scriptFile})
   cd ${folder}
-  source ${filename}
+  sh ${filename}
+  cd - > /dev/null
 done
