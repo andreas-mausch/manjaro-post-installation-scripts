@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 sudo pacman -S --noconfirm slock
-sudo pacman -R light-locker
+sudo pacman -R --noconfirm light-locker
 
 xfconf-query -c xfce4-session -p /general/LockCommand -s "slock"
 
