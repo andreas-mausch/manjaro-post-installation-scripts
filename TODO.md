@@ -1,6 +1,5 @@
 - Taskmanager + shortcut
 - XFCE4 Panel
 - MPV
-- Albert
 - slock
 - slick-greeter
