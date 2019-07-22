@@ -9,11 +9,11 @@ sudo pacman -Syy
 
 declare -A scripts
 
-scriptFiles=(./scripts/**/script.sh)
+scriptFiles=(./**/script.sh)
 
 for scriptFile in "${scriptFiles[@]}"
 do
-  withoutPath=${scriptFile#"./scripts/"}
+  withoutPath=${scriptFile#"./"}
   scriptName=${withoutPath%"/script.sh"}
   
   scripts[${scriptName}]=${scriptFile}
