@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sudo pacman -S --noconfirm fish
+sudo pacman -S --noconfirm fish autojump
 
 cp /etc/pam.d/chsh ./chsh.backup
 sudo cp ./chsh /etc/pam.d/
@@ -16,4 +16,5 @@ rm -rf ./oh-my-fish
 
 fish -c 'omf install eclm'
 
-cp ./fish_variables ~/.config/fish/fish_variables
+cp ./fish_variables ~/.config/fish/
+cp ./config.fish ~/.config/fish/
