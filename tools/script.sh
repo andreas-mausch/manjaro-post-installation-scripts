@@ -8,7 +8,6 @@ sudo pacman -S --noconfirm \
   handbrake \
   httpie \
   meld \
-  wireshark-qt \
   youtube-dl
 yay -S --noconfirm \
   fsearch-git \

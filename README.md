@@ -5,5 +5,5 @@ It contains all my favorite apps, settings, fonts etc.
 Feel free to use and customize them.
 
 ```
-./post-installation.sh clock yay terminal shortcuts shell tools
+./post-installation.sh clock yay terminal shortcuts shell tools wireshark
 ```
