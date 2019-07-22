@@ -1,0 +1,4 @@
+- Taskmanager + shortcut
+- XFCE4 Panel
+- MPV
+- Albert
