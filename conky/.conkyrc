@@ -1,0 +1,93 @@
+conky.config = {     
+    update_interval = 2.0,
+    double_buffer = true,
+    background = true,
+    
+    -- positioning
+    alignment = 'top_right',
+    gap_x = 32,
+    gap_y = 16,
+    
+    -- window settings
+    own_window = true,
+    own_window_type = desktop,
+    own_window_argb_visual = true,
+    own_window_transparent = false,
+    own_window_argb_value = 128,
+    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+    
+    -- layout settings
+    border_width = 0,
+    cpu_avg_samples = 5,
+	default_color = 'white',
+    default_outline_color = 'white',
+    default_shade_color = 'white',
+    draw_borders = false,
+    draw_graph_borders = true,
+    draw_outline = false,
+    draw_shades = false,
+    show_graph_scale = false,
+    show_graph_range = false,
+    
+    -- font
+    use_xft = true,
+    xftalpha = 0.6,
+    font = 'DejaVu Sans Mono:size=9',
+    uppercase = false,
+    use_spacer = 'none',
+    
+    -- misc.
+    net_avg_samples = 5,
+    no_buffers = true,
+    out_to_console = false,
+    out_to_stderr = false,
+    extra_newline = false,
+    stippled_borders = 0,
+    
+    minimum_height = 5,
+    minimum_width = 300,
+
+    draw_graph_borders = false,
+
+    if_up_strictness = 'link',
+	
+    template0 = '${font Open Sans:Bold:size=10}${color dodgerblue3}\\1 ${hr 2}$color${font}${voffset 1}',
+    template1 = '${\\1 name \\2}${alignr}${\\1 \\3 \\2} %',
+    template2 = '$alignc${font Open Sans:Bold:size=16}${color dodgerblue3}'
+}
+
+conky.text = [[
+$alignc${font Open Sans:size=20}$color${time %H:%M}${voffset -14}
+$alignc${font Open Sans:size=12}${color grey}${time %d.%m.%Y}
+
+${template0 CPU}
+$color${cpugraph 60 -t}${voffset -8}
+${font :size=8}${color}${hwmon 2 temp 1}°C $alignr ${cpu}%
+
+${template0 RAM}
+${color grey}Usage $alignr$color$mem/$memmax
+${membar}
+
+${template0 DISK}
+${color grey}/ $alignr$color${fs_used /}/${fs_size /}
+${fs_bar}
+
+${template0 WLAN}
+${if_up wlp2s0}${color grey}Connection $alignr$color${wireless_link_qual_perc wlp2s0}% / ${wireless_bitrate 
+wlp2s0}
+${wireless_link_bar wlp2s0}
+${color grey}Network $alignr $color ${wireless_essid wlp2s0}
+${color grey}IP $alignr $color ${addr wlp2s0}
+${color grey}Down $color ${downspeed wlp2s0}/s ${alignr}${color grey}Up $color ${upspeed wlp2s0}/s
+${downspeedgraph wlp2s0 25,125 43cd80 43cd80} ${alignr}${upspeedgraph wlp2s0 25,125 ff7256 ff7256}
+${else}${color grey}Disconnected
+${endif}
+${template0 SYSTEM}
+${color grey}Linux $alignr $color ${execi 999999 lsb_release -d | cut -f2-} ${execi 999999 lsb_release -rs}
+${color grey}Kernel $alignr $color $kernel
+${color grey}Uptime $alignr $color $uptime_short
+
+${template0 BATTERY}
+${battery BAT0} $alignr${battery_time BAT0}
+${battery_bar BAT0}
+]]
