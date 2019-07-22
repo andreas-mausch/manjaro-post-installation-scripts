@@ -62,7 +62,7 @@ $alignc${font Open Sans:size=12}${color grey}${time %d.%m.%Y}
 
 ${template0 CPU}
 $color${cpugraph 60 -t}${voffset -8}
-${font :size=8}${color}${hwmon 2 temp 1}°C $alignr ${cpu}%
+${font :size=8}${color}${hwmon 2 temp 1}°C $alignc${freq_g} GHz $alignr ${cpu}%
 
 ${template0 RAM}
 ${color grey}Usage $alignr$color$mem/$memmax
