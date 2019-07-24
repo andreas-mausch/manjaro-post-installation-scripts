@@ -5,5 +5,5 @@ It contains all my favorite apps, settings, fonts etc.
 Feel free to use and customize them.
 
 ```
-./post-installation.sh clock yay terminal shortcuts shell albert slock slick-greeter tools conky wireshark
+./post-installation.sh clock yay terminal shortcuts shell albert slock slick-greeter tools conky wireshark mpv
 ```
