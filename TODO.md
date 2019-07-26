@@ -1,2 +1,1 @@
-- Taskmanager + shortcut
 - XFCE4 Panel

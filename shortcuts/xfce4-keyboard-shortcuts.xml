@@ -41,6 +41,7 @@
       <property name="&lt;Super&gt;c" type="string" value="galculator"/>
       <property name="&lt;Super&gt;x" type="string" value="mousepad"/>
       <property name="&lt;Super&gt;f" type="string" value="fsearch"/>
+      <property name="&lt;Super&gt;Escape" type="string" value="xfce4-taskmanager"/>
     </property>
   </property>
   <property name="xfwm4" type="empty">
