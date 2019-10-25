@@ -6,6 +6,5 @@ cp ./albert.conf ~/.config/albert/
 cp ./style_properties.ini ~/.config/albert/org.albert.frontend.qmlboxmodel/
 ln -s /usr/share/applications/albert.desktop ~/.config/autostart/
 
-sudo setkeycodes e05c 0xfa
 echo "keycode 0x42 = 0xfa" >> ~/.Xmodmap
 cp ./disable-capslock.desktop ~/.config/autostart/
