@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=disable capslock
+Exec=setxkbmap -option caps:none
+StartupNotify=false
+Terminal=false
