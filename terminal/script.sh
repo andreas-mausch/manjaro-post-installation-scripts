@@ -2,7 +2,7 @@
 
 xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s "Source Code Pro 10"
 
-pacman -S --noconfirm alacritty
+sudo pacman -S --noconfirm alacritty
 cp ./alacritty.yml ~/.config/alacritty
 
 yay -S --noconfirm tdrop-git
