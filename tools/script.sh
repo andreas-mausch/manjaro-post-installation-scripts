@@ -3,7 +3,6 @@
 sudo pacman -S --noconfirm \
   audacity \
   avidemux-qt \
-  code \
   gthumb \
   handbrake \
   httpie \
