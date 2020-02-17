@@ -7,4 +7,5 @@ git config --global alias.first "hash-object -t tree /dev/null"
 git config --global gui.fontui "-family \"Droid Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 
+mkdir -p ~/.config/git/
 cp ./gitk ~/.config/git/
