@@ -18,6 +18,7 @@
     "workbench.activityBar.visible": false,
     "workbench.colorTheme": "Quiet Light",
     "workbench.editor.enablePreview": false,
+    "workbench.startupEditor": "none",
     "[typescript]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
