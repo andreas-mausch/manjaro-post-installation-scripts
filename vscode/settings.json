@@ -11,6 +11,9 @@
     "files.insertFinalNewline": true,
     "telemetry.enableCrashReporter": false,
     "telemetry.enableTelemetry": false,
+    "search.exclude": {
+        "package-lock.json": true
+    },
     "vetur.format.defaultFormatter.js": "prettier-eslint",
     "vetur.format.defaultFormatter.ts": "vscode-typescript",
     "vetur.format.defaultFormatter.html": "js-beautify-html",
