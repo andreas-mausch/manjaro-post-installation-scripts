@@ -1,7 +1,7 @@
 {
     "breadcrumbs.enabled": false,
-    "editor.acceptSuggestionOnEnter": "off",
     "editor.dragAndDrop": false,
+    "editor.hover.enabled": false,
     "editor.minimap.enabled": false,
     "eslint.format.enable": true,
     "explorer.confirmDragAndDrop": false,
