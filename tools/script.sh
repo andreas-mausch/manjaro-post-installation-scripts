@@ -10,4 +10,5 @@ sudo pacman -S --noconfirm \
   youtube-dl
 yay -S --noconfirm \
   fsearch-git \
-  s-tui
+  s-tui \
+  apostrophe
