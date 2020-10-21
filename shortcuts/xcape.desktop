@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=xcape
-Exec=/usr/bin/xcape -e 'Super_L=Alt_L|F9;Super_R=Alt_L|F9'
-StartupNotify=false
-Terminal=false
