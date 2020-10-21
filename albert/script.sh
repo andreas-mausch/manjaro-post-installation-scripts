@@ -5,6 +5,3 @@ mkdir -p ~/.config/albert/org.albert.frontend.qmlboxmodel/
 cp ./albert.conf ~/.config/albert/
 cp ./.albertignore ~/
 ln -s /usr/share/applications/albert.desktop ~/.config/autostart/
-
-echo "keycode 0x42 = 0xfa" >> ~/.Xmodmap
-cp ./disable-capslock.desktop ~/.config/autostart/

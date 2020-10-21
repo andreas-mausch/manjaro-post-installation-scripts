@@ -34,7 +34,7 @@
       <property name="Print" type="string" value="xfce4-screenshooter -f"/>
       <property name="&lt;Primary&gt;Print" type="string" value="xfce4-screenshooter -r"/>
       <property name="&lt;Shift&gt;Print" type="string" value="xfce4-screenshooter -w"/>
-      <property name="uacute" type="string" value="alacritty"/>
+      <property name="ucircumflex" type="string" value="xfce4-terminal"/>
       <property name="&lt;Super&gt;e" type="string" value="exo-open --launch FileManager"/>
       <property name="&lt;Super&gt;w" type="string" value="exo-open --launch WebBrowser"/>
       <property name="&lt;Super&gt;t" type="string" value="exo-open --launch MailReader"/>
