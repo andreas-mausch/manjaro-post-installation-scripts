@@ -12,3 +12,8 @@ yay -S --noconfirm \
   fsearch-git \
   s-tui \
   apostrophe
+
+# fsearch config changes (located at ~/.config/fsearch/fsearch.conf)
+# [Interface]
+# restore_column_configuration=true
+# restore_window_size=true
