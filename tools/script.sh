@@ -11,7 +11,8 @@ sudo pacman -S --noconfirm \
 yay -S --noconfirm \
   fsearch-git \
   s-tui \
-  apostrophe
+  apostrophe \
+  tiv
 
 # fsearch config changes (located at ~/.config/fsearch/fsearch.conf)
 # [Interface]
