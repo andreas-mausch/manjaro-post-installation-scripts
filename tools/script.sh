@@ -7,6 +7,7 @@ sudo pacman -S --noconfirm \
   handbrake \
   httpie \
   meld \
+  ncdu \
   youtube-dl
 yay -S --noconfirm \
   fsearch-git \
