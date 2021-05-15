@@ -10,12 +10,6 @@ sudo pacman -S --noconfirm \
   ncdu \
   youtube-dl
 yay -S --noconfirm \
-  fsearch-git \
   s-tui \
   apostrophe \
   tiv
-
-# fsearch config changes (located at ~/.config/fsearch/fsearch.conf)
-# [Interface]
-# restore_column_configuration=true
-# restore_window_size=true
