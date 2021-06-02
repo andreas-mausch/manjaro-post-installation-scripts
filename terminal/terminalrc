@@ -47,4 +47,5 @@ ColorBackground=#000000000000
 ColorCursor=#ffffffffffff
 ColorBackgroundVary=TRUE
 ColorUseTheme=TRUE
-
+ShortcutsNoHelpkey=TRUE
+ShortcutsNoMenukey=TRUE
