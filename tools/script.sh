@@ -9,6 +9,8 @@ sudo pacman -S --noconfirm \
   httpie \
   meld \
   ncdu \
+  pv \
+  smartmontools \
   youtube-dl
 yay -S --noconfirm \
   s-tui \
