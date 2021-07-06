@@ -15,4 +15,4 @@ sudo pacman -S --noconfirm \
 yay -S --noconfirm \
   s-tui \
   apostrophe \
-  tiv
+  tiv # You might need to run it like this: yay -S --mflags --skipinteg tiv
