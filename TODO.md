@@ -1,3 +1,0 @@
-- XFCE4 Panel
-- Icon set
-- Theme
