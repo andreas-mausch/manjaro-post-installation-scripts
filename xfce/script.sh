@@ -13,6 +13,8 @@ xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s
 xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "false"
 
 xfconf-query -c thunar -p /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
+xfconf-query -c thunar -p /last-show-hidden -s "true"
+xfconf-query -c thunar -p /last-view -s "ThunarDetailsView"
 
 cp ./xfce4-panel.xml ~/.config/xfce4/xfconf/xfce-perchannel-xml/
 
