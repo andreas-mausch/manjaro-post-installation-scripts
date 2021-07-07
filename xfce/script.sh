@@ -15,3 +15,10 @@ xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "fal
 xfconf-query -c thunar -p /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
 
 cp ./xfce4-panel.xml ~/.config/xfce4/xfconf/xfce-perchannel-xml/
+
+mkdir -p ~/.config/gtk-3.0/
+echo "file:///home/neonew/Documents" >> ~/.config/gtk-3.0/bookmarks
+echo "file:///home/neonew/Downloads" >> ~/.config/gtk-3.0/bookmarks
+echo "file:///home/neonew/Music" >> ~/.config/gtk-3.0/bookmarks
+echo "file:///home/neonew/Pictures" >> ~/.config/gtk-3.0/bookmarks
+echo "file:///home/neonew/Videos" >> ~/.config/gtk-3.0/bookmarks
