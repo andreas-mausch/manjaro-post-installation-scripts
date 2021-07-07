@@ -3,6 +3,7 @@
 sudo pacman -S --noconfirm \
   audacity \
   avidemux-qt \
+  bpytop \
   dhex \
   gthumb \
   handbrake \
