@@ -12,4 +12,6 @@ xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s "fals
 xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s "false"
 xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "false"
 
+xfconf-query -c thunar -p /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
+
 cp ./xfce4-panel.xml ~/.config/xfce4/xfconf/xfce-perchannel-xml/
