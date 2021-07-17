@@ -5,6 +5,7 @@ sudo pacman -S --noconfirm \
   avidemux-qt \
   bless \
   bpytop \
+  colordiff \
   dhex \
   gthumb \
   handbrake \
