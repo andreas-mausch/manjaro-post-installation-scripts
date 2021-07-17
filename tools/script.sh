@@ -3,6 +3,7 @@
 sudo pacman -S --noconfirm \
   audacity \
   avidemux-qt \
+  bless \
   bpytop \
   dhex \
   gthumb \
