@@ -31,6 +31,10 @@ echo "file:///home/neonew/Music" >> ~/.config/gtk-3.0/bookmarks
 echo "file:///home/neonew/Pictures" >> ~/.config/gtk-3.0/bookmarks
 echo "file:///home/neonew/Videos" >> ~/.config/gtk-3.0/bookmarks
 
+# Thunar custom actions
+
+cp ./uca.xml ~/.config/Thunar/
+
 # Panel configuration
 
 cp ./xfce4-panel.xml ~/.config/xfce4/xfconf/xfce-perchannel-xml/
