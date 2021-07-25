@@ -33,7 +33,7 @@
 	<unique-id>1626637941359398-1</unique-id>
 	<command>exiv2 -pa %f | zenity --width=640 --height=480 --text-info --title=&quot;Exif Metadata&quot; --font=&quot;DejaVu Sans Mono&quot;</command>
 	<description>Display tags in metadata</description>
-	<patterns>*.jpg;*.jpeg</patterns>
+	<patterns>*.jpg;*.jpeg;*.JPG</patterns>
 	<image-files/>
 </action>
 </actions>
