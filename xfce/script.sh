@@ -11,16 +11,17 @@ xfconf-query -c xsettings -p /Net/IconThemeName -s "Papirus-Dark"
 
 # Desktop Icons
 
-xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s "false"
-xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s "false"
-xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s "false"
-xfconf-query -R -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "false"
 
 # Thunar Sidebar Icons
 
 xfconf-query -c thunar -p /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
 xfconf-query -c thunar -p /last-show-hidden -s "true"
 xfconf-query -c thunar -p /last-view -s "ThunarDetailsView"
+xfconf-query -c thunar -p /misc-date-style -s "THUNAR_DATE_STYLE_YYYYMMDD"
 
 # Thunar Bookmarks
 
