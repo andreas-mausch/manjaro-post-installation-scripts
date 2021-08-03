@@ -13,6 +13,7 @@ sudo pacman -S --noconfirm \
   meld \
   ncdu \
   pv \
+  scapy \
   smartmontools \
   youtube-dl
 yay -S --noconfirm \
