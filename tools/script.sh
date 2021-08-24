@@ -15,6 +15,7 @@ sudo pacman -S --noconfirm \
   pv \
   scapy \
   smartmontools \
+  sqlitebrowser \
   youtube-dl
 yay -S --noconfirm \
   s-tui \
