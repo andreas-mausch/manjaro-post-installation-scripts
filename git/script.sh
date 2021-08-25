@@ -14,5 +14,7 @@ git config --global alias.branches "! git for-each-ref refs/heads refs/remotes/o
 git config --global gui.fontui "-family \"Droid Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 
+git config --global core.quotepath false
+
 mkdir -p ~/.config/git/
 cp ./gitk ~/.config/git/
