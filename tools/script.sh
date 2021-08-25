@@ -7,6 +7,7 @@ sudo pacman -S --noconfirm \
   bpytop \
   colordiff \
   dhex \
+  dos2unix \
   gpxsee \
   handbrake \
   httpie \
