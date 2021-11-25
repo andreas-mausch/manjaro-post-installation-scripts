@@ -13,6 +13,7 @@ sudo pacman -S --noconfirm \
   httpie \
   meld \
   ncdu \
+  pass \
   pv \
   scapy \
   smartmontools \
