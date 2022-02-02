@@ -4,3 +4,5 @@ begin
         source $AUTOJUMP_PATH
     end
 end
+
+abbr clip "xclip -selection c"
