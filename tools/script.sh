@@ -16,6 +16,7 @@ sudo pacman -S --noconfirm \
   pass \
   pv \
   scapy \
+  scrcpy \
   smartmontools \
   sqlitebrowser \
   xclip \
