@@ -1,0 +1,12 @@
+
+[skins]
+double_size=TRUE
+equalizer_x=317
+equalizer_y=353
+mainwin_font=DejaVu Sans Mono 12
+player_x=317
+player_y=121
+playlist_font=DejaVu Sans Mono 12
+playlist_visible=TRUE
+playlist_x=317
+playlist_y=353
