@@ -22,6 +22,7 @@ sudo pacman -S --noconfirm \
   xclip \
   youtube-dl
 yay -S --noconfirm \
-  s-tui \
+  altair \
   apostrophe \
+  s-tui \
   timg
