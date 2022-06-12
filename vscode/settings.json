@@ -1,6 +1,8 @@
 {
     "breadcrumbs.enabled": false,
     "editor.dragAndDrop": false,
+    "editor.fontFamily": "'DejaVu Mono', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontSize": 11,
     "editor.hover.enabled": false,
     "editor.minimap.enabled": false,
     "eslint.format.enable": true,
@@ -10,7 +12,7 @@
     "files.autoSaveDelay": 300,
     "files.insertFinalNewline": true,
     "telemetry.enableCrashReporter": false,
-    "telemetry.enableTelemetry": false,
+    "telemetry.telemetryLevel": "off",
     "search.exclude": {
         "package-lock.json": true
     },
