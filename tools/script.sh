@@ -14,6 +14,7 @@ sudo pacman -S --noconfirm \
   meld \
   ncdu \
   pass \
+  picard \ # MusicBrainz Picard (MP3-tagger)
   pv \
   scapy \
   scrcpy \
