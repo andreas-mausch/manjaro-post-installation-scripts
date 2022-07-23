@@ -8,6 +8,7 @@ sudo pacman -S --noconfirm \
   colordiff \
   dhex \
   dos2unix \
+  doublecmd-gtk2 \
   gpxsee \
   handbrake \
   httpie \
