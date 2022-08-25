@@ -26,5 +26,6 @@ sudo pacman -S --noconfirm \
 yay -S --noconfirm \
   altair \
   apostrophe \
+  otpclient \
   s-tui \
   timg
