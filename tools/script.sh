@@ -14,6 +14,7 @@ sudo pacman -S --noconfirm \
   httpie \
   meld \
   ncdu \
+  noto-fonts-emoji \
   pass \
   picard \ # MusicBrainz Picard (MP3-tagger)
   pv \
