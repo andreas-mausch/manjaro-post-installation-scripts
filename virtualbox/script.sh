@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sudo pacman -S --noconfirm virtualbox virtualbox-host-dkms
+sudo pacman -S --noconfirm virtualbox virtualbox-host-dkms virtualbox-guest-iso
 yay -S --noconfirm virtualbox-ext-oracle
 
 # On Arch/Manjaro guest machines, run this:
