@@ -5,6 +5,7 @@ sudo pacman -S --noconfirm \
   avidemux-qt \
   bless \
   bpytop \
+  cmatrix \
   colordiff \
   dhex \
   dos2unix \
