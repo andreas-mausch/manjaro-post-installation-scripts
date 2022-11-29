@@ -5,4 +5,4 @@ begin
     end
 end
 
-abbr clip "xclip -selection clipboard -rmlastnl"
+alias clip="xclip -selection clipboard -rmlastnl"
