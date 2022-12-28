@@ -1,8 +1,8 @@
 {
     "breadcrumbs.enabled": false,
     "editor.dragAndDrop": false,
-    "editor.fontFamily": "'DejaVu Mono', Menlo, Monaco, 'Courier New', monospace",
-    "editor.fontSize": 11,
+    "editor.fontFamily": "'Source Code Pro', 'DejaVu Sans Mono', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontSize": 12,
     "editor.hover.enabled": false,
     "editor.minimap.enabled": false,
     "eslint.format.enable": true,
@@ -11,7 +11,7 @@
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 300,
     "files.insertFinalNewline": true,
-    "telemetry.enableCrashReporter": false,
+    "gitlens.telemetry.enabled": false,
     "telemetry.telemetryLevel": "off",
     "search.exclude": {
         "package-lock.json": true
