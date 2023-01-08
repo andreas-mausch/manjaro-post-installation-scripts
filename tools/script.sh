@@ -13,13 +13,14 @@ sudo pacman -S --noconfirm \
   gpxsee \
   handbrake \
   httpie \
+  kid3 \ # MP3-tagger (UI)
   meld \
   ncdu \
   neofetch \
   noto-fonts-emoji \
   pass \
-  picard \ # MusicBrainz Picard (MP3-tagger)
   pv \
+  python-eyed3 \ # MP3-tagger (CLI)
   scapy \
   scrcpy \
   smartmontools \
