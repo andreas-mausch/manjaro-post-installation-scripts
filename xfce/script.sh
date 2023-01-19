@@ -12,7 +12,7 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level
 
 # Keyboard
 
-xfconf-query -c keyboard-layout -p /Default/XkbLayout -s de,us
+xfconf-query -c keyboard-layout -p /Default/XkbLayout -s eu,de
 xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -s grp:shifts_toggle
 
 # Theme
