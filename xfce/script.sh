@@ -10,6 +10,11 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-coun
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-exponential -s "true"
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -s 5
 
+# Keyboard
+
+xfconf-query -c keyboard-layout -p /Default/XkbLayout -s de,us
+xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -s grp:shifts_toggle
+
 # Theme
 
 xfconf-query -c xsettings -p /Net/ThemeName -s "Matcha-dark-azul"
