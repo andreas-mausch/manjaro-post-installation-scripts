@@ -11,6 +11,7 @@ git config --global alias.tidy "! git tidy.branches && git tidy.tags"
 git config --global alias.first "hash-object -t tree /dev/null"
 git config --global alias.tags "lg --tags --no-walk"
 git config --global alias.branches "! git for-each-ref refs/heads refs/remotes/origin --format='%(refname:short)' | xargs -i sh -c 'ahead=\$(git rev-list --count origin/master..{}); behind=\$(git rev-list --count {}..origin/master); printf \"%4s %4s {}\n\" \"+\$ahead\" \"-\$behind\"'"
+git config --global alias.default "! git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
 
 git config --global gui.fontui "-family \"Droid Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
