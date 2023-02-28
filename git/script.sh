@@ -18,6 +18,10 @@ git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight n
 
 git config --global core.quotepath false
 
+git config --global pull.rebase true
+git config --global rebase.autoStash true
+git config --global fetch.prune true
+
 git config --global core.pager "delta"
 git config --global interactive.diffFilter "delta --color-only"
 git config --global delta.hunk-header-style "omit"
