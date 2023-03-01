@@ -8,7 +8,7 @@ git config --global alias.lg "log --abbrev-commit --decorate --date=format:'%Y-%
 git config --global alias.tidy.branches "! git branch --merged origin/master | grep -v \* | xargs --no-run-if-empty git branch -D && git remote update origin --prune"
 git config --global alias.tidy.tags "! git tag -l | xargs git tag -d && git fetch --tags"
 git config --global alias.tidy "! git tidy.branches && git tidy.tags"
-git config --global alias.first "hash-object -t tree /dev/null"
+git config --global alias.root "hash-object -t tree /dev/null"
 git config --global alias.tags "lg --tags --no-walk"
 git config --global alias.branches "! git for-each-ref refs/heads refs/remotes/origin --format='%(refname:short)' | xargs -I{} sh -c 'ahead=\$(git rev-list --count origin/\$(git default)..{}); behind=\$(git rev-list --count {}..origin/\$(git default)); printf \"%4s %4s {}\n\" \"+\$ahead\" \"-\$behind\"'"
 git config --global alias.default "! git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
