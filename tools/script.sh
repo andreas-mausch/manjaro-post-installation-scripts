@@ -19,6 +19,7 @@ sudo pacman -S --noconfirm \
   neofetch \
   noto-fonts-emoji \
   pass \
+  peek \ # GIF recorder
   pv \
   python-eyed3 \ # MP3-tagger (CLI)
   scapy \
