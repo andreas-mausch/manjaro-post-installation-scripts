@@ -12,6 +12,7 @@ git config --global alias.first "hash-object -t tree /dev/null"
 git config --global alias.tags "lg --tags --no-walk"
 git config --global alias.branches "! git for-each-ref refs/heads refs/remotes/origin --format='%(refname:short)' | xargs -I{} sh -c 'ahead=\$(git rev-list --count origin/\$(git default)..{}); behind=\$(git rev-list --count {}..origin/\$(git default)); printf \"%4s %4s {}\n\" \"+\$ahead\" \"-\$behind\"'"
 git config --global alias.default "! git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
+git config --global alias.file-size "! git status --porcelain | awk '{print \$2}' | xargs ls -hl | sort -r -h | awk '{print \$5 \"\t\" \$9}'"
 
 git config --global gui.fontui "-family \"Droid Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
