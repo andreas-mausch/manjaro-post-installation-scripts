@@ -5,6 +5,10 @@ xfconf-query -c xfwm4 -p /general/workspace_count -s 1
 # Power settings
 
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-count -s 4
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lid-action-on-battery -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-panel-label -s 1 # 1 = show battery percentage in tray, but not remaining time
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -s 5
 
 # Keyboard
