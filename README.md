@@ -9,7 +9,7 @@ Feel free to use and customize them.
 ```
 sudo pacman -Syyu
 
-./post-installation.sh clock pacman bluetooth terminal shortcuts shell autorandr albert calculator slock slick-greeter vscode fsearch tools gthumb ebooks git conky wireshark mpv notifications pcspeaker xfce mongo qemu
+./post-installation.sh clock pacman bluetooth terminal shortcuts shell slock slick-greeter browser albert calculator vscode fsearch tools gthumb ebooks git conky wireshark mpv notifications pcspeaker xfce mongo qemu autorandr
 ```
 
 # HiDPI
