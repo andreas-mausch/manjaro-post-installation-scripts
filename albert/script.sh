@@ -1,5 +1,5 @@
 sudo pacman -S --noconfirm muparser
-yay -S --noconfirm albert
+paru -S --noconfirm albert
 
 mkdir -p ~/.config/albert/org.albert.frontend.qmlboxmodel/
 cp ./albert.conf ~/.config/albert/

@@ -6,7 +6,7 @@ chsh -s /usr/bin/fish
 sudo cp ./chsh.backup /etc/pam.d/chsh
 rm ./chsh.backup
 
-yay -S --noconfirm autojump-git
+paru -S --noconfirm autojump-git
 
 git clone https://github.com/oh-my-fish/oh-my-fish
 cd ./oh-my-fish

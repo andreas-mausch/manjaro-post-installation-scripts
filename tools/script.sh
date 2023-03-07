@@ -26,7 +26,7 @@ sudo pacman -S --noconfirm \
   sqlitebrowser \
   xclip \
   youtube-dl
-yay -S --noconfirm \
+paru -S --noconfirm \
   altair \
   apostrophe \
   cpu-x \
