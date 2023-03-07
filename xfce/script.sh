@@ -4,17 +4,17 @@ xfconf-query -c xfwm4 -p /general/workspace_count -s 1
 
 # Power settings
 
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-count -s 4
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -s 1 # 1 = standby
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lid-action-on-battery -s 1 # 1 = standby
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -s false
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-panel-label -s 1 # 1 = show battery percentage in tray, but not remaining time
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -s 5
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-count -n -t uint -s 4
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -n -t uint -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lid-action-on-battery -n -t uint -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -n -t bool -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-panel-label -n -t int -s 1 # 1 = show battery percentage in tray, but not remaining time
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -n -t uint -s 5
 
 # Keyboard
 
-xfconf-query -c keyboard-layout -p /Default/XkbLayout -s eu,de
-xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -s grp:shifts_toggle
+xfconf-query -c keyboard-layout -p /Default/XkbLayout -n -t string -s eu,de
+xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -n -t string -s grp:shifts_toggle
 
 # Theme
 
@@ -61,4 +61,4 @@ dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
 
 # Do not show a dialog when a new display is connected (autorandr handles them instead)
 
-xfconf-query -c displays -p /Notify -s 0
+xfconf-query -c displays -p /Notify -n -t int -s 0
