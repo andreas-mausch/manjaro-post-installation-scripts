@@ -1,39 +1,39 @@
 rm -f ~/.config/autostart/manjaro-hello.desktop
 
-xfconf-query -c xfwm4 -p /general/workspace_count -s 1
+xfconf-query -c xfwm4 -p /general/workspace_count -n -s 1
 
 # Power settings
 
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-count -s 4
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -s 1 # 1 = standby
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lid-action-on-battery -s 1 # 1 = standby
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -s false
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-panel-label -s 1 # 1 = show battery percentage in tray, but not remaining time
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -s 5
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/brightness-step-count -n -s 4
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-sleep-mode-on-battery -n -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lid-action-on-battery -n -s 1 # 1 = standby
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -n -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/show-panel-label -n -s 1 # 1 = show battery percentage in tray, but not remaining time
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/critical-power-level -n -s 5
 
 # Keyboard
 
-xfconf-query -c keyboard-layout -p /Default/XkbLayout -s eu,de
-xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -s grp:shifts_toggle
+xfconf-query -c keyboard-layout -p /Default/XkbLayout -n -s eu,de
+xfconf-query -c keyboard-layout -p /Default/XkbOptions/Group -n -s grp:shifts_toggle
 
 # Theme
 
-xfconf-query -c xsettings -p /Net/ThemeName -s "Matcha-dark-azul"
-xfconf-query -c xsettings -p /Net/IconThemeName -s "Papirus-Dark"
+xfconf-query -c xsettings -p /Net/ThemeName -n -s "Matcha-dark-azul"
+xfconf-query -c xsettings -p /Net/IconThemeName -n -s "Papirus-Dark"
 
 # Desktop Icons
 
-xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s "false"
-xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s "false"
-xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s "false"
-xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -n -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -n -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -n -s "false"
+xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -n -s "false"
 
 # Thunar Sidebar Icons
 
-xfconf-query -c thunar -p /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
-xfconf-query -c thunar -p /last-show-hidden -s "true"
-xfconf-query -c thunar -p /last-view -s "ThunarDetailsView"
-xfconf-query -c thunar -p /misc-date-style -s "THUNAR_DATE_STYLE_YYYYMMDD"
+xfconf-query -c thunar -p /hidden-bookmarks -n -t string -t string -s "computer:///" -s "trash:///"
+xfconf-query -c thunar -p /last-show-hidden -n -s "true"
+xfconf-query -c thunar -p /last-view -n -s "ThunarDetailsView"
+xfconf-query -c thunar -p /misc-date-style -n -s "THUNAR_DATE_STYLE_YYYYMMDD"
 
 # Thunar Bookmarks
 
@@ -61,4 +61,4 @@ dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
 
 # Do not show a dialog when a new display is connected (autorandr handles them instead)
 
-xfconf-query -c displays -p /Notify -s 0
+xfconf-query -c displays -p /Notify -n -s 0
