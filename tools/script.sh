@@ -1,3 +1,10 @@
+# gpxsee: Show .gpx or .jpeg files on a map
+# bless: hex editor
+# kid3: MP3-tagger (UI)
+# python-eyed3: MP3-tagger (CLI)
+# meld: Compare files
+# peek: GIF recorder
+
 sudo pacman -S --needed --noconfirm \
   audacity \
   avidemux-qt \
@@ -11,15 +18,15 @@ sudo pacman -S --needed --noconfirm \
   gpxsee \
   handbrake \
   httpie \
-  kid3 \ # MP3-tagger (UI)
+  kid3 \
   meld \
   ncdu \
   neofetch \
   noto-fonts-emoji \
   pass \
-  peek \ # GIF recorder
+  peek \
   pv \
-  python-eyed3 \ # MP3-tagger (CLI)
+  python-eyed3 \
   scapy \
   scrcpy \
   smartmontools \
