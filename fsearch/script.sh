@@ -1,1 +1,1 @@
-paru -S --noconfirm fsearch-git
+paru -S --needed --noconfirm fsearch-git

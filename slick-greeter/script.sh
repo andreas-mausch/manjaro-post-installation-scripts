@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm lightdm-slick-greeter lightdm-settings
+sudo pacman -S --needed --noconfirm lightdm-slick-greeter lightdm-settings
 
 # Note: You manually need to edit /etc/lightdm/lightdm.conf and set
 # greeter-session=lightdm-slick-greeter

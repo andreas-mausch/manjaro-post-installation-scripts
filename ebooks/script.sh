@@ -1,5 +1,5 @@
-sudo pacman -S --noconfirm calibre
-paru -S --noconfirm yacreader
+sudo pacman -S --needed --noconfirm calibre
+paru -S --needed --noconfirm yacreader
 
 # ~/.local/share/YACReader/YACReader/YACReader.ini
 # SHOW_INFO=false

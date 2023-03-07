@@ -1,1 +1,1 @@
-sudo pacman -S --noconfirm qalculate-gtk
+sudo pacman -S --needed --noconfirm qalculate-gtk

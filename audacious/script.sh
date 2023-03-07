@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm audacious
+sudo pacman -S --needed --noconfirm audacious
 
 mkdir -p ~/.local/share/audacious/Skins/
 cp ./135799-winamp_classic.wsz ~/.local/share/audacious/Skins/

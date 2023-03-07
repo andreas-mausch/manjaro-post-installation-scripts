@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm code
+sudo pacman -S --needed --noconfirm code
 
 code --install-extension EditorConfig.EditorConfig
 code --install-extension dbaeumer.vscode-eslint

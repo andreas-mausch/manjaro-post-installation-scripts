@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm \
+sudo pacman -S --needed --noconfirm \
   audacity \
   avidemux-qt \
   bless \
@@ -26,7 +26,7 @@ sudo pacman -S --noconfirm \
   sqlitebrowser \
   xclip \
   youtube-dl
-paru -S --noconfirm \
+paru -S --needed --noconfirm \
   altair \
   apostrophe \
   cpu-x \

@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm fish
+sudo pacman -S --needed --noconfirm fish
 
 cp /etc/pam.d/chsh ./chsh.backup
 sudo cp ./chsh /etc/pam.d/
@@ -6,7 +6,7 @@ chsh -s /usr/bin/fish
 sudo cp ./chsh.backup /etc/pam.d/chsh
 rm ./chsh.backup
 
-paru -S --noconfirm autojump-git
+paru -S --needed --noconfirm autojump-git
 
 git clone https://github.com/oh-my-fish/oh-my-fish
 cd ./oh-my-fish

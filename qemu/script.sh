@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm libvirt virt-manager virt-viewer
+sudo pacman -S --needed --noconfirm libvirt virt-manager virt-viewer
 
 sudo systemctl enable libvirtd.service
 sudo systemctl start libvirtd.service

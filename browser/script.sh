@@ -1,4 +1,4 @@
-sudo pacman -S --noconfirm firefox
+sudo pacman -S --needed --noconfirm firefox
 
 # browser.aboutConfig.showWarning=false
 # layout.css.devPixelsPerPx=1.6
