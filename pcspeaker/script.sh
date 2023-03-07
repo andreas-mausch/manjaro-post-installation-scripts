@@ -1,1 +1,1 @@
-echo "blacklist pcspkr" > /etc/modprobe.d/disable-pc-speaker.conf
+echo "blacklist pcspkr" | sudo tee /etc/modprobe.d/disable-pc-speaker.conf
