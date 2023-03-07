@@ -7,3 +7,4 @@ cd yay
 makepkg --syncdeps --install --noconfirm
 
 sudo sed -i "s,PKGEXT='.pkg.tar.xz',PKGEXT='.pkg.tar',g" /etc/makepkg.conf
+sudo sed -i "s,^#Color\$,Color,g" /etc/pacman.conf
