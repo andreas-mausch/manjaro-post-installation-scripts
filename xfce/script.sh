@@ -54,3 +54,7 @@ dconf write /org/xfce/mousepad/preferences/view/show-line-numbers true
 dconf write /org/xfce/mousepad/preferences/view/tab-width 'uint32 4'
 dconf write /org/xfce/mousepad/preferences/window/statusbar-visible true
 dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
+
+# Do not show a dialog when a new display is connected (autorandr handles them instead)
+
+xfconf-query -c displays -p /Notify -s 0
