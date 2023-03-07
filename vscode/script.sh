@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm code
 
 code --install-extension EditorConfig.EditorConfig

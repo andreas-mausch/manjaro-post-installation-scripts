@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm muparser
 yay -S --noconfirm albert
 

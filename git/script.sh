@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm tk aspell aspell-en aspell-de
 sudo pacman -S --noconfirm tig gitui
 sudo pacman -S --noconfirm bat git-delta

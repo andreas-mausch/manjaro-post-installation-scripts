@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm \
   audacity \
   avidemux-qt \

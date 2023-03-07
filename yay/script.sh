@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 cd /tmp
 rm -rf ./yay-build
 mkdir ./yay-build

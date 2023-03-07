@@ -33,6 +33,6 @@ do
   folder=$(dirname ${scriptFile})
   filename=$(basename ${scriptFile})
   cd ${folder}
-  sh ${filename}
+  bash -e ${filename}
   cd - > /dev/null
 done

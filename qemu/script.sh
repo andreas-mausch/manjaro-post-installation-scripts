@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm libvirt virt-manager virt-viewer
 
 sudo systemctl enable libvirtd.service

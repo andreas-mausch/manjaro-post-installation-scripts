@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 rm -f ~/.config/autostart/manjaro-hello.desktop
 
 xfconf-query -c xfwm4 -p /general/workspace_count -s 1

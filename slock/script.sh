@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 sudo pacman -S --noconfirm slock
 sudo pacman -R --noconfirm light-locker
 
