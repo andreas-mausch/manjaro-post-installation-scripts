@@ -17,9 +17,9 @@ sudo pacman -Syyu
 Here are my HiDPI settings for Xfce.
 
 ```bash
-xfconf-query -c xsettings -p /Gdk/WindowScalingFactor -s 2
-xfconf-query -c xfwm4 -p /general/theme -s Default-hdpi
-xfconf-query -c xsettings -p /Xft/DPI -s 192
+xfconf-query -c xsettings -np /Gdk/WindowScalingFactor -t int -s 2
+xfconf-query -c xfwm4 -np /general/theme -t string -s Default-hdpi
+xfconf-query -c xsettings -np /Xft/DPI -t int -s 192
 
 echo "export QT_SCALE_FACTOR=1" >> ~/.profile
 echo "export QT_SCREEN_SCALE_FACTORS=2" >> ~/.profile
