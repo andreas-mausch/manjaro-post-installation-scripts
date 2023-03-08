@@ -1,4 +1,5 @@
 This is a collection of my personal post-installation scripts after a clean Manjaro installation.
+It is based on the Manjaro XFCE Desktop.
 
 It contains all my favorite apps, settings, fonts etc.
 
