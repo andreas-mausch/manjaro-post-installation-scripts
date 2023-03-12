@@ -1,11 +1,12 @@
-sudo pacman -S --needed --noconfirm libvirt virt-manager virt-viewer
+sudo pacman -S --needed --noconfirm virt-manager qemu-desktop libvirt edk2-ovmf dnsmasq iptables-nft
+# sudo pacman -S --needed --noconfirm qemu-emulators-full
 
-sudo systemctl enable libvirtd.service
-sudo systemctl start libvirtd.service
+sudo systemctl enable --now libvirtd.service
+
+sudo usermod -a -G libvirt $USER
 
 # You might want to edit /etc/libvirt/libvirtd.conf
 # to use your own user.
 # unix_sock_group = "libvirt"
 # unix_sock_rw_perms = "0770"
-# sudo usermod -a -G libvirt $(whoami)
 # sudo systemctl restart libvirtd.service
