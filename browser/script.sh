@@ -20,3 +20,6 @@ sudo pacman -S --needed --noconfirm firefox
 
 # Hiding one off search from url bar
 # https://www.reddit.com/r/firefox/comments/givqz8/hiding_one_off_search_from_url_bar/
+
+# Bookmarks and Downloads:
+# chrome://browser/content/places/places.xhtml
