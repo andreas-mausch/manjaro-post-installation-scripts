@@ -62,3 +62,7 @@ dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
 # Do not show a dialog when a new display is connected (autorandr handles them instead)
 
 xfconf-query -c displays -np /Notify -t int -s 0
+
+# Reduce tab height
+
+cp ./gtk.css ~/.config/gtk-3.0/
