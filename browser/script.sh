@@ -14,6 +14,7 @@ sudo pacman -S --needed --noconfirm firefox
 # geo.enabled=false
 # media.videocontrols.picture-in-picture.enabled=false
 # browser.bookmarks.editDialog.showForNewBookmarks=false
+# extensions.pocket.enabled
 
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
