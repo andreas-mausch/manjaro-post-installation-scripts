@@ -66,3 +66,10 @@ xfconf-query -c displays -np /Notify -t int -s 0
 # Reduce tab height
 
 cp ./gtk.css ~/.config/gtk-3.0/
+
+# Mousepad dark theme
+
+# https://draculatheme.com/mousepad
+mkdir -p ~/.local/share/gtksourceview-4/styles/
+wget --quiet --directory-prefix ~/.local/share/gtksourceview-4/styles/ https://raw.githubusercontent.com/dracula/mousepad/3964d841ec8fa6f5b63000cc95643977b172f577/dracula.xml
+gsettings set org.xfce.mousepad.preferences.view color-scheme "dracula"
