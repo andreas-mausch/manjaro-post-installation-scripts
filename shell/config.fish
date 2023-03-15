@@ -6,3 +6,4 @@ begin
 end
 
 alias clip="xclip -selection clipboard -rmlastnl"
+alias top="zenith"
