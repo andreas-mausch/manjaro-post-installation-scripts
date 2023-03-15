@@ -73,3 +73,7 @@ cp ./gtk.css ~/.config/gtk-3.0/
 mkdir -p ~/.local/share/gtksourceview-4/styles/
 wget --quiet --directory-prefix ~/.local/share/gtksourceview-4/styles/ https://raw.githubusercontent.com/dracula/mousepad/3964d841ec8fa6f5b63000cc95643977b172f577/dracula.xml
 gsettings set org.xfce.mousepad.preferences.view color-scheme "dracula"
+
+# Default applications
+
+cp ./mimeapps.list ~/.config/
