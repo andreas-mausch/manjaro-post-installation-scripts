@@ -17,6 +17,7 @@ sudo pacman -S --needed --noconfirm firefox
 # extensions.pocket.enabled=false
 # browser.compactmode.show=true
 # browser.uidensity=1
+# browser.tabs.inTitlebar=1
 
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
