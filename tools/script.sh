@@ -9,7 +9,6 @@ sudo pacman -S --needed --noconfirm \
   audacity \
   avidemux-qt \
   bless \
-  bpytop \
   cmatrix \
   colordiff \
   dhex \
@@ -39,4 +38,5 @@ paru -S --needed --noconfirm \
   cpu-x \
   otpclient \
   s-tui \
-  timg
+  timg \
+  zenith
