@@ -10,7 +10,7 @@ Feel free to use and customize them.
 ```
 sudo pacman -Syyu
 
-./post-installation.sh clock pacman bluetooth terminal shortcuts shell slock slick-greeter boot-animation browser albert calculator vscode fsearch tools gthumb ebooks git conky wireshark mpv notifications pcspeaker xfce mongo qemu autorandr
+./post-installation.sh clock pacman terminal shortcuts shell slock slick-greeter boot-animation bluetooth xfce notifications git browser mpv albert calculator vscode fsearch tools gthumb ebooks wireshark pcspeaker mongo qemu autorandr conky
 ```
 
 # HiDPI
