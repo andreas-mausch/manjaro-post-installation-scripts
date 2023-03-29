@@ -11,6 +11,7 @@ sudo pacman -S --needed --noconfirm \
   bless \
   cmatrix \
   colordiff \
+  cool-retro-term \
   dhex \
   dos2unix \
   doublecmd-gtk2 \
