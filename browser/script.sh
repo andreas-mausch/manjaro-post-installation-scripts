@@ -1,4 +1,6 @@
 sudo pacman -S --needed --noconfirm firefox
+sudo pacman -S --needed --noconfirm firefox-ublock-origin
+sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 
 # browser.aboutConfig.showWarning=false
 # layout.css.devPixelsPerPx=1.6
