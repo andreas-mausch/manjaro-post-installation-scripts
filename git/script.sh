@@ -12,8 +12,10 @@ git config --global alias.branches "! git for-each-ref refs/heads refs/remotes/o
 git config --global alias.default "! git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
 git config --global alias.file-size "! git status --porcelain | awk '{print \$2}' | xargs ls -hl | sort -r -h | awk '{print \$5 \"\t\" \$9}'"
 
-git config --global gui.fontui "-family \"Droid Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
-git config --global gui.fontdiff "-family \"Droid Sans Mono\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
+# See here: https://github.com/prati0100/git-gui/issues/29
+git config --global gui.usettk 0
+git config --global gui.fontui "-family \"DejaVu Sans\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
+git config --global gui.fontdiff "-family \"Source Code Pro\" -size 12 -weight normal -slant roman -underline 0 -overstrike 0"
 
 git config --global core.quotepath false
 
