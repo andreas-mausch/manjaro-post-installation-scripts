@@ -32,3 +32,6 @@ git config --global delta.side-by-side "true"
 
 mkdir -p ~/.config/git/
 cp ./gitk ~/.config/git/
+
+mkdir -p ~/.config/lazygit/
+cp ./lazygit.config.yml ~/.config/lazygit/config.yml
