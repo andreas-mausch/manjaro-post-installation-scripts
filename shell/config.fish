@@ -7,4 +7,5 @@ end
 
 alias clip="xclip -selection clipboard -rmlastnl"
 alias top="zenith"
+alias lg="lazygit"
 alias crt="cool-retro-term --profile \"Green Scanlines\" --fullscreen"
