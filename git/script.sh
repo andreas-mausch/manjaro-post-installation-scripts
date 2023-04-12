@@ -1,5 +1,5 @@
 sudo pacman -S --needed --noconfirm tk aspell aspell-en aspell-de
-sudo pacman -S --needed --noconfirm tig gitui
+sudo pacman -S --needed --noconfirm tig lazygit
 sudo pacman -S --needed --noconfirm bat git-delta
 
 git config --global alias.lg "log --abbrev-commit --decorate --date=format:'%Y-%m-%d %H:%M:%S' --format=format:'%C(blue)%h%C(reset) %C(dim white)%ad%C(reset) %C(green)%<(8,trunc)%an%C(reset)%C(yellow)%d%C(reset) %C(white)%s%C(reset)'"
