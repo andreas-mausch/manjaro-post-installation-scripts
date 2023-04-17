@@ -1,3 +1,5 @@
+sudo pacman -S --needed --noconfirm xfce4-weather-plugin
+
 rm -f ~/.config/autostart/manjaro-hello.desktop
 
 xfconf-query -c xfwm4 -np /general/workspace_count -t int -s 1
