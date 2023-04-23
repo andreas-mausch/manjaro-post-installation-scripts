@@ -18,6 +18,7 @@ sudo pacman -S --needed --noconfirm \
   gpxsee \
   handbrake \
   httpie \
+  jq \
   kid3 \
   meld \
   ncdu \
