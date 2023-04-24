@@ -1,5 +1,7 @@
 sudo pacman -S --needed --noconfirm fish
 
+mkdir -p ~/.config/fish/functions/
+
 cp /etc/pam.d/chsh ./chsh.backup
 sudo cp ./chsh /etc/pam.d/
 chsh -s /usr/bin/fish
@@ -14,7 +16,6 @@ cd ./oh-my-fish
 cd ..
 rm -rf ./oh-my-fish
 
-fish -c 'omf install eclm'
-
+cp ./fish_prompt.fish ~/.config/fish/functions/
 cp ./fish_variables ~/.config/fish/
 cp ./config.fish ~/.config/fish/
