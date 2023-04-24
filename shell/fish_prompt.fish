@@ -40,3 +40,9 @@ function fish_prompt
 
   echo -n -s $status_indicator $cwd $git_info $normal ' '
 end
+
+function fish_right_prompt
+  set_color 424242 normal
+  date '+%H:%M:%S'
+  set_color normal
+end
