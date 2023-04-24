@@ -3,7 +3,11 @@ return {
   opts = {
     filesystem = {
       filtered_items = {
-        hide_dotfiles = false
+        hide_dotfiles = false,
+        hide_by_name = {
+          ".git",
+          "package-lock.json"
+        }
       }
     }
   }
