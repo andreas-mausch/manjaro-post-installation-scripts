@@ -27,7 +27,9 @@ vim.api.nvim_create_autocmd("BufEnter", {
         end,
         on_exit = function(_, exitCode, _)
           if exitCode ~= 0 then
-            vim.api.nvim_buf_set_lines(bufferId, 0, -1, false, { string.format("Error: Exit Code %d", exitCode) })
+            vim.notify(string.format("Couldn't load image '%s'\nExit Code %d", event.file, exitCode), "error", {
+              title = "Image Preview with timg"
+            })
           end
           vim.api.nvim_buf_set_option(bufferId, "modifiable", false)
           vim.api.nvim_buf_set_option(bufferId, "buftype", "nowrite")
