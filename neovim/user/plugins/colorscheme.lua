@@ -12,6 +12,10 @@ return {
       colors = {
         primary = "#ffb35f",
         secondary = "#8ba8cd",
+        background = "#151515",
+        nb_background = "#151515",
+        noir_8 = "#181818",
+        noir_9 = "#1C1C1C",
         diagnostic_error = "#ec0034",
         diagnostic_warning = "#eeff00",
         diagnostic_info = "#d5d5d5"
@@ -23,6 +27,7 @@ return {
 
     Group.new("Normal", colors.noir_4, colors.nb_background)
     Group.new("NormalNC", colors.primary, colors.noir_9)
+    Group.new("CursorLine", nil, colors.black)
 
     Group.new("NeoTreeDirectoryIcon", colors.noir_6)
     Group.new("NeoTreeDirectoryName", colors.noir_2)
