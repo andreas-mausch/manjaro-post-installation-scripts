@@ -7,7 +7,7 @@ return function()
     group = "neotree",
     callback = function()
       if vim.fn.argc() == 0 then
-        vim.cmd("Neotree source=filesystem")
+        vim.cmd("Neotree")
       end
     end
   })
