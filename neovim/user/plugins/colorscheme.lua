@@ -29,12 +29,11 @@ return {
     }
 
     local colors = require("colorbuddy").colors
-    local groups = require("colorbuddy").groups
     local Group = require("colorbuddy").Group
 
     Group.new("Normal", colors.noir_4, colors.nb_background)
     Group.new("NormalNC", colors.primary, colors.noir_9)
-    Group.link("LineNr", groups.Normal)
+    Group.new("LineNr", colors.noir_4)
     Group.new("CursorLine", nil, colors.black)
     Group.new("CursorLineNr", colors.noir_9, colors.noir_6)
 
