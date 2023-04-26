@@ -37,6 +37,8 @@ return {
     Group.new("CursorLine", nil, colors.black)
     Group.new("CursorLineNr", colors.noir_9, colors.noir_6)
     Group.new('Visual', colors.nb_background, colors.noir_4)
+    Group.new('Search', colors.noir_9, colors.noir_3)
+    Group.new('IncSearch', colors.noir_9, colors.primary)
 
     -- Reset SignColumn
     -- It was set here: https://github.com/jesseleite/nvim-noirbuddy/blob/7d92fc64ae4c23213fd06f0464a72de45887b0ba/lua/noirbuddy/theme.lua#L39
