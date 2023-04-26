@@ -41,7 +41,7 @@ return {
     Group.new("IncSearch", colors.noir_9, colors.primary)
     Group.new("Error", colors.diagnostic_error)
     Group.new("ErrorMsg", colors.noir_1, colors.diagnostic_error)
-    Group.new("FloatBorder", colors.noir_3)
+    Group.new("FloatBorder", colors.noir_6)
 
     -- Reset SignColumn
     -- It was set here: https://github.com/jesseleite/nvim-noirbuddy/blob/7d92fc64ae4c23213fd06f0464a72de45887b0ba/lua/noirbuddy/theme.lua#L39
