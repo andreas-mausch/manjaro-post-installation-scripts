@@ -22,7 +22,7 @@ return {
         diagnostic_warning = "#eeff00",
         diagnostic_info = "#84a5ff",
         diagnostic_hint = "#84a5ff",
-        diff_add = "#4bdc2b",
+        diff_add = "#9ddc2b",
         diff_change = "#e8d7a5",
         diff_delete = "#ff4b2b"
       }
