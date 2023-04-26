@@ -18,13 +18,13 @@ return {
         nb_background = "#151515",
         noir_8 = "#181818",
         noir_9 = "#1c1c1c",
-        diagnostic_error = "#e03040",
+        diagnostic_error = "#ff4b2b",
         diagnostic_warning = "#eeff00",
         diagnostic_info = "#84a5ff",
         diagnostic_hint = "#84a5ff",
-        diff_add = "#406040",
-        diff_change = "#405060",
-        diff_delete = "#e03040"
+        diff_add = "#4bdc2b",
+        diff_change = "#e8d7a5",
+        diff_delete = "#ff4b2b"
       }
     }
 
@@ -51,9 +51,9 @@ return {
     Group.new("NeoTreeDirectoryName", colors.noir_2)
     Group.new("NeoTreeFileName", colors.noir_3)
     Group.new("NeoTreeRootName", colors.noir_6)
-    Group.new("NeoTreeGitModified", colors.primary)
-    Group.new("NeoTreeGitAdded", colors.secondary)
-    Group.new("NeoTreeGitUntracked", colors.noir_1)
+    Group.new("NeoTreeGitModified", colors.diff_change)
+    Group.new("NeoTreeGitAdded", colors.diff_add)
+    Group.new("NeoTreeGitUntracked", colors.diff_delete)
 
     Group.new('TelescopePromptNormal', colors.noir_4, colors.nb_background)
     Group.new('TelescopeResultsNormal', colors.noir_4, colors.nb_background)
