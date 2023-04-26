@@ -37,6 +37,10 @@ return {
     Group.new("CursorLine", nil, colors.black)
     Group.new("CursorLineNr", colors.noir_9, colors.noir_6)
 
+    -- Reset SignColumn
+    -- It was set here: https://github.com/jesseleite/nvim-noirbuddy/blob/7d92fc64ae4c23213fd06f0464a72de45887b0ba/lua/noirbuddy/theme.lua#L39
+    vim.api.nvim_set_hl(0, 'SignColumn', {})
+
     Group.new("NeoTreeDirectoryIcon", colors.noir_6)
     Group.new("NeoTreeDirectoryName", colors.noir_2)
     Group.new("NeoTreeFileName", colors.noir_3)
