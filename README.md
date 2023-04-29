@@ -2,8 +2,11 @@ This is a collection of my personal post-installation scripts after a clean Manj
 It is based on the Manjaro XFCE Desktop.
 
 It contains all my favorite apps, settings, fonts etc.
-
 Feel free to use and customize them.
+
+This is similar to what other people have in their *dotfiles* repos, but I'd rather keep the program installation commands
+together with their configuration.
+This way I can keep things that are connected, for example git, lazygit, tig, delta, etc., in the same folder.
 
 # Install
 
