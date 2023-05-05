@@ -15,6 +15,7 @@ sudo pacman -S --needed --noconfirm \
   dhex \
   dos2unix \
   doublecmd-gtk2 \
+  gnome-clocks \
   gpxsee \
   handbrake \
   httpie \
