@@ -37,6 +37,12 @@ xfconf-query -c thunar -np /last-show-hidden -t bool -s true
 xfconf-query -c thunar -np /last-view -t string -s "ThunarDetailsView"
 xfconf-query -c thunar -np /misc-date-style -t string -s "THUNAR_DATE_STYLE_YYYYMMDD"
 
+# Intel graphics fix
+# I had the problem with transparent borders in the xfce4-terminal
+# See here: https://wiki.archlinux.org/title/intel_graphics#AccelMethod
+# and here: https://askubuntu.com/questions/312986/dashed-borders-of-my-window-manager-xfce
+sudo cp ./20-intel.conf /etc/X11/xorg.conf.d/
+
 # Thunar Bookmarks
 
 mkdir -p ~/.config/gtk-3.0/
