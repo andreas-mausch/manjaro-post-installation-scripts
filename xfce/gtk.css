@@ -19,3 +19,11 @@ notebook button {
   min-width: 0;
   padding: 0px;
 }
+
+/* Fix for dashed borders on scrolled windows (for example xfce4-terminal)
+* taken from: https://unix.stackexchange.com/questions/251743/dashed-line-on-top-and-below-a-window-when-window-scrolling-is-required/515411#515411 */
+
+scrolledwindow undershoot.top,
+scrolledwindow undershoot.right,
+scrolledwindow undershoot.bottom,
+scrolledwindow undershoot.left { background-image: none; }
