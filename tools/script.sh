@@ -34,6 +34,8 @@ sudo pacman -S --needed --noconfirm \
   smartmontools \
   sqlitebrowser \
   xclip \
+  xorg-xfd \
+  xorg-xinput \
   youtube-dl
 paru -S --needed --noconfirm \
   altair \
