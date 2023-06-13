@@ -38,3 +38,26 @@ See also: https://unix.stackexchange.com/questions/513489/buzzing-when-not-playi
 
 To me it seems like the coil-whine of the CPU is amplified by the speaker if the `module-suspend-on-idle` is loaded. Very annoying.
 Even when unloaded, I can still hear the same buzzing when I hold my ear right next to the keyboard, just way quieter and not annoying anymore.
+
+# Disable the many HDMI output devices via pipewire / WirePlumber
+
+```lua{data-filename=~/.config/wireplumber/main.lua.d/51-disable-hdmi-devices.lua}
+rule = {
+  matches = {
+    {
+      { "node.name", "equals", "alsa_output.pci-0000_00_1f.3-platform-sof_sdw.HiFi__hw_sofsoundwire_6__sink" },
+    },
+    {
+      { "node.name", "equals", "alsa_output.pci-0000_00_1f.3-platform-sof_sdw.HiFi__hw_sofsoundwire_7__sink" },
+    },
+  },
+  apply_properties = {
+    ["node.disabled"] = true,
+  },
+}
+
+table.insert(alsa_monitor.rules,rule)
+```
+
+For me three HDMI outputs were shown, and I occasionally only need to use a single one.
+The config above disables HDMI 2 and 3. You might need to adjust the `alsa_output.*` names.
