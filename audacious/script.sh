@@ -1,3 +1,4 @@
+sudo pacman -S --needed --noconfirm manjaro-pipewire
 sudo pacman -S --needed --noconfirm audacious
 
 mkdir -p ~/.local/share/audacious/Skins/
