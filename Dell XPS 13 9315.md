@@ -23,22 +23,6 @@ https://wiki.archlinux.org/title/Dell_XPS_17_(9720)
 >
 > Make sure both the left and right microphones for the PGA5.0 channel (use keys ; and ') are selected. Other than the above mentioned channels in Playback and Capture, none of the other channels appears to able to influence recorded audio. 
 
-# Sound speaker buzzing
-
-https://wiki.archlinux.org/title/PulseAudio/Troubleshooting#Pops_when_starting_and_stopping_playback
-
-```{data-filename=~/.config/pulse/default.pa}
-.include /etc/pulse/default.pa
-.nofail
-unload-module module-suspend-on-idle
-.fail
-```
-
-See also: https://unix.stackexchange.com/questions/513489/buzzing-when-not-playing/513491#513491
-
-To me it seems like the coil-whine of the CPU is amplified by the speaker if the `module-suspend-on-idle` is loaded. Very annoying.
-Even when unloaded, I can still hear the same buzzing when I hold my ear right next to the keyboard, just way quieter and not annoying anymore.
-
 # Disable the many HDMI output devices via pipewire / WirePlumber
 
 ```lua{data-filename=~/.config/wireplumber/main.lua.d/51-disable-hdmi-devices.lua}
@@ -61,3 +45,29 @@ table.insert(alsa_monitor.rules,rule)
 
 For me three HDMI outputs were shown, and I occasionally only need to use a single one.
 The config above disables HDMI 2 and 3. You might need to adjust the `alsa_output.*` names.
+
+# Sound speaker buzzing
+
+https://davejansen.com/disable-wireplumber-pipewire-suspend-on-idle-pops-delays-noise/
+
+https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/1369
+
+```lua{data-filename=~/.config/wireplumber/main.lua.d/52-suspend-on-idle.lua}
+rule = {
+  matches = {
+    {
+      { "node.name", "equals", "alsa_output.pci-0000_00_1f.3-platform-sof_sdw.HiFi__hw_sofsoundwire_2__sink" },
+    },
+  },
+  apply_properties = {
+    ["session.suspend-timeout-seconds"] = 0,
+  },
+}
+
+table.insert(alsa_monitor.rules,rule)
+```
+
+See also: https://unix.stackexchange.com/questions/513489/buzzing-when-not-playing/513491#513491
+
+To me it seems like the coil-whine of the CPU is amplified by the speaker if the sink is suspended. Very annoying.
+Even on idle, I can still hear the same buzzing when I hold my ear right next to the keyboard, just way quieter and not annoying anymore.
