@@ -55,6 +55,7 @@
       <property name="single-row" type="bool" value="false"/>
       <property name="hide-new-items" type="bool" value="false"/>
       <property name="symbolic-icons" type="bool" value="false"/>
+      <property name="menu-is-primary" type="bool" value="true"/>
     </property>
     <property name="plugin-3" type="string" value="tasklist">
       <property name="grouping" type="uint" value="0"/>
