@@ -44,4 +44,5 @@ paru -S --needed --noconfirm \
   otpclient \
   s-tui \
   timg \
+  usql \
   zenith
