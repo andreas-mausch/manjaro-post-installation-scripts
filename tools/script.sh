@@ -1,5 +1,6 @@
 # gpxsee: Show .gpx or .jpeg files on a map
 # bless: hex editor
+# dry: Docker TUI manager
 # kid3: MP3-tagger (UI)
 # python-eyed3: MP3-tagger (CLI)
 # meld: Compare files
@@ -41,6 +42,7 @@ paru -S --needed --noconfirm \
   altair \
   apostrophe \
   cpu-x \
+  dry-bin \
   otpclient \
   s-tui \
   timg \
