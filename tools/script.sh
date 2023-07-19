@@ -1,10 +1,11 @@
-# gpxsee: Show .gpx or .jpeg files on a map
 # bless: hex editor
 # dry: Docker TUI manager
+# figlet: Prints a text in big ascii art in the terminal
+# gpxsee: Show .gpx or .jpeg files on a map
 # kid3: MP3-tagger (UI)
-# python-eyed3: MP3-tagger (CLI)
 # meld: Compare files
 # peek: GIF recorder
+# python-eyed3: MP3-tagger (CLI)
 
 sudo pacman -S --needed --noconfirm \
   audacity \
@@ -16,6 +17,7 @@ sudo pacman -S --needed --noconfirm \
   dhex \
   dos2unix \
   doublecmd-gtk2 \
+  figlet \
   gnome-clocks \
   gpxsee \
   handbrake \
