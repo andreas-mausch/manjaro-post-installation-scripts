@@ -19,6 +19,7 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # extensions.pocket.enabled=false
 # browser.compactmode.show=true
 # browser.uidensity=1
+# browser.tabs.firefox-view=false
 # browser.tabs.inTitlebar=1
 
 # Use google.de instead of google.com:
