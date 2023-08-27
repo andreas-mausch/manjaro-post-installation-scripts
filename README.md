@@ -13,7 +13,7 @@ This way I can keep things that are connected, for example git, lazygit, tig, de
 ```
 sudo pacman -Syyu
 
-./post-installation.sh clock pacman terminal shortcuts shell slock slick-greeter boot-animation bluetooth xfce notifications git browser mpv albert calculator vscode fsearch tools gthumb ebooks wireshark pcspeaker mongo qemu autorandr neovim
+./post-installation.sh clock pacman terminal shortcuts shell slock slick-greeter boot-animation bluetooth xfce notifications git browser mpv albert calculator vscode fsearch tools gthumb ebooks wireshark pcspeaker mongo qemu autorandr neovim helix
 ```
 
 # HiDPI
