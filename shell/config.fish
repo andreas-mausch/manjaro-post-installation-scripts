@@ -5,7 +5,9 @@ begin
     end
 end
 
+set -gx EDITOR helix
+
 alias clip="xclip -selection clipboard -rmlastnl"
 alias top="zenith"
 alias lg="lazygit"
-alias crt="cool-retro-term --profile \"Green Scanlines\" --fullscreen"
+alias crt="cool-retro-term --profile \"Green Scanlines Blinking Cursor\" --fullscreen"
