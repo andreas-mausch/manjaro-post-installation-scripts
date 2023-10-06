@@ -1,4 +1,5 @@
 # bless: hex editor
+# dive: A tool for exploring layers in a docker image
 # dry: Docker TUI manager
 # figlet: Prints a text in big ascii art in the terminal
 # gpxsee: Show .gpx or .jpeg files on a map
@@ -15,6 +16,7 @@ sudo pacman -S --needed --noconfirm \
   colordiff \
   cool-retro-term \
   dhex \
+  dive \
   dos2unix \
   doublecmd-gtk2 \
   figlet \
