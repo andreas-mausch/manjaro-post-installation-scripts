@@ -19,6 +19,7 @@ sudo pacman -S --needed --noconfirm \
   dive \
   dos2unix \
   doublecmd-gtk2 \
+  fdupes \
   figlet \
   gnome-clocks \
   gpxsee \
