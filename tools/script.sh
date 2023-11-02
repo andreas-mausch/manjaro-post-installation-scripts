@@ -42,7 +42,7 @@ sudo pacman -S --needed --noconfirm \
   xclip \
   xorg-xfd \
   xorg-xinput \
-  youtube-dl
+  yt-dlp
 paru -S --needed --noconfirm \
   altair \
   apostrophe \
