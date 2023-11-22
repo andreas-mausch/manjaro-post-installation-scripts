@@ -17,6 +17,7 @@ sudo pacman -S --needed --noconfirm \
   cool-retro-term \
   dhex \
   dive \
+  dnsutils \
   dos2unix \
   doublecmd-gtk2 \
   fdupes \
