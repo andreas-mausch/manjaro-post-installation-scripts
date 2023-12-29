@@ -7,6 +7,7 @@
 # meld: Compare files
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
+# visidata: TUI spreadsheet multitool
 
 sudo pacman -S --needed --noconfirm \
   audacity \
@@ -40,6 +41,7 @@ sudo pacman -S --needed --noconfirm \
   scrcpy \
   smartmontools \
   sqlitebrowser \
+  visidata \
   xclip \
   xorg-xfd \
   xorg-xinput \
