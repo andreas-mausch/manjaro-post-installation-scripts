@@ -5,6 +5,7 @@
 # gpxsee: Show .gpx or .jpeg files on a map
 # kid3: MP3-tagger (UI)
 # meld: Compare files
+# miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
@@ -30,6 +31,7 @@ sudo pacman -S --needed --noconfirm \
   jq \
   kid3 \
   meld \
+  miller \
   ncdu \
   neofetch \
   noto-fonts-emoji \
