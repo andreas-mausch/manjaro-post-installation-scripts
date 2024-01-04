@@ -9,6 +9,7 @@
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
+# zenith: top replacement
 
 sudo pacman -S --needed --noconfirm \
   audacity \
@@ -47,7 +48,8 @@ sudo pacman -S --needed --noconfirm \
   xclip \
   xorg-xfd \
   xorg-xinput \
-  yt-dlp
+  yt-dlp \
+  zenith
 paru -S --needed --noconfirm \
   altair \
   apostrophe \
@@ -56,5 +58,4 @@ paru -S --needed --noconfirm \
   otpclient \
   s-tui \
   timg \
-  usql \
-  zenith
+  usql
