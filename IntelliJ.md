@@ -1,0 +1,2 @@
+- [Pokemon Progress](https://plugins.jetbrains.com/plugin/15090-pokemon-progress)
+- [Kant Dark Color Scheme](https://github.com/abrookins/kant)
