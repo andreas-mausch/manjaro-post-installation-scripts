@@ -26,6 +26,7 @@ sudo pacman -S --needed --noconfirm \
   fdupes \
   figlet \
   gnome-clocks \
+  gnucash \
   gpxsee \
   handbrake \
   httpie \
