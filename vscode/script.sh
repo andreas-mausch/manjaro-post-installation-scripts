@@ -11,3 +11,8 @@ code --install-extension rangav.vscode-thunder-client
 
 mkdir -p ~/.config/Code\ -\ OSS/User/
 cp ./settings.json ~/.config/Code\ -\ OSS/User/
+
+# TODO:
+# Make VSCode not use Gnome Keyring:
+# in /home/neonew/.vscode-oss/argv.json set
+# "password-store": "basic"
