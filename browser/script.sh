@@ -25,6 +25,10 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # Do not connect to detectportal.firefox.com
 # network.captive-portal-service.enabled=false
 
+# Disable OCSP (certificate validation check)
+# [0=do not check; 1=check all (default); 2=check EVSSL Certs only]
+# security.OCSP.enabled=0
+
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
 
