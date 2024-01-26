@@ -22,6 +22,9 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # browser.tabs.firefox-view=false
 # browser.tabs.inTitlebar=1
 
+# Do not connect to detectportal.firefox.com
+# network.captive-portal-service.enabled=false
+
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
 
