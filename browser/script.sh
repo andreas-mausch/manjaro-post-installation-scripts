@@ -22,6 +22,9 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # browser.tabs.firefox-view=false
 # browser.tabs.inTitlebar=1
 
+# dom.security.https_first=true
+# dom.security.https_first_schemeless=true
+
 # Do not connect to detectportal.firefox.com
 # network.captive-portal-service.enabled=false
 
