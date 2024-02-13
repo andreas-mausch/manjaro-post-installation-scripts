@@ -34,3 +34,16 @@ echo "export GDK_DPI_SCALE=\${GDK_SCALE-0.5}" >> ~/.profile
 ```
 
 For wine, you need to manually set the dpi in `winecfg`.
+
+# Disable UAS
+
+If you have trouble with external USB drives, try to disable UAS.
+
+See these great articles about the details:
+
+- [https://tomthorp.me/blog/problem-linux-unmounting-usb-external-drives](https://tomthorp.me/blog/problem-linux-unmounting-usb-external-drives)
+- [https://leo.leung.xyz/wiki/How_to_disable_USB_Attached_Storage_(UAS)](https://leo.leung.xyz/wiki/How_to_disable_USB_Attached_Storage_(UAS))
+
+```{data-filename=/etc/modprobe.d/disable-uas-for-external-drives.conf}
+options usb-storage quirks=0bc2:2322:u
+```
