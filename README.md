@@ -47,3 +47,9 @@ See these great articles about the details:
 ```{data-filename=/etc/modprobe.d/disable-uas-for-external-drives.conf}
 options usb-storage quirks=0bc2:2322:u
 ```
+
+Now run this and reboot:
+
+```bash
+sudo mkinitcpio --allpresets
+```
