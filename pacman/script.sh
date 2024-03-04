@@ -1,4 +1,4 @@
-sudo sed -i "s,PKGEXT='.pkg.tar.xz',PKGEXT='.pkg.tar',g" /etc/makepkg.conf
+sudo sed -i "s,PKGEXT='.pkg.tar.zst',PKGEXT='.pkg.tar',g" /etc/makepkg.conf
 sudo sed -i "s,^#Color\$,Color,g" /etc/pacman.conf
 
 cd /tmp
