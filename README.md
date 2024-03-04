@@ -31,7 +31,7 @@ echo "export QT_SCREEN_SCALE_FACTORS=2" >> ~/.profile
 echo "export QT_AUTO_SCREEN_SCALE_FACTOR=1" >> ~/.profile
 echo "export QT_FONT_DPI=96" >> ~/.profile
 echo "export GDK_SCALE=\${GDK_SCALE-2}" >> ~/.profile
-echo "export GDK_DPI_SCALE=\${GDK_SCALE-0.5}" >> ~/.profile
+echo "export GDK_DPI_SCALE=\${GDK_DPI_SCALE-0.5}" >> ~/.profile
 ```
 
 For wine, you need to manually set the dpi in `winecfg`.
