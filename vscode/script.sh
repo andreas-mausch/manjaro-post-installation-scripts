@@ -2,7 +2,6 @@ sudo pacman -S --needed --noconfirm code
 
 code --install-extension EditorConfig.EditorConfig
 code --install-extension dbaeumer.vscode-eslint
-code --install-extension drrouman.git-coauthors
 code --install-extension eamodio.gitlens
 code --install-extension Vue.volar
 code --install-extension stylelint.vscode-stylelint
