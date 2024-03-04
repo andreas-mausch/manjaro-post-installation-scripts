@@ -61,6 +61,23 @@ dconf write /org/xfce/mousepad/preferences/view/tab-width 'uint32 4'
 dconf write /org/xfce/mousepad/preferences/window/statusbar-visible true
 dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
 
+# Terminal
+
+xfconf-query -c xfce4-terminal -np /color-background-vary -t bool -s true
+xfconf-query -c xfce4-terminal -np /color-use-theme -t bool -s true
+xfconf-query -c xfce4-terminal -np /color-palette -t string -s "rgb(37,31,31);rgb(230,131,96);rgb(148,231,107);rgb(255,172,24);rgb(70,174,222);rgb(240,85,121);rgb(214,219,172);rgb(239,239,239);rgb(94,94,94);rgb(255,169,138);rgb(149,231,107);rgb(255,172,24);rgb(70,174,222);rgb(238,94,128);rgb(214,219,172);rgb(239,239,239)"
+xfconf-query -c xfce4-terminal -np /font-name -t string -s "Source Code Pro 10"
+xfconf-query -c xfce4-terminal -np /misc-always-show-tabs -t bool -s false
+xfconf-query -c xfce4-terminal -np /misc-bell -t bool -s false
+xfconf-query -c xfce4-terminal -np /misc-borders-default -t bool -s false
+xfconf-query -c xfce4-terminal -np /misc-cursor-shape -t string -s "TERMINAL_CURSOR_SHAPE_UNDERLINE"
+xfconf-query -c xfce4-terminal -np /misc-default-geometry -t string -s "210x54+20+0"
+xfconf-query -c xfce4-terminal -np /misc-menubar-default -t bool -s false
+xfconf-query -c xfce4-terminal -np /misc-tab-close-buttons -t bool -s false
+xfconf-query -c xfce4-terminal -np /misc-tab-close-middle-click -t bool -s false
+xfconf-query -c xfce4-terminal -np /scrolling-bar -t string -s "TERMINAL_SCROLLBAR_NONE"
+xfconf-query -c xfce4-terminal -np /scrolling-lines -t int -s 9999
+
 # Do not show a dialog when a new display is connected (autorandr handles them instead)
 
 xfconf-query -c displays -np /Notify -t int -s 0
