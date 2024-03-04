@@ -16,52 +16,12 @@ Make sure to install these to have `intel_gpu_top` and `intel_gpu_frequency` ava
 sudo pacman -S intel-gpu-tools intel-media-driver libva-utils
 ```
 
-# throttled
-
-I use throttled to set the max TDP to 9 W.
-This is the same as the XPS 13 9315 model has as a default,
-and I prefer more lifetime over more cpu power.
-
-```bash
-sudo pacman -S throttled
-sudo /usr/lib/throttled/throttled.py --monitor
-systemctl status throttled.service
-systemctl start throttled.service
-systemctl enable throttled.service
-```
-
-```{data-filename=/etc/throttled.conf}
-...
-
-[BATTERY]
-# Update the registers every this many seconds
-Update_Rate_s: 30
-# Max package power for time window #1
-PL1_Tdp_W: 9
-# Time window #1 duration
-PL1_Duration_s: 28
-# Max package power for time window #2
-PL2_Tdp_W: 9
-# Time window #2 duration
-PL2_Duration_S: 0.002
-# Max allowed temperature before throttling
-Trip_Temp_C: 75
-# Set cTDP to normal=0, down=1 or up=2 (EXPERIMENTAL)
-cTDP: 1
-# Disable BDPROCHOT (EXPERIMENTAL)
-Disable_BDPROCHOT: False
-
-...
-```
-
 # tlp
 
-Additionally, I use tlp to limit the GPU frequency.
-Maybe I should use tlp only and drop throttled, and use `CPU_SCALING_MAX_FREQ_ON_BAT`
-or `CPU_MAX_PERF_ON_BAT` instead of setting a TDP limit.
+I use tlp to limit the CPU and GPU frequencies.
 
 Reducing the GPU frequency helped a lot to save some power on YouTube videos.
-
+If you play games you want to increase it of course.
 
 ```bash
 sudo pacman -S tlp
