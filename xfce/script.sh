@@ -4,7 +4,7 @@ rm -f ~/.config/autostart/manjaro-hello.desktop
 
 xfconf-query -c xfwm4 -np /general/workspace_count -t int -s 1
 
-# Power settings
+echo "Power.."
 
 xfconf-query -c xfce4-power-manager -np /xfce4-power-manager/brightness-step-count -t uint -s 4
 xfconf-query -c xfce4-power-manager -np /xfce4-power-manager/inactivity-sleep-mode-on-battery -t uint -s 1 # 1 = standby
@@ -13,31 +13,31 @@ xfconf-query -c xfce4-power-manager -np /xfce4-power-manager/logind-handle-lid-s
 xfconf-query -c xfce4-power-manager -np /xfce4-power-manager/show-panel-label -t int -s 1 # 1 = show battery percentage in tray, but not remaining time
 xfconf-query -c xfce4-power-manager -np /xfce4-power-manager/critical-power-level -t uint -s 5
 
-# Keyboard
+echo "Keyboard.."
 
 xfconf-query -c keyboard-layout -np /Default/XkbLayout -t string -s eu,de
 xfconf-query -c keyboard-layout -np /Default/XkbOptions/Group -t string -s grp:shifts_toggle
 
-# Theme
+echo "Theme.."
 
 xfconf-query -c xsettings -np /Net/ThemeName -t string -s "Matcha-dark-azul"
 xfconf-query -c xsettings -np /Net/IconThemeName -t string -s "Papirus-Dark"
 
-# Desktop Icons
+echo "Desktop Icons.."
 
 xfconf-query -c xfce4-desktop -np /desktop-icons/file-icons/show-removable -t bool -s false
 xfconf-query -c xfce4-desktop -np /desktop-icons/file-icons/show-home -t bool -s false
 xfconf-query -c xfce4-desktop -np /desktop-icons/file-icons/show-filesystem -t bool -s false
 xfconf-query -c xfce4-desktop -np /desktop-icons/file-icons/show-trash -t bool -s false
 
-# Thunar Sidebar Icons
+echo "Thunar Sidebar Icons.."
 
 xfconf-query -c thunar -np /hidden-bookmarks -t string -t string -s "computer:///" -s "trash:///"
 xfconf-query -c thunar -np /last-show-hidden -t bool -s true
 xfconf-query -c thunar -np /last-view -t string -s "ThunarDetailsView"
 xfconf-query -c thunar -np /misc-date-style -t string -s "THUNAR_DATE_STYLE_YYYYMMDD"
 
-# Thunar Bookmarks
+echo "Thunar Bookmarks.."
 
 mkdir -p ~/.config/gtk-3.0/
 echo "file:///home/neonew/Documents" >> ~/.config/gtk-3.0/bookmarks
@@ -46,22 +46,22 @@ echo "file:///home/neonew/Music" >> ~/.config/gtk-3.0/bookmarks
 echo "file:///home/neonew/Pictures" >> ~/.config/gtk-3.0/bookmarks
 echo "file:///home/neonew/Videos" >> ~/.config/gtk-3.0/bookmarks
 
-# Thunar custom actions
+echo "Thunar custom actions.."
 
 cp ./uca.xml ~/.config/Thunar/
 
-# Panel configuration
+echo "Panel configuration.."
 
 cp ./xfce4-panel.xml ~/.config/xfce4/xfconf/xfce-perchannel-xml/
 
-# Mousepad
+echo "Mousepad.."
 
 dconf write /org/xfce/mousepad/preferences/view/show-line-numbers true
 dconf write /org/xfce/mousepad/preferences/view/tab-width 'uint32 4'
 dconf write /org/xfce/mousepad/preferences/window/statusbar-visible true
 dconf write /org/xfce/mousepad/preferences/window/opening-mode "'window'"
 
-# Terminal
+echo "Terminal.."
 
 xfconf-query -c xfce4-terminal -np /color-background-vary -t bool -s true
 xfconf-query -c xfce4-terminal -np /color-use-theme -t bool -s true
