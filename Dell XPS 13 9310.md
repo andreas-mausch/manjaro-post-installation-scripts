@@ -1,12 +1,19 @@
 # Device
 
-I have the OLED model.
+I have the 3456x2160 OLED model.
 
 I had some trouble with the power consumption in general.
 It is well-known that the OLED model consumes much more than the LCD,
 however I was able to reduce the amount to a point I can comfortably use it for several hours.
 
-By default it used up to 18-20 W at peaks and I reduced it to ~5 W idle, ~9-10 W at YouTube and ~12-13 W max.
+By default it used up to 18-20 W at peaks and I reduced it to ~5-6 W idle, ~10-11 W at YouTube and ~13-14 W max.
+
+Compared to the XPS 13 9315 with a 1920x1200 display, which uses 2-3 W idle, 7-8 W at YouTube, 16 W max,
+I am happy to trade off the much better display for some battery life.
+It is close though, because the 9315 is the only Linux laptop I own
+which can almost last as long as my MacBook Air, and I like that very much.
+
+Also, the less input lag on the OLED display is noticable to me.
 
 # Intel tools
 
