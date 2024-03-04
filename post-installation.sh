@@ -5,7 +5,7 @@ set -e
 shopt -s globstar
 
 echo "Updating pacman database.."
-sudo pacman -Syy
+sudo pacman -Sy
 
 declare -A scripts
 
