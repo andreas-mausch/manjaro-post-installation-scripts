@@ -7,4 +7,6 @@ sudo pacman -S --needed --noconfirm lightdm-slick-greeter lightdm-settings
 # Taken from here: https://github.com/ooxxvv/basil-tw
 sudo cp ./login-background.png /usr/share/backgrounds/
 sudo chown root:root /usr/share/backgrounds/login-background.png
-sudo sed -i "s,^background=.*\$,background=/usr/share/backgrounds/login-background.png,g" /etc/lightdm/slick-greeter.conf
+
+sudo cp ./slick-greeter.conf /etc/lightdm/
+sudo chown root:root /etc/lightdm/slick-greeter.conf
