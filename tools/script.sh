@@ -41,6 +41,7 @@ sudo pacman -S --needed --noconfirm \
   peek \
   pv \
   python-eyed3 \
+  python-qdarkstyle \
   scapy \
   scrcpy \
   smartmontools \
