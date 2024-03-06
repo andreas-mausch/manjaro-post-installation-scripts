@@ -24,3 +24,5 @@ cp ./config.fish ~/.config/fish/
 # -X: stops the screen from clearing when exiting
 # https://unix.stackexchange.com/questions/19317/can-less-retain-colored-output
 echo "export LESS=-Xr" >> ~/.profile
+
+echo "export PASSWORD_STORE_SIGNING_KEY=6FB79D6D075A268571DE9E42C2C14B464D7B72E9" >> ~/.profile
