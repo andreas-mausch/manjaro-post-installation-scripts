@@ -48,6 +48,7 @@ sudo pacman -S --needed --noconfirm \
   smartmontools \
   sqlitebrowser \
   visidata \
+  viu \
   xclip \
   xorg-xfd \
   xorg-xinput \
@@ -60,5 +61,4 @@ paru -S --needed --noconfirm \
   dry-bin \
   otpclient \
   s-tui \
-  timg \
   usql
