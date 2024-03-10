@@ -50,4 +50,13 @@
 	<patterns>*.jpg;*.jpeg;*.JPG</patterns>
 	<image-files/>
 </action>
+<action>
+	<icon>image-x-generic</icon>
+	<name>Open with geeqie</name>
+	<unique-id>9392037941312943-1</unique-id>
+	<command>geeqie %f</command>
+	<description>Open the selected image with geeqie</description>
+	<patterns>*.jpg;*.jpeg;*.JPG;*.png;*.bmp;*.webp;*.gif</patterns>
+	<image-files/>
+</action>
 </actions>
