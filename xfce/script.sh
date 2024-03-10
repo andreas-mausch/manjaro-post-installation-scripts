@@ -49,6 +49,7 @@ echo "file:///home/neonew/Videos" >> ~/.config/gtk-3.0/bookmarks
 echo "Thunar custom actions.."
 
 cp ./uca.xml ~/.config/Thunar/
+cp ./accels.scm ~/.config/Thunar/
 
 echo "Panel configuration.."
 
