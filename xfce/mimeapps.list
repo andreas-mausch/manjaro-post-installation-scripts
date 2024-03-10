@@ -24,6 +24,7 @@ text/x-nfo=org.xfce.mousepad.desktop
 image/png=viewnior.desktop
 inode/directory=thunar.desktop
 application/json=org.xfce.mousepad.desktop
+image/webp=viewnior.desktop
 
 [Added Associations]
 image/jpeg=xfce4-web-browser.desktop;gcr-viewer.desktop;viewnior.desktop;
@@ -47,3 +48,4 @@ image/png=viewnior.desktop;
 inode/directory=thunar.desktop;
 application/json=org.xfce.mousepad.desktop;
 application/x-wine-extension-ini=org.xfce.mousepad.desktop;
+image/webp=viewnior.desktop;
