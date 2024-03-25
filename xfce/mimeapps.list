@@ -25,6 +25,10 @@ image/png=viewnior.desktop
 inode/directory=thunar.desktop
 application/json=org.xfce.mousepad.desktop
 image/webp=viewnior.desktop
+text/markdown=org.xfce.mousepad.desktop
+message/rfc822=org.xfce.mousepad.desktop
+application/x-sweethome3d=sweethome3d.desktop
+video/x-matroska=mpv.desktop
 
 [Added Associations]
 image/jpeg=xfce4-web-browser.desktop;gcr-viewer.desktop;viewnior.desktop;
@@ -49,3 +53,7 @@ inode/directory=thunar.desktop;
 application/json=org.xfce.mousepad.desktop;
 application/x-wine-extension-ini=org.xfce.mousepad.desktop;
 image/webp=viewnior.desktop;
+text/markdown=org.xfce.mousepad.desktop;
+message/rfc822=org.mozilla.Thunderbird.desktop;org.xfce.mousepad.desktop;
+application/x-sweethome3d=org.xfce.mousepad.desktop;sweethome3d.desktop;
+video/x-matroska=mpv.desktop;
