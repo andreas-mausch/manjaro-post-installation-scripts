@@ -39,6 +39,7 @@ sudo pacman -S --needed --noconfirm \
   noto-fonts-emoji \
   pass \
   peek \
+  progress \
   pv \
   python-eyed3 \
   python-qdarkstyle \
