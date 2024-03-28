@@ -29,6 +29,7 @@ text/markdown=org.xfce.mousepad.desktop
 message/rfc822=org.xfce.mousepad.desktop
 application/x-sweethome3d=sweethome3d.desktop
 video/x-matroska=mpv.desktop
+video/quicktime=mpv.desktop
 
 [Added Associations]
 image/jpeg=xfce4-web-browser.desktop;gcr-viewer.desktop;viewnior.desktop;
@@ -57,3 +58,4 @@ text/markdown=org.xfce.mousepad.desktop;
 message/rfc822=org.mozilla.Thunderbird.desktop;org.xfce.mousepad.desktop;
 application/x-sweethome3d=org.xfce.mousepad.desktop;sweethome3d.desktop;
 video/x-matroska=mpv.desktop;
+video/quicktime=mpv.desktop;
