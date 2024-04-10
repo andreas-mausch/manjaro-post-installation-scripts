@@ -37,6 +37,7 @@ sudo pacman -S --needed --noconfirm \
   ncdu \
   neofetch \
   noto-fonts-emoji \
+  paperkey \
   pass \
   peek \
   progress \
