@@ -36,6 +36,7 @@ sudo pacman -S --needed --noconfirm \
   miller \
   ncdu \
   neofetch \
+  net-tools \
   nmap \
   noto-fonts-emoji \
   paperkey \
