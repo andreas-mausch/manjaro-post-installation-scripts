@@ -94,6 +94,11 @@ mkdir -p ~/.local/share/gtksourceview-4/styles/
 wget --quiet --directory-prefix ~/.local/share/gtksourceview-4/styles/ https://raw.githubusercontent.com/dracula/mousepad/3964d841ec8fa6f5b63000cc95643977b172f577/dracula.xml
 gsettings set org.xfce.mousepad.preferences.view color-scheme "dracula"
 
+# Note: Inline-Code-Blocks are not displayed correctly, see here:
+# https://github.com/dracula/mousepad/pull/4
+# In dracula.xml you need to change the "background" to "purple" in this line:
+# <style name="def:inline-code"             foreground="background"/>
+
 # Default applications
 
 cp ./mimeapps.list ~/.config/
