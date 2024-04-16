@@ -7,6 +7,7 @@ code --install-extension Vue.volar
 code --install-extension stylelint.vscode-stylelint
 code --install-extension patbenatar.advanced-new-file
 code --install-extension rangav.vscode-thunder-client
+code --install-extension jebbs.plantuml
 
 mkdir -p ~/.config/Code\ -\ OSS/User/
 cp ./settings.json ~/.config/Code\ -\ OSS/User/
