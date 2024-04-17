@@ -119,7 +119,10 @@
     </property>
     <property name="plugin-1" type="string" value="pulseaudio">
       <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
-      <property name="enable-mpris" type="bool" value="false"/>
+      <property name="enable-mpris" type="bool" value="true"/>
+      <property name="enable-multimedia-keys" type="bool" value="true"/>
+      <property name="rec-indicator-persistent" type="bool" value="true"/>
+      <property name="multimedia-keys-to-all" type="bool" value="false"/>
     </property>
   </property>
   <property name="configver" type="int" value="2"/>

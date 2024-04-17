@@ -8,8 +8,6 @@ mkdir -p ~/.config/audacious/
 cp ./config ~/.config/audacious/
 echo "skin=`realpath ~/.local/share/audacious/Skins/135799-winamp_classic.wsz`" >> ~/.config/audacious/config
 
-# There is a file *~/.config/audacious/plugin-registry*,
-# but it's format is rather unconvenient to copy the whole file over here.
-# Instead, make sure to enable the Options/Plugins/General/Global Hotkeys plugin.
-# I have removed VolumeUp/Down/Mute as this is already covered by PipeWire,
-# but now you can use the system-wide shortcut for XF86AudioPlay!
+# There is a "Global Hotkeys plugin", but I'd rather let the
+# PulseAudio panel plugin for XFCE control the media keys,
+# see xfce/xfce4-panel.xml
