@@ -102,3 +102,7 @@ gsettings set org.xfce.mousepad.preferences.view color-scheme "dracula"
 # Default applications
 
 cp ./mimeapps.list ~/.config/
+
+# Mute the microphone on login
+mkdir -p ~/.config/autostart/
+cp ./Mute Microphone.desktop ~/.config/autostart/

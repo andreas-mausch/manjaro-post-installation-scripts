@@ -14,6 +14,3 @@ echo "skin=`realpath ~/.local/share/audacious/Skins/135799-winamp_classic.wsz`" 
 # There is a "Global Hotkeys plugin", but I'd rather let the
 # PulseAudio panel plugin for XFCE control the media keys,
 # see xfce/xfce4-panel.xml
-
-# This might not be the right place, but mute the microphone on login
-echo "amixer set Capture nocap" >> ~/.profile
