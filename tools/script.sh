@@ -39,6 +39,7 @@ sudo pacman -S --needed --noconfirm \
   net-tools \
   nmap \
   noto-fonts-emoji \
+  openpgp-card-tools \
   paperkey \
   pass \
   peek \
