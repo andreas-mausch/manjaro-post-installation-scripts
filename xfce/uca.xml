@@ -43,6 +43,20 @@
 </action>
 <action>
 	<icon></icon>
+	<name>Copy directory path</name>
+	<unique-id>1893637941349277-1</unique-id>
+	<command>echo -n &quot;%d&quot; | xclip -selection clipboard</command>
+	<description>Copy directory path with quotes to clipboard</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon></icon>
 	<name>EXIF Metadata</name>
 	<unique-id>1626637941359398-1</unique-id>
 	<command>exiv2 -pa %f | GDK_SCALE=1 GTK_THEME=Matcha:dark zenity --width=1280 --height=720 --text-info --title=&quot;Exif Metadata&quot; --font=&quot;DejaVu Sans Mono&quot;</command>
