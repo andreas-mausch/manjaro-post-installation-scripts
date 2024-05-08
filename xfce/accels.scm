@@ -123,3 +123,4 @@
 (gtk_accel_path "<Actions>/ThunarActions/uca-action-1893637941349276-1" "<Primary><Shift>c")
 (gtk_accel_path "<Actions>/ThunarActions/uca-action-1893637941349277-1" "<Primary><Shift>d")
 (gtk_accel_path "<Actions>/ThunarActions/uca-action-9392037941312943-1" "<Primary><Shift>i")
+(gtk_accel_path "<Actions>/ThunarActions/uca-action-1367866030392833-1" "<Primary><Shift>t")
