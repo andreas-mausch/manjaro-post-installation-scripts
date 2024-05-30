@@ -1,5 +1,6 @@
 # bless: hex editor
 # dive: A tool for exploring layers in a docker image
+# dog: DNS lookup tool, alternative to dig
 # dry: Docker TUI manager
 # figlet: Prints a text in big ascii art in the terminal
 # gpxsee: Show .gpx or .jpeg files on a map
@@ -21,6 +22,7 @@ sudo pacman -S --needed --noconfirm \
   dhex \
   dive \
   dnsutils \
+  dog \
   dos2unix \
   doublecmd-gtk2 \
   fdupes \
