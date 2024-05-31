@@ -23,12 +23,44 @@ Make sure to install these to have `intel_gpu_top` and `intel_gpu_frequency` ava
 sudo pacman -S intel-gpu-tools intel-media-driver libva-utils
 ```
 
-# tlp
+# Power saving tools
 
-I use tlp to limit the CPU and GPU frequencies.
+## cpupower
 
-Reducing the GPU frequency helped a lot to save some power on YouTube videos.
-If you play games you want to increase it of course.
+[https://github.com/deinstapel/cpupower](https://github.com/deinstapel/cpupower)
+
+```bash
+sudo pacman -S cpupower
+systemctl status cpupower.service
+systemctl start cpupower.service
+systemctl enable cpupower.service
+```
+
+```{data-filename=/etc/default/cpupower}
+governor='powersave'
+max_freq="2.4GHz"
+```
+
+In `powersave` mode the fans don't turn on on 100% CPU on all cores, even after over a minute.
+This is great.
+
+The only downside: I couldn't find a setting to limit GPU frequency.
+But for my daily YouTube consumption it doesn't drain much, anyway.
+
+## throttled
+
+[https://github.com/erpalma/throttled](https://github.com/erpalma/throttled)
+
+Not using it anymore.
+
+## tlp
+
+Not using it anymore.
+
+~~I use tlp to limit the CPU and GPU frequencies.~~
+
+~~Reducing the GPU frequency helped a lot to save some power on YouTube videos.~~
+~~If you play games you want to increase it of course.~~
 
 ```bash
 sudo pacman -S tlp
@@ -38,8 +70,6 @@ systemctl enable tlp.service
 ```
 
 ```{data-filename=/etc/tlp.conf}
-...
-
 TLP_DEFAULT_MODE=BAT
 TLP_PERSISTENT_DEFAULT=1
 
@@ -51,6 +81,4 @@ INTEL_GPU_BOOST_FREQ_ON_BAT=500
 
 CPU_MAX_PERF_ON_BAT=40
 CPU_BOOST_ON_BAT=0
-
-...
 ```
