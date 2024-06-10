@@ -1,0 +1,4 @@
+# https://github.com/yt-dlp/yt-dlp#output-template
+-o "%(upload_date>%Y-%m-%d)s %(title)+.100U [%(id)s]"
+
+--format-sort ext:mp4,res:720,fps:30
