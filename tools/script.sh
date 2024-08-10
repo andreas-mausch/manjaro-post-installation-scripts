@@ -29,6 +29,7 @@ sudo pacman -S --needed --noconfirm \
   figlet \
   gnome-clocks \
   gnucash \
+  gnu-netcat \
   gpxsee \
   handbrake \
   httpie \
