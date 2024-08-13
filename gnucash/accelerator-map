@@ -245,7 +245,7 @@
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/FilePrintAction" "<Primary>p")
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/GotoDateAction" "<Primary>g")
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/JumpLinkedInvoiceAction" "")
-; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/JumpTransactionAction" "")
+(gtk_accel_path "<Actions>/GncPluginPageRegisterActions/JumpTransactionAction" "<Alt>j")
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/LinkedTransactionOpenAction" "")
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/LinkTransactionAction" "")
 ; (gtk_accel_path "<Actions>/GncPluginPageRegisterActions/PasteTransactionAction" "")
