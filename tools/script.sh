@@ -28,7 +28,6 @@ sudo pacman -S --needed --noconfirm \
   fdupes \
   figlet \
   gnome-clocks \
-  gnucash \
   gnu-netcat \
   gpxsee \
   handbrake \
