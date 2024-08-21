@@ -59,6 +59,7 @@ sudo pacman -S --needed --noconfirm \
   xclip \
   xorg-xfd \
   xorg-xinput \
+  xsv \
   yt-dlp \
   zenith
 paru -S --needed --noconfirm \
