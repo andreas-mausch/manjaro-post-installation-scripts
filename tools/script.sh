@@ -42,9 +42,11 @@ sudo pacman -S --needed --noconfirm \
   nmap \
   noto-fonts-emoji \
   openpgp-card-tools \
+  optipng \
   paperkey \
   pass \
   peek \
+  pngquant \
   progress \
   pv \
   python-eyed3 \
