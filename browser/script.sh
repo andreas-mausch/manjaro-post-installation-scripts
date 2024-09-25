@@ -32,6 +32,9 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # [0=do not check; 1=check all (default); 2=check EVSSL Certs only]
 # security.OCSP.enabled=0
 
+# Disable PPA (Privacy Preserving Attribution)
+# dom.private-attribution.submission.enabled=false
+
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
 
