@@ -16,3 +16,8 @@ cp ./accels ~/.config/geeqie/
 # Show file list: Ctrl+H
 # Fullscreen: F
 # Info overlay: I
+
+# OSD:
+# %formatted.SubjectDistance%%Exif.OlympusFi.FocusDistance%
+# %formatted.FocalLength% (35mm: %formatted.FocalLength35mmFilm%)
+# %lua.lensID%
