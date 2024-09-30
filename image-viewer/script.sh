@@ -3,6 +3,9 @@ sudo pacman -S --needed --noconfirm geeqie
 mkdir -p ~/.config/geeqie/
 cp ./accels ~/.config/geeqie/
 
+# Bug: geeqie loses all settings from time to time. :(
+# https://github.com/BestImageViewer/geeqie/issues/1287
+
 # Set this in geeqierc.xml or in Preferences/Behavior/Play video by left click on image
 # image_l_click_video = "true"
 # https://github.com/BestImageViewer/geeqie/issues/728
