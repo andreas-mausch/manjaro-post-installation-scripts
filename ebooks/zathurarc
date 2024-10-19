@@ -1,0 +1,7 @@
+# There is no real option for open zathura maximized
+# (this is not fullscreen mode, but just a maximized window),
+# so set the dimensions to high values
+set window-height 3000
+set window-width 3000
+
+set selection-clipboard clipboard
