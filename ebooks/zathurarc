@@ -5,3 +5,5 @@ set window-height 3000
 set window-width 3000
 
 set selection-clipboard clipboard
+
+set adjust-open "best-fit"
