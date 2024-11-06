@@ -35,6 +35,10 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # Disable PPA (Privacy Preserving Attribution)
 # dom.private-attribution.submission.enabled=false
 
+# Don't save addresses
+# extensions.formautofill.addresses.enabled=false
+# extensions.formautofill.addresses.capture.enabled=false
+
 # Use google.de instead of google.com:
 # https://mycroftproject.com/google-search-plugins.html
 
