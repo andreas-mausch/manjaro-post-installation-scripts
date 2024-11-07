@@ -32,7 +32,6 @@ sudo pacman -S --needed --noconfirm \
   gpxsee \
   handbrake \
   httpie \
-  jq \
   kid3 \
   meld \
   miller \
@@ -63,6 +62,7 @@ sudo pacman -S --needed --noconfirm \
   xorg-xinput \
   xsv \
   yt-dlp \
+  yq \
   zenith
 paru -S --needed --noconfirm \
   altair \
