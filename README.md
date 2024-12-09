@@ -17,6 +17,15 @@ sudo pacman -S base-devel
 ./post-installation.sh clock pacman shortcuts shell slock slick-greeter boot-animation bluetooth xfce notifications git browser chat mpv albert calculator vscode fsearch tools image-viewer ebooks wireshark pcspeaker mongo qemu autorandr neovim helix yt-dlp gnucash
 ```
 
+Note: Some packages require manual configurtion after installation.
+These packages are:
+
+- boot-animation
+- browser
+- qemu
+
+See there `script.sh` files for instructions.
+
 # HiDPI
 
 Here are my HiDPI settings for Xfce.
