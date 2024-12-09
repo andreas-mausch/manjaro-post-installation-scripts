@@ -1,5 +1,5 @@
-sudo pacman -S --needed --noconfirm gajim python-gnupg python-gpgme python-axolotl python-qrcode farstream gstreamer gst-libav gst-plugin-gtk gst-plugins-base gst-plugins-ugly gsound gspell
-sudo pacman -S --needed --noconfirm python-gnupg python-gpgme python-axolotl python-qrcode
+sudo pacman -S --needed --noconfirm gajim python-gnupg python-gpgme python-axolotl-curve25519 python-qrcode farstream gstreamer gst-libav gst-plugin-gtk gst-plugins-base gst-plugins-ugly gsound gspell
+sudo pacman -S --needed --noconfirm python-gnupg python-gpgme python-qrcode
 sudo pacman -S --needed --noconfirm farstream gstreamer gst-libav gst-plugin-gtk gst-plugins-base gst-plugins-ugly gsound gspell libvoikko nuspell hunspell
 
 # omemo is not a plugin anymore, but merged into Gajim:
