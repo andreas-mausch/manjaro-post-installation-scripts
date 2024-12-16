@@ -4,6 +4,7 @@
 # dry: Docker TUI manager
 # figlet: Prints a text in big ascii art in the terminal
 # gpxsee: Show .gpx or .jpeg files on a map
+# k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
 # meld: Compare files
 # miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
@@ -32,6 +33,7 @@ sudo pacman -S --needed --noconfirm \
   gpxsee \
   handbrake \
   httpie \
+  k3b \
   kid3 \
   meld \
   miller \
