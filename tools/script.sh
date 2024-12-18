@@ -33,7 +33,7 @@ sudo pacman -S --needed --noconfirm \
   gpxsee \
   handbrake \
   httpie \
-  k3b \
+  k3b cdrtools cdrdao dvd+rw-tools \
   kid3 \
   meld \
   miller \
