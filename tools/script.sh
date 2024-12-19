@@ -45,6 +45,7 @@ sudo pacman -S --needed --noconfirm \
   openpgp-card-tools \
   optipng \
   paperkey \
+  par2cmdline \
   pass \
   peek \
   pngquant \
