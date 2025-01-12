@@ -11,6 +11,7 @@
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
+# yad: Show dialogs from command line; Alternative for zenith
 # zenith: top replacement
 
 sudo pacman -S --needed --noconfirm \
@@ -64,6 +65,7 @@ sudo pacman -S --needed --noconfirm \
   xorg-xfd \
   xorg-xinput \
   xsv \
+  yad \
   yt-dlp \
   yq \
   zenith
