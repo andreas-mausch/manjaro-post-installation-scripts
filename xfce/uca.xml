@@ -3,36 +3,44 @@
 <action>
 	<icon>Terminal</icon>
 	<name>Terminal</name>
+	<submenu></submenu>
 	<unique-id>1367866030392833-1</unique-id>
 	<command>exo-open --working-directory %f --launch TerminalEmulator</command>
 	<description></description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 </action>
 <action>
 	<icon>stock_folder</icon>
 	<name>Thunar Root</name>
+	<submenu></submenu>
 	<unique-id>1367866030392883-2</unique-id>
 	<command>pkexec thunar %f</command>
 	<description>Thunar Root</description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 </action>
 <action>
 	<icon>system-search</icon>
 	<name>Search</name>
+	<submenu></submenu>
 	<unique-id>1367866030392913-3</unique-id>
 	<command>catfish %f</command>
 	<description>find files and folders</description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 </action>
 <action>
 	<icon></icon>
-	<name>Copy file path</name>
+	<name>File path</name>
+	<submenu>Copy</submenu>
 	<unique-id>1893637941349276-1</unique-id>
 	<command>echo -n &quot;%F&quot; | xclip -selection clipboard</command>
 	<description>Copy file path with quotes to clipboard</description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 	<audio-files/>
@@ -43,10 +51,12 @@
 </action>
 <action>
 	<icon></icon>
-	<name>Copy directory path</name>
+	<name>Directory path</name>
+	<submenu>Copy</submenu>
 	<unique-id>1893637941349277-1</unique-id>
 	<command>echo -n &quot;%d&quot; | xclip -selection clipboard</command>
 	<description>Copy directory path with quotes to clipboard</description>
+	<range></range>
 	<patterns>*</patterns>
 	<directories/>
 	<audio-files/>
@@ -58,19 +68,55 @@
 <action>
 	<icon></icon>
 	<name>EXIF Metadata</name>
+	<submenu></submenu>
 	<unique-id>1626637941359398-1</unique-id>
 	<command>exiv2 -pa %f | GDK_SCALE=1 GTK_THEME=Matcha:dark zenity --width=1280 --height=720 --text-info --title=&quot;Exif Metadata&quot; --font=&quot;DejaVu Sans Mono&quot;</command>
 	<description>Display tags in metadata</description>
+	<range></range>
 	<patterns>*.jpg;*.jpeg;*.JPG</patterns>
 	<image-files/>
 </action>
 <action>
 	<icon>image-x-generic</icon>
 	<name>Open with geeqie</name>
+	<submenu></submenu>
 	<unique-id>9392037941312943-1</unique-id>
 	<command>geeqie %f</command>
 	<description>Open the selected image with geeqie</description>
+	<range></range>
 	<patterns>*.jpg;*.jpeg;*.JPG;*.png;*.bmp;*.webp;*.gif</patterns>
 	<image-files/>
+</action>
+<action>
+	<icon>edit-move</icon>
+	<name>Rename..</name>
+	<submenu>NAS</submenu>
+	<unique-id>1736711092370668-1</unique-id>
+	<command>pkexec true &amp;&amp; /home/neonew/.local/bin/nas/rename.sh %f</command>
+	<description>Rename a directory or a file on the NAS</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>entry-delete</icon>
+	<name>Delete..</name>
+	<submenu>NAS</submenu>
+	<unique-id>1736711225592009-2</unique-id>
+	<command>pkexec true &amp;&amp; /home/neonew/.local/bin/nas/delete.sh %f</command>
+	<description>Delete a directory or a file on the NAS</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
 </action>
 </actions>
