@@ -88,7 +88,7 @@
 	<image-files/>
 </action>
 <action>
-	<icon>edit-move</icon>
+	<icon>edit</icon>
 	<name>Rename..</name>
 	<submenu>NAS</submenu>
 	<unique-id>1736711092370668-1</unique-id>
@@ -118,5 +118,16 @@
 	<other-files/>
 	<text-files/>
 	<video-files/>
+</action>
+<action>
+	<icon>edit-move</icon>
+	<name>Move here..</name>
+	<submenu>NAS</submenu>
+	<unique-id>1736770998943870-1</unique-id>
+	<command>/home/neonew/.local/bin/nas/move.sh %f</command>
+	<description>Move files inside the NAS</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<directories/>
 </action>
 </actions>
