@@ -45,6 +45,10 @@ echo "export GDK_DPI_SCALE=\${GDK_DPI_SCALE-0.5}" >> ~/.profile
 
 For wine, you need to manually set the dpi in `winecfg`.
 
+# Mounts
+
+See [fstab.md](fstab.md).
+
 # External hard drives
 
 ## Disable UAS
