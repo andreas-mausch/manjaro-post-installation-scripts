@@ -2,6 +2,7 @@
 # dive: A tool for exploring layers in a docker image
 # dog: DNS lookup tool, alternative to dig
 # dry: Docker TUI manager
+# ent: Tool to show entropy of a file
 # figlet: Prints a text in big ascii art in the terminal
 # gpxsee: Show .gpx or .jpeg files on a map
 # k3b: CD/DVD/Blu-Ray disc burn writing
@@ -74,6 +75,7 @@ paru -S --needed --noconfirm \
   apostrophe \
   cpu-x \
   dry-bin \
+  ent \
   otpclient \
   s-tui \
   usql
