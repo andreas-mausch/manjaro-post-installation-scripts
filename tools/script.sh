@@ -1,4 +1,5 @@
 # bless: hex editor
+# cadaver: WebDAV CLI client
 # dive: A tool for exploring layers in a docker image
 # dog: DNS lookup tool, alternative to dig
 # dry: Docker TUI manager
@@ -19,6 +20,7 @@ sudo pacman -S --needed --noconfirm \
   audacity \
   avidemux-qt \
   bless \
+  cadaver \
   cmatrix \
   colordiff \
   cool-retro-term \
