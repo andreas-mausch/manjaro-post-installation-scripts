@@ -20,6 +20,7 @@
 sudo pacman -S --needed --noconfirm \
   audacity \
   avidemux-qt \
+  barcode \
   bless \
   cadaver \
   cmatrix \
