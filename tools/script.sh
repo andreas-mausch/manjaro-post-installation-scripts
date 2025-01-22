@@ -5,6 +5,7 @@
 # dry: Docker TUI manager
 # ent: Tool to show entropy of a file
 # figlet: Prints a text in big ascii art in the terminal
+# glabels: Print labels at an exact position
 # gpxsee: Show .gpx or .jpeg files on a map
 # k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
@@ -32,6 +33,7 @@ sudo pacman -S --needed --noconfirm \
   doublecmd-gtk2 \
   fdupes \
   figlet \
+  glabels \
   gnome-clocks \
   gnu-netcat \
   gpxsee \
