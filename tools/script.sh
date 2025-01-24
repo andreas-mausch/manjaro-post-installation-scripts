@@ -7,6 +7,7 @@
 # figlet: Prints a text in big ascii art in the terminal
 # glabels: Print labels at an exact position
 # gpxsee: Show .gpx or .jpeg files on a map
+# heimdall: Tool suite used to flash firmware (ROMs) onto Samsung Galaxy S devices
 # k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
 # meld: Compare files
@@ -39,6 +40,7 @@ sudo pacman -S --needed --noconfirm \
   gnu-netcat \
   gpxsee \
   handbrake \
+  heimdall \
   httpie \
   k3b cdrtools cdrdao dvd+rw-tools \
   kid3 \
