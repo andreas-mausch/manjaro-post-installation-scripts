@@ -28,3 +28,6 @@ echo "export LESS=-Xr" >> ~/.profile
 echo "export PASSWORD_STORE_SIGNING_KEY=6FB79D6D075A268571DE9E42C2C14B464D7B72E9" >> ~/.profile
 
 echo "export RCLONE_PASSWORD_COMMAND=\"pass rclone/config\"" >> ~/.profile
+
+# https://github.com/ollama/ollama/pull/4508
+echo "export OLLAMA_NOHISTORY=1" >> ~/.profile
