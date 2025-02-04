@@ -39,7 +39,6 @@ sudo pacman -S --needed --noconfirm \
   glabels \
   gnome-clocks \
   gnu-netcat \
-  gpxsee \
   handbrake \
   heimdall \
   httpie \
