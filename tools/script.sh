@@ -12,6 +12,7 @@
 # kid3: MP3-tagger (UI)
 # meld: Compare files
 # miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
+# multipath-tools: kpartx for mounting and extracting files from images
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
@@ -46,6 +47,7 @@ sudo pacman -S --needed --noconfirm \
   kid3 \
   meld \
   miller \
+  multipath-tools \
   ncdu \
   neofetch \
   net-tools \
