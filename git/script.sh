@@ -24,11 +24,12 @@ git config --global pull.rebase true
 git config --global rebase.autoStash true
 git config --global fetch.prune true
 
-git config --global core.pager "delta --side-by-side"
+git config --global core.pager "delta"
 git config --global interactive.diffFilter "delta --color-only"
 git config --global delta.hunk-header-style "omit"
 git config --global delta.line-numbers "true"
 git config --global delta.navigate "true"
+git config --global delta.side-by-side "true"
 
 mkdir -p ~/.config/git/
 cp ./gitk ~/.config/git/
