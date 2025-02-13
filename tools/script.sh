@@ -44,6 +44,7 @@ sudo pacman -S --needed --noconfirm \
   httpie \
   k3b cdrtools cdrdao dvd+rw-tools \
   kid3 \
+  kiwix-desktop \
   meld \
   miller \
   multipath-tools \
