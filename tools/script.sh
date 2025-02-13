@@ -17,6 +17,7 @@
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
 # yad: Show dialogs from command line; Alternative for zenith
+# zeal: offline documentation
 # zenith: top replacement
 
 sudo pacman -S --needed --noconfirm \
@@ -78,6 +79,7 @@ sudo pacman -S --needed --noconfirm \
   yad \
   yt-dlp \
   yq \
+  zeal \
   zenith
 paru -S --needed --noconfirm \
   altair \
