@@ -8,6 +8,7 @@
 # glabels: Print labels at an exact position
 # gpxsee: Show .gpx or .jpeg files on a map
 # heimdall: Tool suite used to flash firmware (ROMs) onto Samsung Galaxy S devices
+# httptap-bin: Track HTTP calls of application
 # k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
 # meld: Compare files
@@ -87,6 +88,7 @@ paru -S --needed --noconfirm \
   cpu-x \
   dry-bin \
   ent \
+  httptap-bin \
   otpclient \
   s-tui \
   usql
