@@ -1,3 +1,4 @@
+# asciinema / svg-term-cli: Record shell commands in an animation cast
 # bless: hex editor
 # cadaver: WebDAV CLI client
 # dive: A tool for exploring layers in a docker image
@@ -23,6 +24,7 @@
 
 sudo pacman -S --needed --noconfirm \
   audacity \
+  asciinema \
   avidemux-qt \
   barcode \
   bless \
@@ -91,4 +93,5 @@ paru -S --needed --noconfirm \
   httptap-bin \
   otpclient \
   s-tui \
+  svg-term-cli \
   usql
