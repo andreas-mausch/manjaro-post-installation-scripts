@@ -15,6 +15,7 @@
 # meld: Compare files
 # miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
 # multipath-tools: kpartx for mounting and extracting files from images
+# oath-toolkit: TOTP / 2FA tool
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
@@ -57,6 +58,7 @@ sudo pacman -S --needed --noconfirm \
   net-tools \
   nmap \
   noto-fonts-emoji \
+  oath-toolkit \
   openpgp-card-tools \
   optipng \
   paperkey \
