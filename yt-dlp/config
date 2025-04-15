@@ -2,3 +2,8 @@
 -o "%(upload_date>%Y-%m-%d)s %(title)+.100U [%(id)s]"
 
 --format-sort ext:mp4,res:720,fps:30
+
+--embed-thumbnail
+--embed-metadata
+--embed-chapters
+--embed-subs

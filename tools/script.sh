@@ -82,7 +82,6 @@ sudo pacman -S --needed --noconfirm \
   xorg-xinput \
   xsv \
   yad \
-  yt-dlp \
   yq \
   zeal \
   zenith
