@@ -5,6 +5,7 @@
 # dog: DNS lookup tool, alternative to dig
 # dry: Docker TUI manager
 # ent: Tool to show entropy of a file
+# fd: A simple, fast and user-friendly alternative to 'find'
 # figlet: Prints a text in big ascii art in the terminal
 # glabels: Print labels at an exact position
 # gpxsee: Show .gpx or .jpeg files on a map
@@ -40,6 +41,7 @@ sudo pacman -S --needed --noconfirm \
   dog \
   dos2unix \
   doublecmd-gtk2 \
+  fd \
   fdupes \
   figlet \
   glabels \
