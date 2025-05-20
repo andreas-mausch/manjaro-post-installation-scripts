@@ -5,6 +5,7 @@
 # dive: A tool for exploring layers in a docker image
 # dog: DNS lookup tool, alternative to dig
 # dry: Docker TUI manager
+# duf: df alternative
 # ent: Tool to show entropy of a file
 # fd: A simple, fast and user-friendly alternative to 'find'
 # figlet: Prints a text in big ascii art in the terminal
@@ -44,6 +45,7 @@ sudo pacman -S --needed --noconfirm \
   dog \
   dos2unix \
   doublecmd-gtk2 \
+  duf \
   fd \
   fdupes \
   figlet \
