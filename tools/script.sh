@@ -16,6 +16,7 @@
 # miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
 # multipath-tools: kpartx for mounting and extracting files from images
 # oath-toolkit: TOTP / 2FA tool
+# oha: HTTP load generator
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
@@ -61,6 +62,7 @@ sudo pacman -S --needed --noconfirm \
   oath-toolkit \
   openpgp-card-tools \
   optipng \
+  oha \
   paperkey \
   par2cmdline \
   pass \
