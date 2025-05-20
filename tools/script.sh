@@ -21,6 +21,7 @@
 # oath-toolkit: TOTP / 2FA tool
 # oha: HTTP load generator
 # peek: GIF recorder
+# procs: ps -ef alternative
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
 # xh: curl alternative for HTTP requests
@@ -75,6 +76,7 @@ sudo pacman -S --needed --noconfirm \
   pass \
   peek \
   pngquant \
+  procs \
   progress \
   pv \
   python-eyed3 \
