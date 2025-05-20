@@ -1,4 +1,4 @@
-sudo pacman -S --needed --noconfirm neovim ripgrep trash-cli ttf-sourcecodepro-nerd
+sudo pacman -S --needed --noconfirm neovim trash-cli ttf-sourcecodepro-nerd
 
 mkdir -p ~/.config/nvim
 git clone --depth 1 https://github.com/AstroNvim/AstroNvim ~/.config/nvim

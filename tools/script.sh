@@ -75,6 +75,7 @@ sudo pacman -S --needed --noconfirm \
   python-eyed3 \
   python-qdarkstyle \
   rclone \
+  ripgrep \
   scapy \
   scrcpy \
   smartmontools \
