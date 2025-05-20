@@ -1,4 +1,5 @@
 # asciinema / svg-term-cli: Record shell commands in an animation cast
+# bandwhich: Monitor network traffic
 # bless: hex editor
 # cadaver: WebDAV CLI client
 # dive: A tool for exploring layers in a docker image
@@ -21,6 +22,7 @@
 # peek: GIF recorder
 # python-eyed3: MP3-tagger (CLI)
 # visidata: TUI spreadsheet multitool
+# xh: curl alternative for HTTP requests
 # yad: Show dialogs from command line; Alternative for zenith
 # zeal: offline documentation
 # zenith: top replacement
@@ -29,6 +31,7 @@ sudo pacman -S --needed --noconfirm \
   audacity \
   asciinema \
   avidemux-qt \
+  bandwhich \
   barcode \
   bless \
   cadaver \
@@ -83,6 +86,7 @@ sudo pacman -S --needed --noconfirm \
   visidata \
   viu \
   xclip \
+  xh \
   xorg-xfd \
   xorg-xinput \
   xsv \
