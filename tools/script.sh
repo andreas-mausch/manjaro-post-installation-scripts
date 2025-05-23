@@ -105,6 +105,7 @@ paru -S --needed --noconfirm \
   dry-bin \
   ent \
   httptap-bin \
+  lazydocker-bin \
   otpclient \
   s-tui \
   svg-term-cli \
