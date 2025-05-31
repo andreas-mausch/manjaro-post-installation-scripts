@@ -50,6 +50,7 @@ sudo pacman -S --needed --noconfirm \
   fd \
   fdupes \
   figlet \
+  fuseiso \
   glabels \
   gnome-clocks \
   gnu-netcat \

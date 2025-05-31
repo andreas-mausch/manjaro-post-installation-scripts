@@ -88,6 +88,18 @@
 	<image-files/>
 </action>
 <action>
+	<icon>media-optical-cd-audio-symbolic</icon>
+	<name>Mount ISO Image</name> 
+	<submenu></submenu>
+	<unique-id>9392037941312944-1</unique-id>
+	<command>fuseiso %f /mnt/iso</command>
+	<description>Mount the selected image file to /mnt/iso</description>
+	<patterns>*.ISO;*.iso;*.nrg;*.bin;*.mdf;*.img</patterns>
+	<startup-notify/>
+	<other-files/>
+	<video-files/>
+</action>
+<action>
 	<icon>edit</icon>
 	<name>Rename..</name>
 	<submenu>NAS</submenu>
