@@ -98,6 +98,7 @@ sudo pacman -S --needed --noconfirm \
   yad \
   yq \
   zeal \
+  zed \
   zenith
 paru -S --needed --noconfirm \
   altair \
