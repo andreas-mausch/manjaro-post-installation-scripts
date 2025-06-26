@@ -7,16 +7,6 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "telemetry": {
-    "metrics": false,
-    "diagnostics": false
-  },
-  "ui_font_size": 16,
-  "buffer_font_size": 14,
-  "autosave": { "after_delay": { "milliseconds": 300 } },
-  "buffer_font_features": {
-    "calt": false
-  },
   "auto_install_extensions": {
     "docker-compose": true,
     "dockerfile": true,
@@ -25,6 +15,20 @@
     "toml": true,
     "vue": true,
     "xml": true
+  },
+  "autosave": { "after_delay": { "milliseconds": 300 } },
+  "buffer_font_family": "DejaVu Sans Mono",
+  "buffer_font_features": {
+    "calt": false
+  },
+  "buffer_font_size": 14,
+  "buffer_font_weight": 100,
+  "buffer_line_height": "standard",
+  "ui_font_family": "DejaVu Sans Mono",
+  "ui_font_size": 14,
+  "telemetry": {
+    "metrics": false,
+    "diagnostics": false
   },
   "theme": {
     "mode": "system",
