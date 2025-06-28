@@ -24,8 +24,8 @@
   "buffer_font_size": 14,
   "buffer_font_weight": 100,
   "buffer_line_height": "standard",
-  "ui_font_family": "DejaVu Sans Mono",
-  "ui_font_size": 14,
+  "show_completions_on_input": false,
+  "show_edit_predictions": false,
   "telemetry": {
     "metrics": false,
     "diagnostics": false
@@ -34,5 +34,8 @@
     "mode": "system",
     "light": "One Light",
     "dark": "Ayu Dark"
-  }
+  },
+  "ui_font_family": "DejaVu Sans Mono",
+  "ui_font_size": 14,
+  "use_autoclose": false
 }
