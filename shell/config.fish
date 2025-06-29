@@ -12,6 +12,13 @@ alias top="zenith"
 alias lg="lazygit"
 alias crt="cool-retro-term --profile \"Green Scanlines Blinking Cursor\" --fullscreen"
 
+function git-bundle-remote
+  mkdir -p /tmp/gitbundlerepo
+  and git clone --mirror $argv /tmp/gitbundlerepo
+  and git -C /tmp/gitbundlerepo bundle create "$(pwd)/$(date --iso-8601)_$(basename -s .git $(git -C /tmp/gitbundlerepo remote get-url origin)).git.bundle" --all
+  and rm -rf /tmp/gitbundlerepo
+end
+
 function scana4
     if test -e scan.jpg
         echo 'File \'scan.jpg\' already exists, aborting.'
