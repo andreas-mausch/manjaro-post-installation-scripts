@@ -10,6 +10,7 @@
 # fd: A simple, fast and user-friendly alternative to 'find'
 # figlet: Prints a text in big ascii art in the terminal
 # glabels: Print labels at an exact position
+# go-yq: yq is s .yaml file parser, similar to jq for .json
 # gpxsee: Show .gpx or .jpeg files on a map
 # heimdall: Tool suite used to flash firmware (ROMs) onto Samsung Galaxy S devices
 # httptap-bin: Track HTTP calls of application
@@ -54,6 +55,7 @@ sudo pacman -S --needed --noconfirm \
   glabels \
   gnome-clocks \
   gnu-netcat \
+  go-yq \
   handbrake \
   heimdall \
   httpie \
@@ -96,7 +98,6 @@ sudo pacman -S --needed --noconfirm \
   xorg-xinput \
   xsv \
   yad \
-  yq \
   zeal \
   zenith
 paru -S --needed --noconfirm \
