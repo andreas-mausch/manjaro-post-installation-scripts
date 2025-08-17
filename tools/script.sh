@@ -9,6 +9,7 @@
 # ent: Tool to show entropy of a file
 # fd: A simple, fast and user-friendly alternative to 'find'
 # figlet: Prints a text in big ascii art in the terminal
+# fname: Generate a random username
 # glabels: Print labels at an exact position
 # go-yq: yq is s .yaml file parser, similar to jq for .json
 # gpxsee: Show .gpx or .jpeg files on a map
@@ -106,6 +107,7 @@ paru -S --needed --noconfirm \
   cpu-x \
   dry-bin \
   ent \
+  fname \
   httptap-bin \
   lazydocker-bin \
   otpclient \
