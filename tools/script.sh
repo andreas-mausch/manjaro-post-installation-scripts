@@ -15,6 +15,7 @@
 # gpxsee: Show .gpx or .jpeg files on a map
 # heimdall: Tool suite used to flash firmware (ROMs) onto Samsung Galaxy S devices
 # httptap-bin: Track HTTP calls of application
+# httrack: Download / archive websites
 # k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
 # meld: Compare files
@@ -60,6 +61,7 @@ sudo pacman -S --needed --noconfirm \
   handbrake \
   heimdall \
   httpie \
+  httrack \
   k3b cdrtools cdrdao dvd+rw-tools \
   kid3 \
   kiwix-desktop \
