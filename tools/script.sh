@@ -81,6 +81,7 @@ sudo pacman -S --needed --noconfirm \
   par2cmdline \
   pass \
   peek \
+  pgpdump \
   pngquant \
   procs \
   progress \
