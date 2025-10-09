@@ -108,6 +108,7 @@ paru -S --needed --noconfirm \
   altair \
   apostrophe \
   cpu-x \
+  diceware \
   dry-bin \
   ent \
   fname \
