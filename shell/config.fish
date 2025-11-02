@@ -10,6 +10,7 @@ set -gx EDITOR helix
 alias clip="xclip -selection clipboard -rmlastnl"
 alias top="zenith"
 alias lg="lazygit"
+alias ip="ip --color=auto"
 alias crt="cool-retro-term --profile \"Green Scanlines Blinking Cursor\" --fullscreen"
 
 function git-bundle-remote
