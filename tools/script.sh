@@ -112,6 +112,7 @@ paru -S --needed --noconfirm \
   dry-bin \
   ent \
   fname \
+  freetube-bin \
   httptap-bin \
   lazydocker-bin \
   otpclient \
