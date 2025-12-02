@@ -110,4 +110,4 @@ cp ./mimeapps.list ~/.config/
 
 # Mute the microphone on login
 mkdir -p ~/.config/autostart/
-cp ./Mute Microphone.desktop ~/.config/autostart/
+cp ./Mute\ Microphone.desktop ~/.config/autostart/
