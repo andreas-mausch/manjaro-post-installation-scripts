@@ -1,5 +1,5 @@
 sudo pacman -S --needed --noconfirm calibre
-paru -S --needed --noconfirm yacreader
+paru -S --needed --noconfirm yacreader-bin
 
 sudo pacman -S --needed --noconfirm tesseract-data-deu tesseract-data-eng
 sudo pacman -S --needed --noconfirm zathura zathura-pdf-mupdf zathura-cb
