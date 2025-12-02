@@ -57,7 +57,6 @@ sudo pacman -S --needed --noconfirm \
   fuseiso \
   glabels \
   gnome-clocks \
-  gnu-netcat \
   go-yq \
   handbrake \
   heimdall \
