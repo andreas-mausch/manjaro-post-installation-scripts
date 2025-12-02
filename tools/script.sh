@@ -49,7 +49,7 @@ sudo pacman -S --needed --noconfirm \
   dnsutils \
   dog \
   dos2unix \
-  doublecmd-gtk2 \
+  doublecmd-qt6 \
   duf \
   fd \
   fdupes \
