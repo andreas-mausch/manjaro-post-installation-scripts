@@ -1,5 +1,5 @@
 sudo pacman -S --needed --noconfirm slock
-sudo pacman -R --noconfirm light-locker xfce4-screensaver
+sudo pacman -R --noconfirm light-locker xfce4-screensaver || true
 
 xfconf-query -c xfce4-session -np /general/LockCommand -t string -s "slock"
 
