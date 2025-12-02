@@ -70,7 +70,6 @@ sudo pacman -S --needed --noconfirm \
   miller \
   multipath-tools \
   ncdu \
-  neofetch \
   net-tools \
   nmap \
   noto-fonts-emoji \
