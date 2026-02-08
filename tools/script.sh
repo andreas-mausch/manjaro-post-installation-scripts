@@ -118,6 +118,7 @@ paru -S --needed --noconfirm \
   httptap-bin \
   lazydocker-bin \
   otpclient \
+  rapidraw-bin \
   s-tui \
   svg-term-cli \
   usql
