@@ -35,12 +35,12 @@
 # zenith: top replacement
 
 sudo pacman -S --needed --noconfirm \
+  adobe-source-code-pro-fonts \
   audacity \
   asciinema \
   avidemux-qt \
   bandwhich \
   barcode \
-  bless \
   cadaver \
   cmatrix \
   colordiff \
@@ -96,6 +96,7 @@ sudo pacman -S --needed --noconfirm \
   scrcpy \
   smartmontools \
   sqlitebrowser \
+  sshfs \
   visidata \
   viu \
   xclip \
@@ -109,6 +110,7 @@ sudo pacman -S --needed --noconfirm \
 paru -S --needed --noconfirm \
   altair \
   apostrophe \
+  bless \
   cpu-x \
   diceware \
   dry-bin \
