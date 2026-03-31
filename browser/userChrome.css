@@ -1,0 +1,9 @@
+/* Hide tab close button */
+.tabbrowser-tab .tab-close-button {
+  display: none !important;
+}
+
+/* Hide tab mute/unmute icon */
+.tabbrowser-tab .tab-icon-overlay {
+  display: none !important;
+}

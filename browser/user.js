@@ -33,3 +33,6 @@ user_pref("dom.private-attribution.submission.enabled", false);
 // Don't save addresses
 user_pref("extensions.formautofill.addresses.enabled", false);
 user_pref("extensions.formautofill.addresses.capture.enabled", false);
+
+// Enable userChrome.css
+user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
