@@ -34,5 +34,8 @@ user_pref("dom.private-attribution.submission.enabled", false);
 user_pref("extensions.formautofill.addresses.enabled", false);
 user_pref("extensions.formautofill.addresses.capture.enabled", false);
 
+// Disable built-in VPN
+user_pref("browser.ipProtection.enabled", false);
+
 // Enable userChrome.css
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
