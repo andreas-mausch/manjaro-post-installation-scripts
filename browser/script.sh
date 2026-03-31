@@ -11,5 +11,7 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # Bookmarks and Downloads:
 # chrome://browser/content/places/places.xhtml
 
-# TODO: Apply user.js
+# TODO: Apply <PROFILE_DIR>/user.js
 # TODO: Apply user-privacy-handbuch.de.js
+
+# TODO: Apply <PROFILE_DIR>/chrome/userChrome.css
