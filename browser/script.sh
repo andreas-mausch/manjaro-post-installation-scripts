@@ -12,3 +12,4 @@ sudo pacman -S --needed --noconfirm passff-host firefox-extension-passff
 # chrome://browser/content/places/places.xhtml
 
 # TODO: Apply user.js
+# TODO: Apply user-privacy-handbuch.de.js
