@@ -1,10 +1,10 @@
-# Mozilla User Preferences
-# Privacy-Handbuch, medium strenge user.js (vom 15.07.2024)
-# Download: https://www.privacy-handbuch.de/handbuch_21u.htm
+// Mozilla User Preferences
+// Privacy-Handbuch, medium strenge user.js (vom 15.07.2024)
+// Download: https://www.privacy-handbuch.de/handbuch_21u.htm
 
-#####################
-# Minimale Parameter
-#####################
+// #####################
+// # Minimale Parameter
+// #####################
 
 user_pref("app.normandy.enabled", false);
 user_pref("app.shield.optoutstudies.enabled", false);
@@ -97,9 +97,9 @@ user_pref("webgl.enable-debug-renderer-info", false);
 user_pref("security.ssl.require_safe_negotiation", true);
 user_pref("security.ssl.treat_unsafe_negotiation_as_broken", true);
 
-#####################
-# Moderate Parameter
-#####################
+// #####################
+// # Moderate Parameter
+// #####################
 
 user_pref("browser.formfill.enable", false);
 user_pref("browser.safebrowsing.downloads.remote.url", " ");
@@ -139,9 +139,9 @@ user_pref("webgl.disable-fail-if-major-performance-caveat", true);
 // temporär RESET auf Default
 user_pref("browser.display.use_document_fonts", 1);
 
-##########################
-# Medium strenge Parameter
-##########################
+// ##########################
+// # Medium strenge Parameter
+// ##########################
 
 user_pref("dom.push.enabled", false);
 user_pref("identity.fxaccounts.enabled", false);
@@ -163,9 +163,9 @@ user_pref("signon.rememberSignons", false);
 user_pref("_user.js.prhdb", "medium_15072024");
 
 
-####################
-# Strenge Parameter (hier deaktiviert)
-####################
+// ####################
+// # Strenge Parameter (hier deaktiviert)
+// ####################
 
 // user_pref("browser.chrome.site_icons", false);
 // user_pref("browser.display.use_document_fonts", 0);
