@@ -1,0 +1,1 @@
+cryptdevice=UUID=22941234-ab56-4778-8b90-c3eb12345678:luks-22941234-ab56-4778-8b90-c3eb12345678 root=/dev/mapper/luks-22941234-ab56-4778-8b90-c3eb12345678 rw quiet splash bgrt_disable
