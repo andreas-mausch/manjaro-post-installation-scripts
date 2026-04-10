@@ -49,6 +49,10 @@ For wine, you need to manually set the dpi in `winecfg`.
 
 See [fstab.md](fstab.md).
 
+# Unified Kernel Image (UKI)
+
+See [uki/README.md](uki/README.md).
+
 # External hard drives
 
 ## Disable UAS
