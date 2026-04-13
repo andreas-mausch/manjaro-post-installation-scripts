@@ -1,4 +1,5 @@
-#!/usr/bin/env -S bash -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 # Script to decrypt external USB drives using dm-crypt (plain mode)
 # Key is derived via Argon2 using the drive's serial number
