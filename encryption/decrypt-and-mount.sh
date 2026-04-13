@@ -1,16 +1,27 @@
 #!/usr/bin/env -S bash -e
 
-# Script to decrypt external USB drives
-# using dm-crypt in plain mode
-# with a key derived via Argon2 using the drive's serial number
+# Script to decrypt external USB drives using dm-crypt (plain mode)
+# Key is derived via Argon2 using the drive's serial number
 
-# Usage:    decrypt-and-mount list
-# and then: decrypt-and-mount /dev/sdX
-
-if [[ $# -ne 1 ]]; then
-  echo "Usage: $0 <device-path>"
+usage() {
+  echo "Usage:"
+  echo "  $0 list"
+  echo "  $0 <device-path>"
   exit 1
-fi
+}
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "Error: Required command '$1' not found"
+    exit 1
+  }
+}
+
+for cmd in lsblk udevadm sed cryptsetup openssl udisksctl pass; do
+  require "${cmd}"
+done
+
+[[ $# -eq 1 ]] || usage
 
 if [[ "${1}" == "list" ]]; then
   lsblk --fs --paths --output=+SIZE,TRAN | grep usb
@@ -18,14 +29,25 @@ if [[ "${1}" == "list" ]]; then
 fi
 
 DEVICE_PATH="${1}"
+
+if [[ ! -b "${DEVICE_PATH}" ]]; then
+  echo "Error: '${DEVICE_PATH}' is not a valid block device"
+  exit 1
+fi
+
 SERIAL_NUMBER=$(udevadm info "${DEVICE_PATH}" | sed -n 's/^E: ID_SERIAL_SHORT=//p')
 
-if [[ -z "$SERIAL_NUMBER" ]]; then
+if [[ -z "${SERIAL_NUMBER}" ]]; then
   echo "Error: Could not extract serial number"
   exit 1
 fi
 
 MAPPING_NAME="disk_${SERIAL_NUMBER}"
+
+if [[ -e "/dev/mapper/${MAPPING_NAME}" ]]; then
+  echo "Error: Mapping already exists: ${MAPPING_NAME}"
+  exit 1
+fi
 
 openssl kdf -binary \
   -keylen 64 \
@@ -48,10 +70,12 @@ openssl kdf -binary \
 udisksctl mount --filesystem-type=ext4 --block-device="/dev/mapper/${MAPPING_NAME}"
 
 echo
-echo After usage, you still need to unmount and close the cryptsetup device again.
+echo "✅ Device mounted successfully."
+echo "After usage, you still need to unmount and close the cryptsetup device again."
 echo
-echo "udisksctl unmount --block-device=/dev/mapper/${MAPPING_NAME}"
-echo "sudo cryptsetup close ${MAPPING_NAME}"
+echo "To unmount:"
+echo "  udisksctl unmount --block-device=/dev/mapper/${MAPPING_NAME}"
+echo "  sudo cryptsetup close ${MAPPING_NAME}"
 echo
-echo "And optionally, turn off the disk:"
-echo "udisksctl power-off --block-device=${DEVICE_PATH}"
+echo "Optional power off:"
+echo "  udisksctl power-off --block-device=${DEVICE_PATH}"
