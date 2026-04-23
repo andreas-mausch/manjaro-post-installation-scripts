@@ -28,6 +28,7 @@
 # peek: GIF recorder
 # procs: ps -ef alternative
 # python-eyed3: MP3-tagger (CLI)
+# step-cli: tool to manage certificates (e.g. X.509)
 # visidata: TUI spreadsheet multitool
 # xh: curl alternative for HTTP requests
 # yad: Show dialogs from command line; Alternative for zenith
@@ -97,6 +98,7 @@ sudo pacman -S --needed --noconfirm \
   smartmontools \
   sqlitebrowser \
   sshfs \
+  step-cli \
   visidata \
   viu \
   xclip \
