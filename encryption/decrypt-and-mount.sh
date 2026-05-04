@@ -88,10 +88,9 @@ open_device() {
   # argon2 "HDD123456789" -id -t 4 -k 262144 -p 4 -l 64 -v 13 -r | xxd -plain -revert -cols 999999
   # argon2 "HDD123456789" -id -t 4 -k 262144 -p 4 -r -l 64
   # argon2 "HDD123456789" -id -t 4 -m 18 -p 4 -r -l 64
-  pass disk-encryption | head -n 1 | tr -d '\n' | \
   openssl kdf -binary \
     -keylen 64 \
-    -kdfopt pass:stdin \
+    -kdfopt pass:$(pass disk-encryption | head -n 1 | tr -d '\n') \
     -kdfopt salt:"HDD|Serial:${serial}" \
     -kdfopt iter:4 \
     -kdfopt memcost:262144 \
