@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # dm-crypt (plain) USB helper with Argon2-derived key
+# Example call: pass disk-encryption | head -n 1 | tr -d '\n' | decrypt-and-mount open /dev/sdX
 
 usage() {
   cat <<EOF
@@ -21,7 +22,7 @@ require() {
   }
 }
 
-for cmd in lsblk udevadm sed cryptsetup openssl udisksctl pass; do
+for cmd in lsblk udevadm sed cryptsetup openssl udisksctl; do
   require "$cmd"
 done
 
@@ -88,9 +89,23 @@ open_device() {
   # argon2 "HDD123456789" -id -t 4 -k 262144 -p 4 -l 64 -v 13 -r | xxd -plain -revert -cols 999999
   # argon2 "HDD123456789" -id -t 4 -k 262144 -p 4 -r -l 64
   # argon2 "HDD123456789" -id -t 4 -m 18 -p 4 -r -l 64
+  if [[ -t 0 ]]; then
+    # Interactive terminal → prompt safely
+    read -rsp "Enter encryption key: " secret
+    echo
+  else
+    # Piped input → read from stdin
+    secret="$(cat)"
+  fi
+
+  [[ -n "$secret" ]] || {
+    echo "Error: empty encryption key"
+    exit 1
+  }
+
   openssl kdf -binary \
     -keylen 64 \
-    -kdfopt pass:$(pass disk-encryption | head -n 1 | tr -d '\n') \
+    -kdfopt pass:${secret} \
     -kdfopt salt:"HDD|Serial:${serial}" \
     -kdfopt iter:4 \
     -kdfopt memcost:262144 \
