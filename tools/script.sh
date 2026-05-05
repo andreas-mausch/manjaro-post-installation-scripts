@@ -60,6 +60,7 @@ sudo pacman -S --needed --noconfirm \
   glabels \
   gnome-clocks \
   go-yq \
+  gpg-tui \
   handbrake \
   heimdall \
   httpie \
