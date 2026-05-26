@@ -39,3 +39,6 @@ cp ./lazygit.config.yml ~/.config/lazygit/config.yml
 
 mkdir -p ~/.config/bat/
 cp ./bat.config ~/.config/bat/config
+
+mkdir -p ~/.config/tig/
+cp ./tig.config ~/.config/tig/config
