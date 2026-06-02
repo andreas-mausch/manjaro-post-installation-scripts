@@ -6,11 +6,13 @@ sudo chsh -s /usr/bin/fish "$USER"
 
 paru -S --needed --noconfirm autojump-rs
 
-git clone https://github.com/oh-my-fish/oh-my-fish
-cd ./oh-my-fish
-./bin/install --offline --noninteractive
-cd ..
-rm -rf ./oh-my-fish
+if [ ! -d ~/.local/share/omf ]; then
+  git clone https://github.com/oh-my-fish/oh-my-fish
+  cd ./oh-my-fish
+  ./bin/install --offline --noninteractive
+  cd ..
+  rm -rf ./oh-my-fish
+fi
 
 cp ./fish_prompt.fish ~/.config/fish/functions/
 cp ./fish_variables ~/.config/fish/
