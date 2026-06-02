@@ -4,7 +4,11 @@ set -e
 
 shopt -s globstar
 
-echo "Updating pacman database.."
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
+
+log "Updating pacman database.."
 sudo pacman -Sy
 
 declare -A scripts
@@ -22,17 +26,22 @@ done
 for argument in "$@"
 do
   scriptFile=${scripts[$argument]}
-  echo "Executing ${argument}"
 
   if [ -z "${scriptFile}" ];
   then
-    echo "ERROR: Couldn't find script ${argument}"
+    log "ERROR: Couldn't find script '${argument}'"
     exit 1
   fi
+
+  log "Starting: ${argument}"
 
   folder=$(dirname ${scriptFile})
   filename=$(basename ${scriptFile})
   cd ${folder}
   bash -e ${filename}
   cd - > /dev/null
+
+  log "Finished: ${argument}"
 done
+
+log "All scripts completed successfully"
