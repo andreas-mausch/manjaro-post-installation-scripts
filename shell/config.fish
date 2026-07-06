@@ -12,6 +12,7 @@ alias top="zenith"
 alias lg="lazygit"
 alias ip="ip --color=auto"
 alias crt="cool-retro-term --profile \"Green Scanlines Blinking Cursor\" --fullscreen"
+alias ls="eza --long --git --icons=always"
 
 function git-bundle-remote
   mkdir -p /tmp/gitbundlerepo
