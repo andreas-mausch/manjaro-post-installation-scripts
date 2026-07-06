@@ -7,6 +7,7 @@
 # dry: Docker TUI manager
 # duf: df alternative
 # ent: Tool to show entropy of a file
+# eza: ls replacement
 # fd: A simple, fast and user-friendly alternative to 'find'
 # figlet: Prints a text in big ascii art in the terminal
 # fname: Generate a random username
@@ -57,6 +58,7 @@ sudo pacman -S --needed --noconfirm \
   fdupes \
   figlet \
   fuseiso \
+  eza \
   glabels \
   gnome-clocks \
   go-yq \
