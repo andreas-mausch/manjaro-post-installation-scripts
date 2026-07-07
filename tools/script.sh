@@ -20,6 +20,7 @@
 # hurl: HTTP testing
 # k3b: CD/DVD/Blu-Ray disc burn writing
 # kid3: MP3-tagger (UI)
+# lychee: link checker
 # macchina: System information like neofetch
 # meld: Compare files
 # miller: Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON
@@ -71,6 +72,7 @@ sudo pacman -S --needed --noconfirm \
   k3b cdrtools cdrdao dvd+rw-tools \
   kid3 \
   kiwix-desktop \
+  lychee \
   macchina \
   meld \
   miller \
