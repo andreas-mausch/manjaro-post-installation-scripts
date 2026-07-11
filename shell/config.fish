@@ -12,7 +12,7 @@ alias top="zenith"
 alias lg="lazygit"
 alias ip="ip --color=auto"
 alias crt="cool-retro-term --profile \"Green Scanlines Blinking Cursor\" --fullscreen"
-alias ls="eza --git --icons=always"
+alias ls="eza --binary --git --icons=always"
 alias ll="ls --long"
 
 function git-bundle-remote
