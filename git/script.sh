@@ -42,3 +42,11 @@ cp ./bat.config ~/.config/bat/config
 
 mkdir -p ~/.config/tig/
 cp ./tig.config ~/.config/tig/config
+
+git_activity_file=$(mktemp)
+trap 'rm -f "$git_activity_file"' EXIT
+wget --quiet --output-document="$git_activity_file" https://raw.githubusercontent.com/aaossa/git-activity/ac2ade9a49c202dfbd42c0e189692c5509bc710b/git-activity
+echo "b6541cf893456230d78cb1c45277478eed39f9562e879ac66c742eea8fa58773  $git_activity_file" | sha256sum --check --status
+mkdir -p ~/.local/bin/
+cp "$git_activity_file" ~/.local/bin/git-activity
+chmod +x ~/.local/bin/git-activity
