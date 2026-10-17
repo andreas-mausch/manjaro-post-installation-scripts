@@ -44,6 +44,7 @@
       "pwd": "allow",
       "whoami": "allow",
       "echo *": "allow",
+      "tee *": "allow",
       "date": "allow",
       "test *": "allow",
       "javap *": "allow",
