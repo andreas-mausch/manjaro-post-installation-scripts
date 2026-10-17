@@ -94,7 +94,6 @@ sudo pacman -S --needed --noconfirm \
   procs \
   progress \
   pv \
-  python-eyed3 \
   python-qdarkstyle \
   rclone \
   ripgrep \
@@ -127,6 +126,7 @@ paru -S --needed --noconfirm \
   httptap-bin \
   lazydocker-bin \
   otpclient \
+  python-eyed3 \
   rapidraw-bin \
   s-tui \
   svg-term-cli \
