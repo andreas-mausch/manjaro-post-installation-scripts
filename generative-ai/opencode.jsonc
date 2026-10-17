@@ -1,6 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": false,
+  "plugins": [
+    "opencode-models-discovery@v1.10.0"
+  ],
   "instructions": [
     "~/.config/opencode/personal/personal-profile-protocol.md"
   ],
@@ -64,10 +67,15 @@
       "template": "Lies ~/.config/opencode/personal/personal-profile.md und ~/.config/opencode/personal/personal-observations.md. Führe mit mir eine Feedback-Runde zu meiner Persönlichkeit und Kommunikation durch. Benenne Stärken, Schwächen, wiederkehrende Muster, Veränderungen und mögliche Fehlinterpretationen konkret und ehrlich. Trenne meine Selbstaussagen von deinen Beobachtungen. Frage bei wichtigen Unklarheiten nach. Aktualisiere anschließend das Profil anhand unserer gemeinsamen Ergebnisse und markiere die verwendeten Beobachtungen als ausgewertet. Zusätzlicher Schwerpunkt: $ARGUMENTS"
     }
   },
-  "provider": {
+  "providers": {
     "gaming-desktop": {
-      "options": {
-        "baseURL": "http://gaming-desktop:1235/v1"
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://gaming-desktop:1235/v1",
+        "apiKey": "${LLM_GAMING_DESKTOP_API_KEY}",
+        "modelsDiscovery": {
+          "enabled": true
+        }
       },
       "models": {
         "Qwen3.6-35B-A3B": {
