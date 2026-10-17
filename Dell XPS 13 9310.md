@@ -13,7 +13,7 @@ I am happy to trade off the much better display for some battery life.
 It is close though, because the 9315 is the only Linux laptop I own
 which can almost last as long as my MacBook Air, and I like that very much.
 
-Also, the less input lag on the OLED display is noticable to me.
+Also, the less input lag on the OLED display is noticeable to me.
 
 # Intel tools
 

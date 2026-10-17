@@ -17,7 +17,7 @@ sudo pacman -S base-devel
 ./post-installation.sh clock pacman shortcuts shell slock slick-greeter boot-animation bluetooth xfce notifications git browser chat mpv albert calculator vscode zed fsearch gpx tools image-viewer ebooks wireshark pcspeaker mongo qemu autorandr neovim helix yt-dlp gnucash encryption openpgp
 ```
 
-Note: Some packages require manual configurtion after installation.
+Note: Some packages require manual configuration after installation.
 These packages are:
 
 - boot-animation
