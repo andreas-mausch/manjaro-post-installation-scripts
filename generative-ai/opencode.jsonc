@@ -70,6 +70,36 @@
     }
   },
   "providers": {
+    "gufo": {
+      "name": "gufo",
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "modelsDiscovery": {
+          "enabled": true,
+          "endpoint": "/models",
+          "smartModelName": true
+        }
+      },
+      "models": {
+        "Qwen3.8 Flash Next": {
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          }
+        }
+      }
+    },
     "gaming-desktop": {
       "package": "@opencode-ai/ai/providers/openai-compatible",
       "settings": {
@@ -93,7 +123,7 @@
           },
           "limit": {
             "context": 131072,
-            "output": 16000
+            "output": 16384
           }
         }
       }
