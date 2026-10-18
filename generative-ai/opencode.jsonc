@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "autoupdate": false,
+  "update": "disable",
   "plugins": [
     "opencode-models-discovery@v1.10.0"
   ],
@@ -8,62 +8,54 @@
     "~/.config/opencode/personal/personal-profile-protocol.md"
   ],
   "default_agent": "default",
-  "permission": {
-    "read": {
-      "*": "allow",
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.env.example": "allow"
-    },
-    "edit": "allow",
-    "glob": "allow",
-    "grep": "allow",
-    "bash": {
-      "*": "ask",
-      "git status *": "allow",
-      "git diff *": "allow",
-      "git log *": "allow",
-      "git branch *": "allow",
-      "git show *": "allow",
-      "git ls-files *": "allow",
-      "git rev-parse *": "allow",
-      "git describe *": "allow",
-      "git tag *": "allow",
-      "git remote *": "allow",
-      "git stash list *": "allow",
-      "git for-each-ref *": "allow",
-      "git worktree list *": "allow",
-      "ls *": "allow",
-      "head *": "allow",
-      "tail *": "allow",
-      "find *": "allow",
-      "grep *": "allow",
-      "rg *": "allow",
-      "wc *": "allow",
-      "unzip *": "allow",
-      "pwd": "allow",
-      "whoami": "allow",
-      "echo *": "allow",
-      "tee *": "allow",
-      "date": "allow",
-      "test *": "allow",
-      "javap *": "allow",
-      "mvn *": "allow",
-      "git push *": "deny"
-    },
-    "task": "allow",
-    "skill": "allow",
-    "lsp": "allow",
-    "question": "allow",
-    "webfetch": "allow",
-    "websearch": "allow",
-    "external_directory": {
-      "*": "ask",
-      "~/.config/opencode/personal/*": "allow"
-    },
-    "doom_loop": "ask"
-  },
-  "command": {
+  "permissions": [
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" },
+    { "action": "read", "resource": "*.env.example", "effect": "allow" },
+    { "action": "edit", "resource": "*", "effect": "allow" },
+    { "action": "glob", "resource": "*", "effect": "allow" },
+    { "action": "grep", "resource": "*", "effect": "allow" },
+    { "action": "shell", "resource": "*", "effect": "ask" },
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "git branch *", "effect": "allow" },
+    { "action": "shell", "resource": "git show *", "effect": "allow" },
+    { "action": "shell", "resource": "git ls-files *", "effect": "allow" },
+    { "action": "shell", "resource": "git rev-parse *", "effect": "allow" },
+    { "action": "shell", "resource": "git describe *", "effect": "allow" },
+    { "action": "shell", "resource": "git tag *", "effect": "allow" },
+    { "action": "shell", "resource": "git remote *", "effect": "allow" },
+    { "action": "shell", "resource": "git stash list *", "effect": "allow" },
+    { "action": "shell", "resource": "git for-each-ref *", "effect": "allow" },
+    { "action": "shell", "resource": "git worktree list *", "effect": "allow" },
+    { "action": "shell", "resource": "ls *", "effect": "allow" },
+    { "action": "shell", "resource": "head *", "effect": "allow" },
+    { "action": "shell", "resource": "tail *", "effect": "allow" },
+    { "action": "shell", "resource": "find *", "effect": "allow" },
+    { "action": "shell", "resource": "grep *", "effect": "allow" },
+    { "action": "shell", "resource": "rg *", "effect": "allow" },
+    { "action": "shell", "resource": "wc *", "effect": "allow" },
+    { "action": "shell", "resource": "unzip *", "effect": "allow" },
+    { "action": "shell", "resource": "pwd", "effect": "allow" },
+    { "action": "shell", "resource": "whoami", "effect": "allow" },
+    { "action": "shell", "resource": "echo *", "effect": "allow" },
+    { "action": "shell", "resource": "tee *", "effect": "allow" },
+    { "action": "shell", "resource": "date", "effect": "allow" },
+    { "action": "shell", "resource": "test *", "effect": "allow" },
+    { "action": "shell", "resource": "javap *", "effect": "allow" },
+    { "action": "shell", "resource": "mvn *", "effect": "allow" },
+    { "action": "shell", "resource": "git push *", "effect": "deny" },
+    { "action": "subagent", "resource": "*", "effect": "allow" },
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    { "action": "question", "resource": "*", "effect": "allow" },
+    { "action": "webfetch", "resource": "*", "effect": "allow" },
+    { "action": "websearch", "resource": "*", "effect": "allow" },
+    { "action": "external_directory", "resource": "*", "effect": "ask" },
+    { "action": "external_directory", "resource": "~/.config/opencode/personal/*", "effect": "allow" }
+  ],
+  "commands": {
     "kommunikationsfeedback": {
       "description": "Persönliches Kommunikationsprofil gemeinsam auswerten und aktualisieren",
       "template": "Lies ~/.config/opencode/personal/personal-profile.md und ~/.config/opencode/personal/personal-observations.md. Führe mit mir eine Feedback-Runde zu meiner Persönlichkeit und Kommunikation durch. Benenne Stärken, Schwächen, wiederkehrende Muster, Veränderungen und mögliche Fehlinterpretationen konkret und ehrlich. Trenne meine Selbstaussagen von deinen Beobachtungen. Frage bei wichtigen Unklarheiten nach. Aktualisiere anschließend das Profil anhand unserer gemeinsamen Ergebnisse und markiere die verwendeten Beobachtungen als ausgewertet. Zusätzlicher Schwerpunkt: $ARGUMENTS"
@@ -104,15 +96,15 @@
       "package": "@opencode-ai/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://gaming-desktop:1235/v1",
-        "apiKey": "${LLM_GAMING_DESKTOP_API_KEY}",
+        "apiKey": "{env:LLM_GAMING_DESKTOP_API_KEY}",
         "modelsDiscovery": {
           "enabled": true
         }
       },
       "models": {
         "Qwen3.6-35B-A3B": {
-          "id": "Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-IQ4_XS.gguf",
-          "modalities": {
+          "modelID": "Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-IQ4_XS.gguf",
+          "capabilities": {
             "input": [
               "text",
               "image"
