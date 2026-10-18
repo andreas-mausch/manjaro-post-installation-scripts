@@ -17,6 +17,7 @@ user_pref("browser.compactmode.show", false);
 user_pref("browser.uidensitys", 1);
 user_pref("browser.tabs.firefox-view", false);
 user_pref("browser.tabs.inTitlebar", 1);
+user_pref("browser.urlbar.suggest.searches", false);
 
 user_pref("dom.security.https_first", true);
 user_pref("dom.security.https_first_schemeless", true);
