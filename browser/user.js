@@ -4,6 +4,7 @@ user_pref("extensions.formautofill.creditCards.enabled", false);
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
 user_pref("browser.newtabpage.activity-stream.showSearch", false);
+user_pref("browser.newtabpage.activity-stream.widgets.enabled", false);
 user_pref("browser.newtabpage.pinned", []);
 user_pref("browser.toolbars.bookmarks.visibility", "never");
 user_pref("browser.search.widget.inNavBar", true);
