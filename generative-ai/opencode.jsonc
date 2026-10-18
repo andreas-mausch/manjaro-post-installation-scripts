@@ -94,8 +94,32 @@
             ],
             "output": [
               "text"
-            ]
+            ],
+            // Marks the model as a reasoning model. The #effort options come from `variants` below, not from
+            // `reasoning.effort`, because v2.0.32's `reasoning.toggle` does not surface a `none` variant here.
+            "reasoning": {
+              "supported": true
+              // Cleaner declarative form, once v2 surfaces these for openai-compatible. It would replace the whole
+              // `variants` list below:   "toggle": true,   "effort": ["low", "medium", "xhigh"]
+            }
           },
+          // gufo returns thinking as `reasoning_content`; read it there and replay it on later turns.
+          "compatibility": {
+            "reasoningField": "reasoning_content"
+          },
+          // Default effort for requests with no #variant chosen (gufo's own default is xhigh). A selected variant's
+          // `body` below overrides this same key, so #low/#medium/#xhigh/#none still win over this default.
+          "body": {
+            "reasoning_effort": "low"
+          },
+          // Explicit effort variants. `body` merges straight into the request, and gufo accepts top-level
+          // reasoning_effort (verified via curl). `none` turns thinking off; the model card supports only low/medium/xhigh.
+          "variants": [
+            { "id": "low", "body": { "reasoning_effort": "low" } },
+            { "id": "medium", "body": { "reasoning_effort": "medium" } },
+            { "id": "xhigh", "body": { "reasoning_effort": "xhigh" } },
+            { "id": "none", "body": { "reasoning_effort": "none" } }
+          ],
           "limit": {
             "context": 262144,
             "output": 16384
