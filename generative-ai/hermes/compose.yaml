@@ -1,0 +1,122 @@
+# Hermes stack: gateway + dashboard (pinned Nous image) + community chat Web UI.
+# Adapted from nesquena/hermes-webui docker-compose.three-container.yml, but:
+#   * images pinned (agent tag v0.22.5; WebUI by immutable digest),
+#   * dashboard merged into the agent container (HERMES_DASHBOARD=1) to avoid a 3rd process on the shared home,
+#   * WebUI runs in GATEWAY-BACKEND mode (chat/tools/vision run on the gateway),
+#   * WebUI does NOT mount the agent source: editable-installing agent v0.22.5 into the WebUI venv hits an
+#     unsolvable pin (hermes-agent==pillow13 vs browser-harness==pillow12.3), so we let the gateway do the work.
+services:
+  hermes:
+    image: nousresearch/hermes-agent:v0.22.5
+    container_name: hermes
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:9119:9119"   # dashboard
+      - "127.0.0.1:8642:8642"   # OpenAI-compatible gateway api_server
+
+    command: ["gateway", "run"]
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      # LLM = local gufo server (multimodal) on the host.
+      OPENAI_BASE_URL: "${GUFO_BASE_URL:-http://host.docker.internal:8080/v1}"
+      OPENAI_API_KEY: "${GUFO_API_KEY:-dummy}"
+
+      # OpenAI-compatible API server consumed by the WebUI (and any OpenAI client).
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set in .env}"
+
+      # Built-in dashboard (monitoring, sessions, config).
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_HOST: "0.0.0.0"
+      HERMES_DASHBOARD_PORT: "9119"
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "${DASHBOARD_USER:-admin}"
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${DASHBOARD_PASSWORD:-admin}"
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: "${DASHBOARD_SECRET:-0123456789abcdef}"
+
+      # --- XMPP/Jabber platform plugin (fastfinge/hermes-xmpp-plugin) ---
+      # Non-secret connection settings live here; the JIDs and the bot password are
+      # pulled from .env (git-ignored — JIDs aren't credentials but are personal).
+      # OMEMO stays ON (the plugin default): the adapter OMEMO-encrypts replies to any peer that has
+      # published device keys, so keep OMEMO ENABLED in your client for this chat too — otherwise the
+      # bot's encrypted replies won't be visible on a client that has OMEMO turned off.
+      XMPP_JID: "${XMPP_JID:?XMPP_JID must be set in .env}"
+      XMPP_HOST: "jabbers.one"
+      XMPP_PORT: "5222"
+      XMPP_ALLOWED_USERS: "${XMPP_ALLOWED_USERS:?XMPP_ALLOWED_USERS must be set in .env}"
+      XMPP_HOME_CHANNEL: "${XMPP_HOME_CHANNEL:?XMPP_HOME_CHANNEL must be set in .env}"
+      XMPP_PASSWORD: "${XMPP_PASSWORD:?XMPP_PASSWORD must be set in .env}"
+
+    volumes:
+      - hermes-data:/opt/data
+
+    stdin_open: true
+    tty: true
+
+  hermes-webui:
+    # Community chat-first Web UI for Hermes (nesquena/hermes-webui, MIT) — pinned to a stable version.
+    image: ghcr.io/nesquena/hermes-webui:0.52.492
+    container_name: hermes-webui
+    restart: unless-stopped
+    depends_on:
+      - hermes
+
+    ports:
+      - "127.0.0.1:8787:8787"   # browser chat
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      HERMES_WEBUI_HOST: "0.0.0.0"
+      HERMES_WEBUI_PORT: "8787"
+      HERMES_WEBUI_STATE_DIR: "/home/hermeswebui/.hermes/webui"
+
+      # Route chat to the gateway (single agent runtime = the proven one; keeps tools/vision/memory).
+      HERMES_WEBUI_CHAT_BACKEND: "gateway"
+      HERMES_WEBUI_GATEWAY_BASE_URL: "http://hermes:8642"
+      HERMES_WEBUI_GATEWAY_API_KEY: "${API_SERVER_KEY:?API_SERVER_KEY must be set in .env}"
+      HERMES_WEBUI_GATEWAY_USE_RUNS_API: "true"   # enable tool-approval cards via the Gateway runs API
+      HERMES_API_URL: "http://hermes:8642"
+
+      # Match the agent's runtime UID/GID (its home is owned by 10000) so the WebUI can read/write the shared home.
+      WANTED_UID: "10000"
+      WANTED_GID: "10000"
+
+      # Optional login password for non-loopback exposure (loopback-only by default).
+      HERMES_WEBUI_PASSWORD: "${HERMES_WEBUI_PASSWORD:-}"
+
+    volumes:
+      # Same agent home -> shares config (gufo provider), memory, skills, sessions.
+      - hermes-data:/home/hermeswebui/.hermes
+      # Workspace shown in the file browser.
+      - webui-workspace:/workspace
+
+  speaches:
+    # OpenAI-compatible faster-whisper STT sidecar (pinned stable). hermes-agent points stt.provider=openai here.
+    # Proper /v1/audio/transcriptions API; the faster-whisper model is pre-placed under /srv/llama/models/whisper and mounted READ-ONLY,
+    # so the container never writes there and runs fully offline (no network at inference).
+    image: ghcr.io/speaches-ai/speaches:0.8.3-cpu
+    container_name: speaches
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"          # loopback for testing; the agent reaches it at http://speaches:8000
+    environment:
+      HF_HOME: "/srv-cache"            # faster-whisper reads models from the read-only host mount below
+      HF_HUB_CACHE: "/srv-cache/hub"
+      HF_HUB_OFFLINE: "1"             # never contact the hub (model is pre-placed) -> keeps it local + avoids write attempts
+      TRANSFORMERS_OFFLINE: "1"
+      WHISPER__INFERENCE_DEVICE: "cpu"
+      WHISPER__COMPUTE_TYPE: "int8"
+      WHISPER__MODEL: "Systran/faster-whisper-small"   # Speaches requires an HF repo id resolved from the read-only HF cache (it validates via the model card); a flat folder path is not supported by this image
+      STT_MODEL_TTL: "-1"             # keep the whisper model resident forever (never unload on idle) so the first transcription after idle stays fast
+    volumes:
+      - /srv/llama/models/whisper:/srv-cache:ro   # models stay on /srv, kept separate; read-only
+
+volumes:
+  hermes-data:
+  webui-workspace:
