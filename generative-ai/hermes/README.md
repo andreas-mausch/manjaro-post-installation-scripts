@@ -1,8 +1,9 @@
-# Hermes stack — LLM (gufo) + WebUI + agent-side STT + XMPP (OMEMO)
+# Hermes stack — LLM (gufo) + WebUI + agent-side STT/TTS + XMPP (OMEMO)
 
 A self-hosted, local-first setup that runs the **Hermes agent** with a **local
-`gufo` LLM**, a **ChatGPT-style Web UI**, **offline speech-to-text (STT)**, and an
-**XMPP/Jabber bot** — all pinned by version and fully local (no cloud TTS/STT).
+`gufo` LLM**, a **ChatGPT-style Web UI**, **offline speech-to-text (STT)** and
+**text-to-speech (TTS)**, and an **XMPP/Jabber bot** — all pinned by version and fully
+local (no cloud TTS/STT).
 
 This README is a **fresh-install guide**: it assumes Docker + `docker compose` are
 already installed on a brand-new machine. It documents every deliberate, manual
@@ -12,23 +13,27 @@ adaptation made during bring-up so the stack can be reproduced (and understood).
 
 ## 1. Architecture
 
-Three pinned containers (compose project name `hermes`, ports are loopback-only):
+Four pinned containers (compose project name `hermes`, ports are loopback-only):
 
 | Service | Image (pinned by version) | Purpose | Loopback ports |
 |---|---|---|---|
 | `hermes` | `nousresearch/hermes-agent:v0.22.5` | Gateway: agent runtime, dashboard, OpenAI-compatible `api_server` | `9119` dashboard, `8642` gateway API |
 | `hermes-webui` | `ghcr.io/nesquena/hermes-webui:0.52.492` | Community ChatGPT-like Web UI (gateway-backend mode) | `8787` browser chat |
 | `speaches` | `ghcr.io/speaches-ai/speaches:0.8.3-cpu` | OpenAI-compatible `/v1/audio/transcriptions` (faster-whisper) STT sidecar | `8000` STT API |
+| `localai` | `localai/localai:v4.12.1` | OpenAI-compatible `/v1/audio/speech` (PocketTTS German, voice cloning) TTS sidecar | `8081` TTS API (host `8080` is gufo) |
 
 Data lives in a named volume **`hermes_hermes-data`** (mounted at `/opt/data` in the
 agent — holds `config.yaml`, `.env`, plugins, OMEMO store, sessions, logs). Whisper
 models stay on the host at **`/srv/llama/models/whisper`** and are mounted **read-only**
-into Speaches.
+into Speaches. The TTS weights live on the host at **`/srv/llama/models/pocket-tts/german`**
+and the reference voice at **`../text-to-speech/sample.wav`** (git-ignored) — see
+[`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md).
 
 ```
 Browser ──► hermes-webui:8787 ──(gateway runs API)──► hermes:8642 ──LLM──► gufo (host :8080)
 XMPP peer ─► jabbers.one ─► hermes (xmpp plugin, OMEMO) ──LLM──► gufo
 Voice note ─► hermes-agent ──(stt.provider=openai)──► speaches:8000 ──► faster-whisper
+Spoken reply ─► hermes-agent ──(tts.provider=openai)──► localai:8080 ──► PocketTTS German
 ```
 
 ### Key design decisions (why it looks like this)
@@ -41,6 +46,14 @@ Voice note ─► hermes-agent ──(stt.provider=openai)──► speaches:800
 - **STT = Speaches**, chosen because it exposes a true OpenAI `/v1/audio/transcriptions`;
   whisper.cpp only exposes `/inference`, and Hermes' `api_server` rejects audio content
   parts. Speaches runs **offline** from a pre-placed, read-only model cache.
+- **TTS = LocalAI + pocket-tts backend** (German, voice cloning from a reference wav, fast
+  on CPU). It exposes a true OpenAI `/v1/audio/speech` (incl. opus/mp3 output, which plain
+  whisper/audio.cpp setups don't). The weights are bind-mounted at fixed HF snapshot paths
+  and it runs **offline** (`HF_HUB_OFFLINE=1`). Why this model over the alternatives
+  (Qwen3-TTS, Chatterbox, Kokoro, …) is documented in
+  [`../text-to-speech/2026-10-29 Model Evaluation.md`](../text-to-speech/2026-10-29%20Model%20Evaluation.md).
+  Because gufo occupies host `8080`, LocalAI is published on host `8081`; inside the
+  compose network the agent reaches it at `http://localai:8080`.
 - **XMPP** via the community plugin
   [`fastfinge/hermes-xmpp-plugin`](https://github.com/fastfinge/hermes-xmpp-plugin),
   installed through Hermes' own plugin machinery and **pinned to a commit**.
@@ -57,6 +70,12 @@ Voice note ─► hermes-agent ──(stt.provider=openai)──► speaches:800
    and your own peer JID for the allow-list. Both go in `.env` (see below) — the JIDs
    aren't credentials, but they're personal, so nothing identity-related is tracked.
 4. Disk for the whisper model(s) under `/srv/llama/models/whisper`.
+5. For TTS: the PocketTTS German weights at
+   `/srv/llama/models/pocket-tts/german/model.safetensors` + `tokenizer.json`, and your
+   reference voice at `../text-to-speech/sample.wav` (git-ignored). Without these files the
+   `localai` container won't start (bind mounts use `create_host_path: false` on purpose,
+   so missing files fail loudly instead of silently mounting empty dirs). See
+   [`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md).
 
 ---
 
@@ -121,19 +140,24 @@ XMPP_HOME_CHANNEL=<your own JID>
 ```bash
 cd generative-ai/hermes
 docker compose up -d
-docker compose ps        # all three Up; speaches /health -> 200
+docker compose ps        # all four Up; speaches /health -> 200
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/health
 ```
 
-On first start the agent creates its home + `config.yaml` in the volume.
+On first start the agent creates its home + `config.yaml` in the volume. `localai`'s
+first start can take a long time: it installs the pocket-tts backend online and preloads
+the model (healthcheck allows up to 60 min; then test a real `/v1/audio/speech` call,
+see [`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md)). If you skip the TTS
+assets, `localai` is the only service that fails — stop it with
+`docker compose stop localai` or comment the service out.
 
 ---
 
-## 6. Configure the agent (gufo model + STT) — the "manual" steps, automated
+## 6. Configure the agent (gufo model + STT + TTS) — the "manual" steps, automated
 
 Use Hermes' own CLI (safe; it preserves the file's ownership, so the agent keeps
-permission). Run inside the container. Values below are for **gufo** + **Speaches** with
-**auto-detect** STT language.
+permission). Run inside the container. Values below are for **gufo** + **Speaches** +
+**LocalAI** with **auto-detect** STT language.
 
 ```bash
 H="/opt/hermes/.venv/bin/hermes"
@@ -151,6 +175,14 @@ X stt.openai.base_url "http://speaches:8000/v1"
 X stt.openai.api_key  "not-needed"            # MUST be non-empty — see "dummy api key" below
 X stt.openai.model    "Systran/faster-whisper-small"
 X stt.openai.language ""                       # auto-detect language; use "de" to force German
+
+# --- TTS: agent-side, OpenAI API -> LocalAI sidecar (PocketTTS German) ---
+X tts.provider        openai
+X tts.openai.base_url "http://localai:8080/v1"
+X tts.openai.api_key  "not-needed"            # non-empty, same dummy-key contract as STT
+X tts.openai.model    "pocket-tts-german"
+# `voice` is still sent in the request body; LocalAI's pocket-tts backend uses its configured
+# default reference voice (/references/sample.wav), so the value is cosmetic here.
 
 docker compose restart hermes
 ```
@@ -261,6 +293,12 @@ docker compose exec hermes grep -aE "xmpp connected|Gateway running with" \
 docker compose ps
 curl -s http://127.0.0.1:8000/v1/models | head
 
+# TTS health (LocalAI): model list + real synthesis (details in ../text-to-speech/LocalAI.md)
+curl -s http://127.0.0.1:8081/v1/models | head
+curl -s --fail-with-body -o /tmp/tts-test.wav http://127.0.0.1:8081/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"pocket-tts-german","input":"Hallo, sag mal etwas zu mir.","response_format":"wav"}'
+
 # LLM/vision through the gateway api_server (text + image) -> gufo
 docker compose exec hermes sh -lc 'KEY=$(grep ^API_SERVER_KEY= /opt/data/.env|cut -d= -f2-)
   curl -s -H "Authorization: Bearer $KEY" http://127.0.0.1:8642/v1/models'   # 200 + lists model
@@ -327,13 +365,19 @@ See also [`TODO.md`](./TODO.md).
 - Agent: `nousresearch/hermes-agent:v0.22.5`
 - Web UI: `ghcr.io/nesquena/hermes-webui:0.52.492`
 - STT: `ghcr.io/speaches-ai/speaches:0.8.3-cpu`
+- TTS: `localai/localai:v4.12.1` (pocket-tts backend installed into the `localai-backends`
+  volume on first start — the backend itself comes from LocalAI's live catalog, not pinned)
 - XMPP plugin: `fastfinge/hermes-xmpp-plugin` @ `d01087a7ab4f26d6624622582dc83b2124ba400d`
 
 **Files**
-- `compose.yaml` — three pinned services (+ non-secret `XMPP_*`)
+- `compose.yaml` — four pinned services (+ non-secret `XMPP_*`)
 - `.env` — `API_SERVER_KEY`, `XMPP_PASSWORD` (git-ignored)
 - Volume `hermes_hermes-data` → `/opt/data` (config.yaml, .env, plugins, xmpp_omemo.json, logs)
 - Host `/srv/llama/models/whisper/hub` → read-only whisper cache
+- Host `/srv/llama/models/pocket-tts/german` → read-only PocketTTS German weights
+- Host `../text-to-speech/` → reference voice `sample.wav` (git-ignored) + `LocalAI.md`
+  + the TTS model evaluation
+- Volumes `localai-models` / `localai-backends` / `localai-configuration` / `localai-data`
 
 **Useful commands**
 ```bash

@@ -1,4 +1,4 @@
-# Hermes stack: gateway + dashboard (pinned Nous image) + community chat Web UI.
+# Hermes stack: gateway + dashboard (pinned Nous image) + community chat Web UI + STT/TTS sidecars.
 # Adapted from nesquena/hermes-webui docker-compose.three-container.yml, but:
 #   * images pinned (agent tag v0.22.5; WebUI by immutable digest),
 #   * dashboard merged into the agent container (HERMES_DASHBOARD=1) to avoid a 3rd process on the shared home,
@@ -117,6 +117,90 @@ services:
     volumes:
       - /srv/llama/models/whisper:/srv-cache:ro   # models stay on /srv, kept separate; read-only
 
+  localai:
+    # OpenAI-compatible /v1/audio/speech TTS sidecar (pinned): PocketTTS German with
+    # voice cloning from a pre-placed reference voice, direct CPU backend.
+    # Setup details + model evaluation: ../text-to-speech/ (LocalAI.md).
+    # Host port 8080 is taken by gufo -> published as 8081; in-network use http://localai:8080.
+    image: localai/localai:v4.12.1
+    container_name: localai
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"          # loopback for testing; the agent reaches it at http://localai:8080
+    environment:
+      LOCALAI_MODELS_PATH: /models
+      LOCALAI_BACKENDS_PATH: /backends
+      LOCALAI_CONFIG_DIR: /configuration
+      LOCALAI_DATA_PATH: /data
+      LOCALAI_LOAD_TO_MEMORY: pocket-tts-german
+      LOCALAI_DISABLE_AGENTS: "true"
+      HF_HOME: /models/huggingface
+      HF_HUB_CACHE: /models/huggingface/hub
+      HF_HUB_OFFLINE: "1"              # never download; the German weights are bind-mounted into the HF cache below
+    volumes:
+      # Named volumes carry the backend + LocalAI state (explicit names = stable regardless of project name).
+      - localai-models:/models
+      - localai-backends:/backends
+      - localai-configuration:/configuration
+      - localai-data:/data
+      # German PocketTTS weights + tokenizer, bound at the exact HF snapshot paths the installed backend expects.
+      # Not in git (live under /srv like the whisper models) — place them before first start or the container won't create.
+      - type: bind
+        source: /srv/llama/models/pocket-tts/german/model.safetensors
+        target: /models/huggingface/hub/models--kyutai--pocket-tts/snapshots/3e82814a68665eec246ff649b14c71331f955c06/languages/german/model.safetensors
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /srv/llama/models/pocket-tts/german/tokenizer.json
+        target: /models/huggingface/hub/models--kyutai--pocket-tts-without-voice-cloning/snapshots/4e1e0a3e611c51c0b4ed8174fc10f32a54644303/languages/german/tokenizer.json
+        read_only: true
+        bind:
+          create_host_path: false
+      # Default reference voice (also git-ignored). Lives outside /models so LocalAI never lists it as a model.
+      - type: bind
+        source: ../text-to-speech/sample.wav
+        target: /references/sample.wav
+        read_only: true
+        bind:
+          create_host_path: false
+    configs:
+      - source: pocket-tts-german
+        target: /models/pocket-tts-german.yaml
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        /local-ai backends install pocket-tts --backends-path=/backends
+        exec /local-ai run --models-path=/models
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/readyz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60m               # first start also INSTALLS the pocket-tts backend (needs internet once)
+
+configs:
+  # Embedded model config (Compose >= 2.23.1): LocalAI loads it as the "pocket-tts-german" model.
+  pocket-tts-german:
+    content: |
+      name: pocket-tts-german
+      backend: pocket-tts
+      known_usecases:
+        - tts
+      tts:
+        audio_path: /references/sample.wav
+      options:
+        - "language:german"
+        - "default_voice:/references/sample.wav"
+
 volumes:
   hermes-data:
   webui-workspace:
+  localai-models:
+    name: localai-models
+  localai-backends:
+    name: localai-backends
+  localai-configuration:
+    name: localai-configuration
+  localai-data:
+    name: localai-data
