@@ -3,7 +3,7 @@
 # Every setting is overridable via env vars, e.g.:  HOST=0.0.0.0 PORT=8080 ./gufo-run.sh
 set -euo pipefail
 
-IMAGE="${IMAGE:-ghcr.io/gufo-org/toolboxes/gufo-runtime:0.17.1}"
+IMAGE="${IMAGE:-ghcr.io/gufo-org/toolboxes/gufo-runtime:0.27.0}"
 MODELS_DIR="${MODELS_DIR:-/srv/llama/models/Qwen3.8-Flash-Next-125B-A6B}"
 MODEL="${MODEL:-/models/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf}"
 MTP_MODEL="${MTP_MODEL:-/models/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf}"
