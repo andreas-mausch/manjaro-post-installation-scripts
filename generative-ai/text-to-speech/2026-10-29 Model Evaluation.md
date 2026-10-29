@@ -91,6 +91,50 @@ Obacht: audio.cpp bietet nur Generierung von WAV an, kein MP3 oder OGG. (Obwohl,
 
 Deswegen: Nutzung von LocalAI, was eine OpenAI API anbietet, die opus, mp3 etc. anbietet.
 
+### Benchmark: PocketTTS german vs. german_24l (LocalAI, CPU)
+
+Getestet am 2026-10-29: Wie viel langsamer ist das größere deutsche 24-Layer-Modell
+(`german_24l`) gegenüber dem eingesetzten `german`-Checkpoint?
+
+Setup: LocalAI v4.12.1, CPU-Backend (wie im Hermes-Stack), zwei Server parallel —
+`german` auf 8081 (laufender `localai`-Dienst), `german_24l` in einem Wegwerf-Container
+auf 8082 mit Modell-YAML `language:german_24l` und den Gewichten aus
+`/srv/llama/models/pocket-tts/german_24l`. Jeweils 1 Warmup + 3 Messläufe, alternierend,
+gleicher Text, gemessen mit `curl` `time_total` (inkl. HTTP-Overhead).
+
+Satz 1 („Hallo, das ist ein Test der deutschen Sprachausgabe. Heute probiere ich ein
+groesseres Modell aus und schaue, wie viel Zeit das kostet."):
+
+| Modell | API-Zeit (Ø) | Audio (Ø) | Rechenzeit pro Sekunde Audio |
+|---|---|---|---|
+| german | 2,49 s | 7,81 s | ~0,32 s (~3x schneller als Realtime) |
+| german_24l | 9,84 s | 9,04 s | ~1,09 s (unter Realtime) |
+
+Satz 2 („Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."):
+
+| Modell | API-Zeit (Ø) | Audio (Ø) | Rechenzeit pro Sekunde Audio |
+|---|---|---|---|
+| german | 2,21 s | 6,56 s | ~0,34 s (~3x schneller als Realtime) |
+| german_24l | 8,52 s | 7,76 s | ~1,10 s (unter Realtime) |
+
+Ergebnis: `german_24l` ist ~4x langsamer (pro Sekunde Audio ~3,4–3,9x) und erreicht auf
+der CPU nicht einmal Realtime-Tempo. Damit verletzt es die Anforderung „5–10x schneller
+als Realtime" deutlich; das aktuelle `german` bleibt die Wahl für Lucy/XMPP.
+zusätzlich spricht `german_24l` denselben Text langsamer (längere Audioausgabe).
+Audioqualität wurde nicht bewertet, nur Geschwindigkeit.
+
+Setup-Hinweise:
+
+- Das `pocket_tts`-Paket (v4.0.1) im LocalAI-Backend unterstützt `german_24l` nativ als
+  `language`-Option. Wichtig: `language:german` mit den 24l-Gewichten zu mounten schlägt
+  fehl (state_dict: Unexpected keys `flow_lm.transformer.layers.6..23`), die Architektur-
+  konfiguration kommt aus der Sprach-Config des Backends.
+- Benötigte Bind-Mounts (analog zum bestehenden `german`-Setup in `../hermes/compose.yaml`):
+  - `model.safetensors` -> `/models/huggingface/hub/models--kyutai--pocket-tts/snapshots/2dd944b099d06bb9edbd221fef138685711d9bf0/languages/german_24l/model.safetensors`
+  - `tokenizer.json` -> `/models/huggingface/hub/models--kyutai--pocket-tts-without-voice-cloning/snapshots/4e1e0a3e611c51c0b4ed8174fc10f32a54644303/languages/german_24l/tokenizer.json`
+- Caveats: Einzelner Rechner, nur je 3 Messungen, CPU-Backend setzt selbst 1 Intraop-Thread
+  (siehe LocalAI.md).
+
 # Ungeeignet
 
 ## Kokoro
