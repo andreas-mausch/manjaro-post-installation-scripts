@@ -185,6 +185,77 @@ Erkenntnisse:
 Fazit: Speed-Technik wäre gegeben; Audioqualität 24l-Q8 vs. german-f32 und eine
 Opus-Konvertierungsstrategie sind noch offen.
 
+### Offene Baustelle: german_24l klingt lokal deutlich schlechter als in der Web-Demo
+
+Ungeklärtes Problem (Stand 2026-10-29 abends): `german_24l` erzeugt **lokal
+Kauderwelsch** — besonders bei Ziffern ("13:05") und englischen Wörtern ("Sprites",
+"gerendered") — während die Demo
+<https://copersian1-pocket-tts-demo.static.hf.space/index.html> mit den Settings
+"German - 24 layer", "juergen (de)", "Standard - quantised, 3x smaller", "8 steps"
+saubere Ausgabe liefert. Das Problem ist nicht auf die Stimme `juergen` beschränkt
+(auch die geklonte sample.wav klingt lokal schlecht); `juergen` ist nur der einzige
+Fall, in dem gute Referenzausgabe nachweislich existiert.
+
+Testfall war jeweils: „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."
+
+Was bereits ausgeschlossen werden konnte:
+
+- **Quantisierung/Präzision:** Die unquantisierte Python-Referenz (f32, LocalAI) klingt
+  lokal genauso schlecht wie Q8_/BF16-GGUF (`e-`, `g-`, `h-`-Dateien). Die Demo nutzt
+  sogar nur INT8. -> Ist es nicht.
+- **Backend/Pfad (Vulkan vs. CPU, Flash-Attention):** mit `--no-fa` und CPU unverändert.
+- **LSD-Steps als simpler Parameter:** Die Python-Referenz (`lsd_decode`, n=8) und
+  `pockettts.cpp --lsd-steps 8` erzeugen beide Früh-Abbrüche (~1,4 s statt ~7-10 s).
+  Die Demo-Portierung kann "8 steps" also nicht auf dieselbe Weise belegen.
+- **„Demo nutzt ein Multilingual-Modell":** Stimmt nicht. `KevinAHM/pocket-tts-onnx`
+  enthält pro einsprachige Kyutai-Checkpoints ein Bundle ("multilingual bundles" =
+  viele Sprachen im Repo, nicht pro Bundle). Ein deutsch/englisches PocketTTS
+  existiert nicht.
+- **„Demo nutzt einen anderen (alten) Checkpoint" allein:** teilweise widerlegt. Die
+  Demo pinnt Voice-Embeddings auf Revision `e041936c` (April) von
+  `kyutai/pocket-tts-without-voice-cloning`; Kyutai hat `languages/german_24l/` danach
+  stillschweigend ersetzt (HEAD `a7056f50`; Modell-ETags und juergen.safetensors
+  unterscheiden sich bei gleicher Dateigröße von unseren `/srv`-Dateien). Aber: Der
+  April-Checkpoint + April-juergen mit der lokalen Python-Referenz erzeugt ebenfalls
+  Kauderwelsch bzw. Früh-Abbrüche (`i-april-run1/2.wav`). -> Allein der Alters-
+  unterschied erklärt es nicht.
+
+Offene Hypothesen:
+
+1. Die ONNX-Portierung implementiert Sampler (externer Flow-Loop), EOS oder
+   Text-Vorverarbeitung anders als Referenz/GGUF und genau das macht den Qualitäts-
+   unterschied aus.
+2. Der ONNX-Export (April) könnte aus dem **gated** Repo `kyutai/pocket-tts` von einer
+   anderen Revision stammen als der verglichene ungated Zwilling — lokal nicht prüfbar
+   ohne HF-Zugang (Gated-Repo hier nicht gemeldet).
+3. Die Voice-Embeddings der Demo wurden möglicherweise mit dem ONNX-Mimi neu gerechnet
+   und passen nicht 1:1 zu den safetensors-States aus dem HF-Repo.
+
+Zusätzlich aufgefallen (unabhängig vom Qualitätsproblem): Früher EOS-Abbruch der
+Generierung tritt in **allen** Runtimes in etwa jedem 3. Lauf auf (Seed-Lotterie bei
+temp 0.3 / eos_threshold -4). Für den Produktivbetrieb ggf. `eos_threshold` erhöhen
+oder Ausgabe auf Mindestlänge prüfen.
+
+Nächste sinnvolle Schritte:
+
+- In der Demo selbst die Settings durchhören (1 step vs. 8 steps, fp32 vs. quantised,
+  `german` 6L vs. `german_24l`): isoliert, welche Zutat die Qualität trägt.
+- Den ONNX-Stack lokal reproduzieren (onnxruntime + KevinAHM-Dateien + gepinnte
+  Voices): klingt es dort gut, wäre das entweder direkt nutzbare Basis oder man kann die
+  Gewichte daraus in GGUF überführen.
+- Kyutai auf den ausgetauschten Checkpoint ansprechen (Regression bei Ziffern/Englisch?).
+
+Testmaterial (alle `/tmp/opencode`, Satz 2, Voice juergen, locale Runtimes):
+
+| Datei | Runtime/Konfiguration | Urteil |
+|---|---|---|
+| `e-f32-python-juergen.wav` | LocalAI, Python 4.0.1, f32, 1 step | schlecht |
+| `g-bf16-vulkan.wav` | pockettts.cpp, BF16-GGUF, Vulkan | schlecht |
+| `h-bf16-cpu-nofa.wav` | pockettts.cpp, BF16-GGUF, CPU, FP32-Attn | schlecht |
+| `c-cpu-nofa-temp0.wav` | pockettts.cpp, Q8_0, CPU, temp 0 | (nicht bewertet) |
+| `p-steps1.wav` / `p-steps8.wav` | Python 4.0.1, HEAD-Checkpoint, 1/8 steps | 8 steps: Früh-Abbruch |
+| `i-april-run1/2.wav` | Python 4.0.1, April-Checkpoint (e041936c) + April-juergen | Kauderwelsch |
+
 # Ungeeignet
 
 ## Kokoro
