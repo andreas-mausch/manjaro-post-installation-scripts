@@ -18,7 +18,7 @@ docker run --rm \
   --device /dev/kfd \
   --device /dev/dri \
   --ulimit memlock=-1 \
-  -p "127.0.0.1:$PORT:8080" \
+  -p "$PORT:8080" \
   -v "$MODELS_DIR:/models/:ro" \
   "$IMAGE" \
   gufo serve llm \
