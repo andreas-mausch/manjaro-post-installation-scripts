@@ -1,0 +1,3 @@
+# Local-only TTS assets, mounted read-only by ../hermes/compose.yaml — never commit
+sample.txt
+sample.wav
