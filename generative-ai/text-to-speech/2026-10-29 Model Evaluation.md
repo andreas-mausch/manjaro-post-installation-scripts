@@ -135,6 +135,56 @@ Setup-Hinweise:
 - Caveats: Einzelner Rechner, nur je 3 Messungen, CPU-Backend setzt selbst 1 Intraop-Thread
   (siehe LocalAI.md).
 
+## pockettts.cpp (GGUF, Vulkan)
+
+<https://github.com/ServeurpersoCom/pockettts.cpp> — C++17-Port von Pocket TTS auf ggml,
+mit CPU/CUDA/Metal/Vulkan-Backend und zwei Tools: `pocket-tts` (Text -> WAV) und
+`tts-server` (OpenAI-kompatible HTTP-API).
+
+Build (Arch/Manjaro): `git clone --recurse-submodules` + `./buildvulkan.sh`; benötigt
+`vulkan-headers`, `spirv-headers`, `glslang`, `spirv-tools` (hier schon installiert).
+Strix-Halo-iGPU wird von RADV sauber erkannt (Vulkan 1.4, coopmat-Matrix-Cores).
+Getestet am 2026-10-29 mit `pocket-tts-german_24l-Q8_0.gguf` aus
+`/srv/llama/models/pocket-tts/Serveurperso-GGUF/` und Klone-Stimme `sample.wav`:
+
+```bash
+echo "Testtext" | ./build/pocket-tts \
+  --model /srv/llama/models/pocket-tts/Serveurperso-GGUF/pocket-tts-german_24l-Q8_0.gguf \
+  --voice sample.wav --device Vulkan0 -o out.wav
+```
+
+Messwerte (gleiche Sätze wie beim LocalAI-Benchmark; `[TTS]`-Zeilen des Tools = Synthese
+ohne Modell-Ladung (~0,4 s) und Voice-Encoding (~0,6 s), die der CLI pro Prozess separat
+ausweist):
+
+| Backend | Satz 1 (Ø) | Satz 2 (Ø) | Tempo |
+|---|---|---|---|
+| LocalAI CPU, german (Referenz) | 2,49 s | 2,21 s | ~3x Realtime |
+| LocalAI CPU, german_24l (Referenz) | 9,84 s | 8,52 s | ~0,9x (unter Realtime) |
+| pockettts.cpp, CPU | 1,84 s | 1,97 s | 4,5–4,7x, sehr stabil |
+| pockettts.cpp, Vulkan0 | 0,58–1,14 s | 1,29–1,54 s | 5,5–12x, volatil (Bursts bis 17x) |
+| tts-server, Vulkan0, via HTTP | — | ~1,23 s | ~6,6x |
+
+Erkenntnisse:
+
+- **24l wird dadurch nutzbar:** schon der reine CPU-Build macht `german_24l` ~4,6x
+  schneller als Realtime und ist damit sogar schneller als LocalAI mit dem kleinen
+  `german`-Checkpoint. Gründe: alle CPU-Kerne + Q8_0-Quantisierung statt 1 Intraop-Thread
+  + f32 im Python-Backend. Auf Vulkan (~6,6x) ist die 5–10x-Anforderung erfüllt.
+- Vulkan-Taktvolatilität: Zahlen streuen stark (sustained ~6–7x, Bursts 12–17x); nicht
+  thermisch (Tctl ~53 °C), vermutlich Taktstufen des APU. Für belastbare Zahlen länger
+  messen.
+- `tts-server` ist OpenAI-kompatibel: `POST /v1/audio/speech` (`input`, `voice`,
+  `response_format`, `seed`, `temperature`), `GET/POST/DELETE /v1/audio/voices` —
+  Voice-Cloning funktioniert über `POST /v1/audio/voices` mit base64-WAV (bei großen
+  Dateien via `curl --data @datei`, sonst „Argument list too long").
+- Einschränkungen ggü. LocalAI: nur `response_format` `wav`/`pcm` (kein Opus/OGG/MP3 —
+  damals Hauptgrund für LocalAI), registrierte Stimmen sind nach Neustart weg, ein Modell
+  pro Prozess. `pcm` streamt s16le während der Generierung (praktisch für Live-Ausgabe).
+
+Fazit: Speed-Technik wäre gegeben; Audioqualität 24l-Q8 vs. german-f32 und eine
+Opus-Konvertierungsstrategie sind noch offen.
+
 # Ungeeignet
 
 ## Kokoro
