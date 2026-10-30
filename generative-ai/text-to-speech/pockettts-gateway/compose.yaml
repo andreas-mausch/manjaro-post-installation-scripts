@@ -1,0 +1,49 @@
+# Standalone TTS stack: pockettts.cpp (Vulkan) + OpenAI gateway with
+# mp3/opus/aac/flac/wav/pcm. Replaces the localai service of the Hermes stack
+# (details + cutover: README.md).
+name: pockettts-gateway
+
+services:
+  pockettts-gateway:
+    build: .
+    image: local/pocket-tts-vulkan:fab7972
+    container_name: pockettts-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"     # same as localai before; Hermes reaches it via host.docker.internal
+    devices:
+      - /dev/dri:/dev/dri          # iGPU for Vulkan (RADV)
+    group_add:
+      - "${RENDER_GID:-987}"
+      - "${VIDEO_GID:-983}"
+    environment:
+      PKTTS_MODEL: /models/pocket-tts-german_24l_april-Q8_0.gguf
+      PKTTS_VOICES: /models/pocket-tts-german_24l_april-voices.gguf
+      PKTTS_DEVICE: Vulkan0
+      TTS_DEFAULT_VOICE: lucy                     # cloned from REF_WAV at startup + persisted
+      TTS_REF_WAV: /references/sample.wav
+      TTS_MODEL_NAME: pocket-tts-german           # drop-in for the existing Hermes config
+    volumes:
+      - type: bind
+        source: /srv/llama/models/pocket-tts/german_24l
+        target: /models
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../sample.wav
+        target: /references/sample.wav
+        read_only: true
+        bind:
+          create_host_path: false
+      - gateway-state:/data        # persists registered voices across restarts
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  gateway-state:
+    name: pockettts-gateway-state
