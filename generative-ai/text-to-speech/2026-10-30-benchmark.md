@@ -98,7 +98,7 @@ Wichtige Folgerung aus dem Hörvergleich: **Der Qualitätsfaktor ist die
 Modellgröße (24l), nicht das Checkpoint-Alter.** April vs. 2026-09 war beim 6l
 tempo- und qualitätsseitig neutral; erst das 24l bringt die verständliche
 Aussage von „13:05" und „Sprites/gerendered". Ob das 24l zwingend auf April-Basis stehen muss, ist in diesem Benchmark nicht
-gegeneinander gehört (das `Serveurperso-GGUF/pocket-tts-german_24l-Q8_0.gguf`
+gegeneinander gehört (das `german_2026-09_24l/pocket-tts-german_24l-Q8_0.gguf`
 mit 2026-09-Gewichten stünde bereit). Andreas' Notiz dazu: Nach seinen früheren
 Tests klang 24l mit 2026-09-Gewichten **deutlich schlechter** als hier erlebt —
 er vermutet den Releasestand weiterhin als Qualitätsfaktor. Das wäre dann beim
@@ -118,7 +118,8 @@ Persistant in `/srv/llama/models/pocket-tts/`:
   `pocket-tts-german_april-Q8_0.gguf` + `-voices.gguf`, `spm2json.py`
 - `german_24l/` — April-24l: Safetensors,
   `pocket-tts-german_24l_april-Q8_0.gguf` + `-voices.gguf`
-- `german_2026-09/` u. a. — jüngerer Stand; GGUFs davon in `Serveurperso-GGUF/`
+- `german_2026-09/` & `german_2026-09_24l/` — jüngerer Stand (Safetensors +
+  die davon abgeleiteten Serveurperso-GGUFs, Q8_0 + Stimmen)
 
 Arbeitsverzeichnis `/tmp/opencode/tts-bench/` (tmpfs, überlebt keinen Neustart —
 WAVs bei Bedarf sichern): `out/` alle Mess-WAVs (`*-1..3`), `bench-final.jsonl`
@@ -128,7 +129,7 @@ Rohdaten inkl. Tool-Logzeilen, `omnivoice.cpp/` Build, `models/` GGUFs,
 ```bash
 # Pocket-TTS (alle drei Pakete gleich, nur --model wechseln, z. B.:)
 #   german/pocket-tts-german_april-Q8_0.gguf
-#   Serveurperso-GGUF/pocket-tts-german-Q8_0.gguf
+#   german_2026-09/pocket-tts-german-Q8_0.gguf
 #   german_24l/pocket-tts-german_24l_april-Q8_0.gguf
 echo "Testtext" | ~/Documents/coding/tts/pockettts.cpp/build/pocket-tts \
   --model /srv/llama/models/pocket-tts/german_24l/pocket-tts-german_24l_april-Q8_0.gguf \
