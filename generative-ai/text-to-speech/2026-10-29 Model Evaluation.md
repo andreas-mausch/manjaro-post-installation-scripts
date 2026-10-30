@@ -292,6 +292,12 @@ PCM-/FFmpeg-/HTTP-Pipeline funktioniert beim User und wartet nicht auf die
 vollständige Generierung. Streaming-WAV hat unbekannte RIFF-/Datenlängen;
 Clients müssen diese Konvention unterstützen. Details stehen im Gateway-README.
 
+**Voice-State bleibt ausschliesslich im RAM (aktualisierte Entscheidung).**
+Registrierte Stimmen gehen bei Backend-/Container-Neustart oder Absturz bewusst
+verloren; der Gateway speichert und restauriert keinen Laufzeit-State. Nur die
+konfigurierte, read-only gemountete Referenz wird beim Start erneut registriert.
+Modell-Bindmounts bleiben unveraendert; Audio-Konvertierung erfolgt ueber Pipes.
+
 # Ungeeignet
 
 ## Kokoro

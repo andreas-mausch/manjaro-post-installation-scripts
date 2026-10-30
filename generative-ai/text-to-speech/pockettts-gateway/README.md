@@ -20,10 +20,15 @@ bundled Python gateway (`gateway.py`, stdlib only + ffmpeg) adds the
 "ogg" which delivered Vorbis) and encodes from the PCM stream — the client
 receives bytes before the answer is complete.
 
-The gateway also fixes two `pockettts.cpp` shortcomings vs. LocalAI: registered
-voices survive restarts (persisted in the `pockettts-gateway-state` volume) and the reference
-voice `sample.wav` is cloned at startup into voice **`lucy`**, set as the
-default (env `TTS_DEFAULT_VOICE`).
+All runtime voice state lives only in backend RAM. Registered voices are
+intentionally lost on backend/container restart or crash: no persistence,
+restore, rollback, filesystem cache or runtime state volume is used. The external,
+read-only reference `sample.wav` is read at startup and cloned into RAM as
+**`lucy`** by the separate `startup.py` bootstrap. The backend's native
+`--voice lucy` (`PKTTS_SERVER_VOICE`) sets the default. The reference and model
+bind mounts are inputs, not persisted runtime state, and remain unchanged.
+Any old `pockettts-gateway-state` volume is now unused; existing host files and
+volumes are not deleted or migrated.
 
 ## Startup
 
@@ -58,11 +63,25 @@ curl -s http://localhost:8081/v1/audio/voices
 
 Omitting `voice` is fine (→ `lucy`). Register your own reference voices via
 `POST /v1/audio/voices` with `{"name":"…","wav_b64":"…"}` (base64 WAV; for
-large files use `--data @file`); they survive restarts.
-Names are case-insensitive (stored lowercase), with 1 to 100 characters.
-State filenames use SHA-256 instead of lossy character replacement; existing
-registrations migrate on startup. Updates use atomic replacement, and registry
-mutations are serialized. A failed backend deletion retains the saved voice.
+large files use `--data @file`); re-register them after a backend restart.
+Registration, listing and deletion are proxied to the backend, including its
+response body and status. Names are case-insensitive in the backend. Deleting
+`lucy` removes the RAM registration for this run, so requests using the default
+fail until it is re-registered; the configured reference is
+registered again at the next startup. Audio conversion uses FFmpeg pipes only,
+without temporary audio files.
+
+The gateway has no voice configuration, reference loading, name normalization or
+default injection: an absent speech `voice` remains absent, and explicit values
+are forwarded unchanged. Only the backend interprets voice names.
+
+Verified against the pinned [server CLI and adapter](https://github.com/ServeurpersoCom/pockettts.cpp/blob/fab7972/tools/tts-server.cpp):
+`--voice` takes a registry name, not a WAV path. `find_voice` resolves that name
+at synthesis time, checking runtime registrations before built-ins; startup does
+not require the default to be loaded yet. There is no API to change the default.
+The bootstrap waits for the backend, registers the reference once via its native
+API, then execs the gateway. Registration failure prevents gateway startup and
+lets supervision restart the stack rather than silently using another voice.
 
 ## Cutting Hermes over to this stack
 
@@ -91,8 +110,8 @@ afterwards with `docker volume rm`. Details of the old setup:
 | `PKTTS_MODEL` | german_24l_april Q8_0 | GGUF language pack (6l packs work too, see benchmark) |
 | `PKTTS_VOICES` | german_24l_april-voices.gguf | built-in voices (optional) |
 | `PKTTS_DEVICE` | `Vulkan0` | `CPU` as fallback without /dev/dri |
-| `TTS_DEFAULT_VOICE` | `lucy` | voice for requests without one; cloned from REF_WAV |
-| `TTS_REF_WAV` | `/references/sample.wav` | bind mount of the reference |
+| `PKTTS_SERVER_VOICE` | `lucy` | native backend `--voice` default registry name |
+| `PKTTS_REF_WAV` | `/references/sample.wav` | optional startup reference registered under `PKTTS_SERVER_VOICE` |
 | `TTS_MODEL_NAME` | `pocket-tts-german` | outward model id (drop-in) |
 
 ## Operations & limits
@@ -136,4 +155,5 @@ Run `python3 -m unittest -v` in this directory (FFmpeg required for codec tests)
 The tests include real FFmpeg and local HTTP streaming: MP3, Opus, WAV and PCM
 deliver audio before the mock backend finishes; truncated upstream streams and
 expired deadlines must not produce a successful HTTP terminal chunk. They also
-cover encoder errors, health, child exits, persistence and capacity limits.
+cover encoder errors, health, child exits, unchanged voice proxying, separate startup reference
+registration and capacity limits. Codec tests exercise all supported formats.

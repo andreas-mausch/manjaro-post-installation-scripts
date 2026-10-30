@@ -11,8 +11,7 @@ ARGS="--model $MODEL --device $DEVICE --host 127.0.0.1 --port $BACKEND_PORT"
 if [ -n "$VOICES" ] && [ -f "$VOICES" ]; then
     ARGS="$ARGS --voices $VOICES"
 fi
-# tts-server prefers a built-in voice as its default; the gateway sets the
-# target voice per request anyway.
+# The backend resolves this name at synthesis time, after startup registration.
 if [ -n "${PKTTS_SERVER_VOICE:-}" ]; then
     ARGS="$ARGS --voice $PKTTS_SERVER_VOICE"
 fi

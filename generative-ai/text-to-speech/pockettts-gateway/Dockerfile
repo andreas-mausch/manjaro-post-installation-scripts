@@ -19,7 +19,7 @@ RUN pacman -Syu --noconfirm --needed vulkan-icd-loader vulkan-radeon ffmpeg pyth
 COPY --from=build /out/ /usr/local/lib/
 RUN mv /usr/local/lib/tts-server /usr/local/bin/tts-server
 ENV LD_LIBRARY_PATH=/usr/local/lib
-COPY gateway.py supervisor.py entrypoint.sh /opt/tts/
+COPY gateway.py supervisor.py startup.py entrypoint.sh /opt/tts/
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD curl -fsS http://127.0.0.1:8080/health || exit 1

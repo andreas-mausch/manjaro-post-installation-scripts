@@ -43,4 +43,4 @@ def supervise(backend_command, gateway_command):
 
 
 if __name__ == "__main__":
-    sys.exit(supervise(sys.argv[1:], [sys.executable, "/opt/tts/gateway.py"]))
+    sys.exit(supervise(sys.argv[1:], [sys.executable, "/opt/tts/startup.py"]))

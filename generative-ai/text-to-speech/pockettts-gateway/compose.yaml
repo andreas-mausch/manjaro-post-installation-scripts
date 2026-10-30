@@ -20,8 +20,8 @@ services:
       PKTTS_MODEL: /models/pocket-tts-german_24l_april-Q8_0.gguf
       PKTTS_VOICES: /models/pocket-tts-german_24l_april-voices.gguf
       PKTTS_DEVICE: Vulkan0
-      TTS_DEFAULT_VOICE: lucy                     # cloned from REF_WAV at startup + persisted
-      TTS_REF_WAV: /references/sample.wav
+      PKTTS_SERVER_VOICE: lucy                    # native backend default registry name
+      PKTTS_REF_WAV: /references/sample.wav       # registered by startup.py, not the gateway
       TTS_MODEL_NAME: pocket-tts-german           # drop-in for the existing Hermes config
     volumes:
       - type: bind
@@ -36,14 +36,9 @@ services:
         read_only: true
         bind:
           create_host_path: false
-      - gateway-state:/data        # persists registered voices across restarts
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 30s
-
-volumes:
-  gateway-state:
-    name: pockettts-gateway-state

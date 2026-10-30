@@ -6,32 +6,21 @@ The tts-server only speaks wav/pcm. This gateway exposes the same OpenAI API
 additionally serves mp3/opus/aac/flac via ffmpeg transcoding — streamed
 (chunked), i.e. the client receives bytes while generation is still running.
 
-Also persistent: registered voices (the tts-server loses them on restart) and
-the reference voice from TTS_REF_WAV, registered as TTS_DEFAULT_VOICE at
-startup.
-
 Python stdlib only; ffmpeg must be on PATH.
 """
-import base64
-import hashlib
 import json
 import os
 import socket
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import urllib.error
 import urllib.request
-import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BACKEND = os.environ.get("TTS_BACKEND", "http://127.0.0.1:8085")
 PORT = int(os.environ.get("GATEWAY_PORT", "8080"))
-STATE_DIR = os.environ.get("TTS_STATE_DIR", "/data/voices")
-DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "")   # e.g. "lucy"
-REF_WAV = os.environ.get("TTS_REF_WAV", "")               # e.g. /references/sample.wav
 MODEL_NAME = os.environ.get("TTS_MODEL_NAME", "")         # e.g. pocket-tts-german (drop-in)
 
 SAMPLE_RATE = 24000  # the tts-server streams s16le mono at 24 kHz
@@ -111,80 +100,7 @@ class Server(ThreadingHTTPServer):
             self.slots.release()
 
 
-VOICE_LOCK = threading.RLock()
-
-
-def canonical_name(name):
-    if not isinstance(name, str) or not name or len(name) > 100:
-        raise ValueError("voice name must contain 1 to 100 characters")
-    return name.lower()
-
-
-def voice_path(name):
-    digest = hashlib.sha256(canonical_name(name).encode()).hexdigest()
-    return os.path.join(STATE_DIR, digest + ".json")
-
-
-# ---------------------------------------------------------------- voice registry
-
-def store_voice(path, data):
-    if data is None:
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
-        return
-    os.makedirs(STATE_DIR, exist_ok=True)
-    temporary = None
-    try:
-        with tempfile.NamedTemporaryFile(mode="wb", dir=STATE_DIR, suffix=".tmp", delete=False) as f:
-            temporary = f.name
-            f.write(data)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(temporary, path)
-    finally:
-        if temporary and os.path.exists(temporary):
-            os.remove(temporary)
-
-
-def mutate_voice(name, body_json=None):
-    name = canonical_name(name)
-    path = voice_path(name)
-    data = None if body_json is None else json.dumps(dict(body_json, name=name)).encode()
-    with VOICE_LOCK:
-        try:
-            with open(path, "rb") as f:
-                previous = f.read()
-        except FileNotFoundError:
-            previous = None
-        # Fail filesystem operations before changing the live backend registry.
-        store_voice(path, data)
-        try:
-            route = "/v1/audio/voices"
-            if data is None:
-                route += "/" + urllib.parse.quote(name, safe="")
-            with backend_request(route, "DELETE" if data is None else "POST", data, timeout=120) as resp:
-                result = resp.read()
-                if data is None:
-                    return result, resp.status, resp.headers.get("Content-Type", "application/json")
-        except Exception as error:
-            try:
-                store_voice(path, previous)
-            except Exception as rollback_error:
-                message = f"voice '{name}' persistence rollback failed; backend and disk may differ: {error}; {rollback_error}"
-                log("ERROR:", message)
-                raise RuntimeError(message) from rollback_error
-            raise
-
-
-def register_voice(name, body_json):
-    """Persists a registration, restoring previous state if the backend fails."""
-    mutate_voice(name, body_json)
-    log(f"voice '{name}' registered and persisted")
-
-
-def startup_voices():
+def wait_for_backend():
     # Wait for the backend (tts-server is loading the model).
     for _ in range(240):
         try:
@@ -197,38 +113,6 @@ def startup_voices():
         log("ERROR: backend not reachable")
         sys.exit(1)
 
-    # Restore persisted registrations.
-    if os.path.isdir(STATE_DIR):
-        for fn in sorted(os.listdir(STATE_DIR)):
-            if not fn.endswith(".json"):
-                continue
-            try:
-                with open(os.path.join(STATE_DIR, fn)) as f:
-                    body = json.load(f)
-                register_voice(body.get("name", fn), body)
-                # Migrate the previously shipped sanitized filenames.
-                if os.path.join(STATE_DIR, fn) != voice_path(body["name"]):
-                    os.remove(os.path.join(STATE_DIR, fn))
-            except Exception as e:
-                log(f"warning: could not re-activate voice from {fn}: {e}")
-
-    # Register the reference voice as default if not present yet.
-    if DEFAULT_VOICE and REF_WAV and os.path.isfile(REF_WAV):
-        try:
-            with backend_request("/v1/audio/voices", timeout=10) as response:
-                existing = json.load(response)["voices"]
-            have = any(canonical_name(v.get("name") if isinstance(v, dict) else v)
-                       == canonical_name(DEFAULT_VOICE) for v in existing)
-        except Exception as e:
-            log(f"warning: cannot check default voice, leaving it unchanged: {e}")
-            have = True
-        if not have:
-            with open(REF_WAV, "rb") as f:
-                body = {"name": DEFAULT_VOICE, "wav_b64": base64.b64encode(f.read()).decode()}
-            try:
-                register_voice(DEFAULT_VOICE, body)
-            except Exception as e:
-                log(f"warning: reference voice '{DEFAULT_VOICE}' not registered: {e}")
     log("ready")
 
 
@@ -266,13 +150,14 @@ class Handler(BaseHTTPRequestHandler):
     def _end_chunked(self):
         self.wfile.write(b"0\r\n\r\n")
 
-    def _forward_simple(self, path, body=None, method="GET"):
+    def _forward_simple(self, path, body=None, method="GET", timeout=IO_TIMEOUT):
         """Pass non-audio routes through 1:1."""
         try:
-            with backend_request(path, method, body, timeout=IO_TIMEOUT) as resp:
+            with backend_request(path, method, body, timeout=timeout) as resp:
                 data, status, ctype = resp.read(), resp.status, resp.headers.get("Content-Type", "application/json")
         except urllib.error.HTTPError as e:
-            data, status, ctype = e.read(), e.code, e.headers.get("Content-Type", "application/json")
+            with e:
+                data, status, ctype = e.read(), e.code, e.headers.get("Content-Type", "application/json")
         except Exception as e:
             self._send_json(502, {"error": {"message": f"backend: {e}"}})
             return 502
@@ -340,38 +225,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/v1/audio/speech":
             self._speech(body)
         elif self.path == "/v1/audio/voices":
-            try:
-                payload = json.loads(body)
-                register_voice(payload.get("name", ""), payload)
-                self._send_json(200, {"object": "list", "data": [{"id": payload.get("name")}]})
-            except urllib.error.HTTPError as e:
-                self._send_json(e.code, {"error": {"message": e.read().decode(errors="replace")}})
-            except (OSError, RuntimeError) as e:
-                self._send_json(500, {"error": {"message": str(e)}})
-            except Exception as e:
-                self._send_json(400, {"error": {"message": str(e)}})
+            self._forward_simple(self.path, body, "POST", timeout=120)
         else:
             self._send_json(404, {"error": {"message": "not found"}})
 
     def do_DELETE(self):
         if self.path.startswith("/v1/audio/voices/"):
-            try:
-                name = canonical_name(urllib.parse.unquote(self.path.rsplit("/", 1)[-1]))
-                data, status, ctype = mutate_voice(name)
-            except ValueError as e:
-                self._send_json(400, {"error": {"message": str(e)}})
-                return
-            except urllib.error.HTTPError as e:
-                self._send_json(e.code, {"error": {"message": e.read().decode(errors="replace")}})
-                return
-            except Exception as e:
-                self._send_json(500, {"error": {"message": str(e)}})
-                return
-            self.send_response(status)
-            self.send_header("Content-Type", ctype)
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
+            self._forward_simple(self.path, method="DELETE")
         else:
             self._send_json(404, {"error": {"message": "not found"}})
 
@@ -394,8 +254,6 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(text, str) or not text.strip() or len(text) > MAX_INPUT_CHARS:
                 self._send_json(400, {"error": {"message": f"input must contain 1 to {MAX_INPUT_CHARS} characters"}})
                 return
-            if payload.get("voice"):
-                payload["voice"] = canonical_name(payload["voice"])
             fmt = (payload.get("response_format") or "mp3").lower()
         except Exception:
             self._send_json(400, {"error": {"message": "invalid JSON"}})
@@ -403,8 +261,6 @@ class Handler(BaseHTTPRequestHandler):
         if fmt not in FFMPEG_FORMATS and fmt != "pcm":
             self._send_json(400, {"error": {"message": f"response_format '{fmt}' not supported"}})
             return
-        if DEFAULT_VOICE and not payload.get("voice"):
-            payload["voice"] = DEFAULT_VOICE
         payload["response_format"] = "pcm"  # backend streams s16le/24 kHz/mono
 
         try:
@@ -531,5 +387,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    startup_voices()
+    wait_for_backend()
     Server(("0.0.0.0", PORT), Handler).serve_forever()
