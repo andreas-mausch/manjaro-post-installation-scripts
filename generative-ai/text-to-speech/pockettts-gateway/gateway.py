@@ -232,39 +232,64 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(502, {"error": {"message": f"backend: {e}"}})
             return
 
-        self._begin_chunked(200, CONTENT_TYPES[fmt])
+        started = False
+
+        def emit(chunk):
+            nonlocal started
+            if not started:
+                self._begin_chunked(200, CONTENT_TYPES[fmt])
+                started = True
+            self._write_chunk(chunk)
+
         try:
             if fmt == "pcm":
                 while True:
-                    chunk = up.read(65536)
+                    chunk = up.read1(65536)
                     if not chunk:
                         break
-                    self._write_chunk(chunk)
+                    emit(chunk)
             else:
-                self._transcode(up, fmt)
+                self._transcode(up, fmt, emit)
+            if not started:
+                self._begin_chunked(200, CONTENT_TYPES[fmt])
             self._end_chunked()
         except (BrokenPipeError, ConnectionResetError):
             self.close_connection = True  # client aborted
         except Exception as e:
             log("error while streaming:", e)
-            self.close_connection = True
+            if started:
+                self.close_connection = True
+            else:
+                self._send_json(502, {"error": {"message": str(e)}})
+        finally:
+            up.close()
 
-    def _transcode(self, up, fmt):
+    def _transcode(self, up, fmt, emit):
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-loglevel", "error",
              "-f", "s16le", "-ar", str(SAMPLE_RATE), "-ac", "1", "-i", "pipe:0",
              *FFMPEG_FORMATS[fmt], "pipe:1"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        errors = []
+        stderr = bytearray()
+
+        def drain():
+            while True:
+                chunk = ffmpeg.stderr.read1(4096)
+                if not chunk:
+                    break
+                stderr.extend(chunk)
+                del stderr[:-8192]
 
         def feed():
             try:
                 while True:
-                    chunk = up.read(65536)
+                    chunk = up.read1(65536)
                     if not chunk:
                         break
                     ffmpeg.stdin.write(chunk)
-            except (BrokenPipeError, ValueError):
-                pass  # ffmpeg ended earlier (client aborted)
+            except Exception as e:
+                errors.append(e)
             finally:
                 try:
                     ffmpeg.stdin.close()
@@ -272,18 +297,33 @@ class Handler(BaseHTTPRequestHandler):
                     pass
 
         feeder = threading.Thread(target=feed, daemon=True)
+        drainer = threading.Thread(target=drain, daemon=True)
         feeder.start()
+        drainer.start()
         try:
             while True:
-                chunk = ffmpeg.stdout.read(65536)
+                chunk = ffmpeg.stdout.read1(65536)
                 if not chunk:
                     break
-                self._write_chunk(chunk)
-        finally:
+                emit(chunk)
             feeder.join(timeout=10)
+            if feeder.is_alive():
+                raise RuntimeError("upstream feeder did not finish")
+            code = ffmpeg.wait(timeout=10)
+            drainer.join(timeout=10)
+            if errors:
+                raise RuntimeError(f"upstream stream failed: {errors[0]}")
+            if code:
+                raise RuntimeError(f"ffmpeg exited {code}: {stderr.decode(errors='replace')}")
+        finally:
             if ffmpeg.poll() is None:
-                ffmpeg.terminate()
+                ffmpeg.kill()
+            ffmpeg.wait()
             up.close()
+            feeder.join(timeout=10)
+            drainer.join(timeout=10)
+            for pipe in (ffmpeg.stdin, ffmpeg.stdout, ffmpeg.stderr):
+                pipe.close()
 
 
 if __name__ == "__main__":
