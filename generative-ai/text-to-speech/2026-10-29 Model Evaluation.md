@@ -247,10 +247,37 @@ noch zwischen Seeds. Weitere Temperatur- oder Laufzeitvergleiche sind vorerst ni
 OmniVoice bleibt eine Alternative, die Andreas in eigenen Tests vielversprechend fand;
 hier nicht installiert.
 
-Alle 36 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
+**Zusatztest: April german mit 6 Layern (2026-10-30):** Gewichte, SentencePiece-Tokenizer
+und eigener Jürgen-State aus `languages/german@e041936c`, Python 4.0.1, CPU-f32,
+1 Step, Temperatur 0,7; gleiche Seeds und native EOS-Einstellungen wie oben.
+Sechs tatsächliche Transformer-Layer und alle 214 geladenen Tensoren vor/nach dem
+Lauf geprüft; Asset-Hashes passen zur Revision, Seed 101 wiederholt bit-identisch.
+Nur der byte-identische Tokenizer wurde wiederverwendet, nicht der 24L-Voice-State.
+
+| Seed | Audio  | Generierung ohne Modellladen | EOS-Frame |
+| ---- | ------ | ---------------------------- | --------- |
+| 101  | 5,28 s | 1,715 s                      | 63        |
+| 202  | 4,00 s | 1,337 s                      | 47        |
+| 303  | 4,96 s | 1,614 s                      | 59        |
+
+Alle drei enden durch EOS. Gemessener Durchsatz: aggregiert ca. 3,05x Realtime,
+gegenüber ca. 0,97x beim früheren passenden 24L-Lauf, also ca. 3,14x schneller pro
+generierter Audiosekunde. Kein alternierender Benchmark; unterschiedliche Modelle,
+Stimmen-States und Audiolängen, nur drei Seeds.
+
+**Hörurteil von Andreas:** April-24L klingt deutlich besser. Auch auf dem April-Stand
+spricht 6L englische Wörter zu eingedeutscht aus und Zahlen schlecht.
+Für diesen Testtext ist das passende April-24L-Paket daher trotz des höheren
+Rechenaufwands die bessere Wahl; der April-Stand allein reicht bei 6L nicht aus.
+
+Direkter 6L-/24L-Hörvergleich: `april-german-6l/listen.html` im Archiv.
+
+Alle 39 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
 `/home/andreas/Desktop/2026-10-30 Pocket-TTS german_24l Test vs. onnx/`.
 Details zum Gewichtsvergleich: `weight-analysis/WEIGHT_COMPARISON.md` im Archiv.
 Details zum passenden Lauf: `april-matched/MATCHED_APRIL.md`.
+Details zum 6L-Lauf: `april-german-6l/APRIL_GERMAN_6L.md`; die vorherigen 36 WAVs
+sind per SHA256 unverändert.
 
 # Ungeeignet
 
