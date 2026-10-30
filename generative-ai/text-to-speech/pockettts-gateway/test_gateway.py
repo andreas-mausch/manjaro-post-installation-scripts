@@ -1,11 +1,16 @@
 import io
+import http.client
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import threading
 import unittest
+from contextlib import contextmanager
+from email.message import Message
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 
 import gateway
@@ -23,6 +28,128 @@ class BrokenStream(Stream):
 
 
 class GatewayTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_disconnect_reaps_encoder_and_closes_upstream(self):
+        processes = []
+        popen = subprocess.Popen
+
+        def spawn(*args, **kwargs):
+            process = popen(*args, **kwargs)
+            processes.append(process)
+            return process
+
+        def disconnect(chunk):
+            raise BrokenPipeError("injected client disconnect")
+
+        upstream = Stream(b"\0" * 480000)
+        with patch.object(gateway.subprocess, "Popen", side_effect=spawn):
+            with self.assertRaises(BrokenPipeError):
+                self.handler()._transcode(upstream, "opus", disconnect)
+        self.assertTrue(upstream.closed)
+        self.assertIsNotNone(processes[0].poll())
+        self.assertTrue(all(pipe.closed for pipe in (processes[0].stdin, processes[0].stdout, processes[0].stderr)))
+
+    @contextmanager
+    def serving(self, handler, server_class=ThreadingHTTPServer):
+        server = server_class(("127.0.0.1", 0), handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            yield server
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_real_http_streams_before_generation_finishes_and_detects_truncation(self):
+        release = threading.Event()
+        complete = threading.Event()
+        fail = threading.Event()
+
+        class Backend(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def log_message(self, *args):
+                pass
+
+            def do_POST(self):
+                self.rfile.read(int(self.headers["Content-Length"]))
+                self.send_response(200)
+                self.send_header("Transfer-Encoding", "chunked")
+                self.end_headers()
+                data = b"\0" * 480000
+                self.wfile.write(f"{len(data):X}\r\n".encode() + data + b"\r\n")
+                self.wfile.flush()
+                release.wait(10)
+                complete.set()
+                if not fail.is_set():
+                    self.wfile.write(b"0\r\n\r\n")
+                self.close_connection = True
+
+        with self.serving(Backend) as upstream:
+            with patch.object(gateway, "BACKEND", f"http://127.0.0.1:{upstream.server_port}"):
+                with self.serving(gateway.Handler, gateway.Server) as server:
+                    for fmt, broken, timed in (("mp3", False, False), ("opus", False, False),
+                                              ("wav", False, False), ("pcm", False, False),
+                                              ("mp3", True, False), ("pcm", False, True),
+                                              ("mp3", False, True)):
+                        with self.subTest(fmt=fmt, broken=broken, timed=timed):
+                            release.clear()
+                            complete.clear()
+                            fail.set() if broken else fail.clear()
+                            connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+                            try:
+                                with patch.object(gateway, "STREAM_TIMEOUT", 0.2 if timed else 180):
+                                    connection.request("POST", "/v1/audio/speech", json.dumps({"input": "test", "response_format": fmt}))
+                                    response = connection.getresponse()
+                                    self.assertEqual(response.status, 200)
+                                    self.assertTrue(response.read1(100))
+                                    self.assertFalse(complete.is_set(), "stream buffered until generation completed")
+                                    if not timed:
+                                        release.set()
+                                    if broken or timed:
+                                        with self.assertRaises(http.client.IncompleteRead):
+                                            response.read()
+                                    else:
+                                        self.assertTrue(response.read())
+                            finally:
+                                release.set()
+                                connection.close()
+                                self.assertTrue(complete.wait(2), "mock generation did not finish")
+
+    def test_request_limits_and_busy_capacity(self):
+        handler = self.handler()
+        handler.path = "/v1/audio/speech"
+        for length, expected in (("-1", 400), ("invalid", 400), (str(gateway.MAX_BODY_BYTES + 1), 413)):
+            handler.headers = Message()
+            handler.headers["Content-Length"] = length
+            handler.do_POST()
+            self.assertEqual(handler.error[0], expected)
+        for payload in ([], {"input": ""}, {"input": "x" * (gateway.MAX_INPUT_CHARS + 1)}):
+            handler._speech(json.dumps(payload).encode())
+            self.assertEqual(handler.error[0], 400)
+        with patch.object(gateway, "SYNTHESIS_SLOTS", threading.BoundedSemaphore(1)):
+            gateway.SYNTHESIS_SLOTS.acquire()
+            handler._speech(b'{"input":"test"}')
+            self.assertEqual(handler.error[0], 429)
+            gateway.SYNTHESIS_SLOTS.release()
+            handler._speech(b'[]')
+            self.assertTrue(gateway.SYNTHESIS_SLOTS.acquire(blocking=False))
+
+    def test_connection_capacity_returns_429(self):
+        with self.serving(gateway.Handler, gateway.Server) as server:
+            for _ in range(gateway.MAX_CONNECTIONS):
+                server.slots.acquire()
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=2)
+            try:
+                connection.request("GET", "/health")
+                self.assertEqual(connection.getresponse().status, 429)
+            finally:
+                connection.close()
+                for _ in range(gateway.MAX_CONNECTIONS):
+                    server.slots.release()
+
     def test_concurrent_registration_keeps_complete_json(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch.object(gateway, "STATE_DIR", directory):
@@ -113,7 +240,7 @@ class GatewayTests(unittest.TestCase):
     def test_upstream_failure_is_not_success(self):
         handler = self.handler()
         with patch.object(gateway, "backend_request", return_value=BrokenStream()):
-            handler._speech(b'{"response_format":"mp3"}')
+            handler._speech(b'{"input":"test","response_format":"mp3"}')
         self.assertFalse(handler.wfile.getvalue().endswith(b"0\r\n\r\n"))
         self.assertTrue(handler.close_connection or handler.error[0] == 502)
 
@@ -122,7 +249,7 @@ class GatewayTests(unittest.TestCase):
         handler = self.handler()
         with patch.dict(gateway.FFMPEG_FORMATS, {"mp3": ["-c:a", "missing_encoder", "-f", "mp3"]}):
             with patch.object(gateway, "backend_request", return_value=Stream(b"\0" * 48000)):
-                handler._speech(b'{"response_format":"mp3"}')
+                handler._speech(b'{"input":"test","response_format":"mp3"}')
         self.assertEqual(handler.error[0], 502)
         self.assertIn("ffmpeg exited", handler.error[1]["error"]["message"])
 
@@ -132,7 +259,7 @@ class GatewayTests(unittest.TestCase):
             with self.subTest(fmt=fmt):
                 handler = self.handler()
                 with patch.object(gateway, "backend_request", return_value=Stream(b"\0" * 48000)):
-                    handler._speech(json.dumps({"response_format": fmt}).encode())
+                    handler._speech(json.dumps({"input": "test", "response_format": fmt}).encode())
                 self.assertTrue(handler.wfile.getvalue().endswith(b"0\r\n\r\n"))
                 self.assertFalse(handler.close_connection)
 

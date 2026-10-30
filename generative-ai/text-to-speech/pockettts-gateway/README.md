@@ -97,6 +97,20 @@ afterwards with `docker volume rm`. Details of the old setup:
 
 ## Operations & limits
 
+- Resource limits are configurable through environment variables:
+  `TTS_MAX_BODY_BYTES=8388608` (8 MiB), `TTS_MAX_INPUT_CHARS=10000`,
+  `TTS_MAX_CONNECTIONS=16`, `TTS_MAX_SYNTHESIS=2`, `TTS_IO_TIMEOUT=30`
+  (socket inactivity, seconds), and `TTS_STREAM_TIMEOUT=180` (stream deadline
+  after backend headers, seconds). All must be positive. Voice registration
+  has a separate 120-second backend I/O timeout. Excess capacity returns 429,
+  oversized bodies 413, and invalid/empty input 400. Requests require a single
+  Content-Length; chunked request bodies are unsupported. POST connections
+  close after their response, including when a request body is rejected.
+- Streaming failures before audio headers return an error response. After
+  headers they close the connection without the successful terminating chunk;
+  clients must treat incomplete HTTP chunk framing as an error, not usable
+  complete audio. Upstream reads, downstream writes, and encoder lifetime are
+  bounded. Disconnect cleanup interrupts upstream reads and reaps FFmpeg.
 - AMD/iGPU: the container needs `/dev/dri` + groups `render`/`video`
   (GIDs via `getent group render video`, kept as defaults in compose.yaml).
 - `response_format`: `mp3|opus|ogg|aac|flac|wav|pcm` (default `mp3`, like OpenAI).
@@ -115,3 +129,11 @@ afterwards with `docker volume rm`. Details of the old setup:
   stops both services and their encoder children (five-second grace period).
 - The gateway is deliberately minimal (no auth — loopback-only, as before);
   handle encryption/exposure the same way as LocalAI.
+
+## Regression tests
+
+Run `python3 -m unittest -v` in this directory (FFmpeg required for codec tests).
+The tests include real FFmpeg and local HTTP streaming: MP3, Opus, WAV and PCM
+deliver audio before the mock backend finishes; truncated upstream streams and
+expired deadlines must not produce a successful HTTP terminal chunk. They also
+cover encoder errors, health, child exits, persistence and capacity limits.
