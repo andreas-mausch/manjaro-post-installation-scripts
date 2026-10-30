@@ -194,7 +194,7 @@ April-Tokenizer und April-Jürgen klingt auch die native Python-Version gut.
 Der entscheidende Unterschied ist das Modellpaket, nicht Python gegenüber ONNX.
 
 Testtext: „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."
-Ergebnisse nach Anhören durch Andreas:
+Ergebnisse nach Anhören durch den User:
 
 - **ONNX, INT8, juergen:** alle sechs Aufnahmen gut, sowohl mit 1 als auch 8 Steps.
 - **Python 4.0.1, passendes April-Paket, 1 Step, Temperatur 0,7:** Aussprache passt,
@@ -244,7 +244,7 @@ beibehalten: Schwelle -4, Mindestframe 6, Nachlauf 3 Frames.
 Warum das neuere Paket schlechter abschneidet, ist nicht geklärt; eine allgemeine
 Qualitätsregression ist damit nicht nachgewiesen. Vollständigkeit und Tonfall schwanken
 noch zwischen Seeds. Weitere Temperatur- oder Laufzeitvergleiche sind vorerst nicht geplant.
-OmniVoice bleibt eine Alternative, die Andreas in eigenen Tests vielversprechend fand;
+OmniVoice bleibt eine Alternative, die der User in eigenen Tests vielversprechend fand;
 hier nicht installiert.
 
 **Zusatztest: April german mit 6 Layern (2026-10-30):** Gewichte, SentencePiece-Tokenizer
@@ -265,7 +265,7 @@ gegenüber ca. 0,97x beim früheren passenden 24L-Lauf, also ca. 3,14x schneller
 generierter Audiosekunde. Kein alternierender Benchmark; unterschiedliche Modelle,
 Stimmen-States und Audiolängen, nur drei Seeds.
 
-**Hörurteil von Andreas:** April-24L klingt deutlich besser. Auch auf dem April-Stand
+**Hörurteil des Users:** April-24L klingt deutlich besser. Auch auf dem April-Stand
 spricht 6L englische Wörter zu eingedeutscht aus und Zahlen schlecht.
 Für diesen Testtext ist das passende April-24L-Paket daher trotz des höheren
 Rechenaufwands die bessere Wahl; der April-Stand allein reicht bei 6L nicht aus.
@@ -273,11 +273,24 @@ Rechenaufwands die bessere Wahl; der April-Stand allein reicht bei 6L nicht aus.
 Direkter 6L-/24L-Hörvergleich: `april-german-6l/listen.html` im Archiv.
 
 Alle 39 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
-`/home/andreas/Desktop/2026-10-30 Pocket-TTS german_24l Test vs. onnx/`.
+`~/Desktop/2026-10-30 Pocket-TTS german_24l Test vs. onnx/`.
 Details zum Gewichtsvergleich: `weight-analysis/WEIGHT_COMPARISON.md` im Archiv.
 Details zum passenden Lauf: `april-matched/MATCHED_APRIL.md`.
 Details zum 6L-Lauf: `april-german-6l/APRIL_GERMAN_6L.md`; die vorherigen 36 WAVs
 sind per SHA256 unverändert.
+
+### Geplantes Serving: Vulkan, OpenAI-API, WAV/MP3/Opus
+
+Selbst gebaute `german_24l`-GGUFs liegen dem User bereits vor. Geplant ist ein eigenes
+Docker-Image mit `pockettts.cpp` (Vulkan), FFmpeg und einer dünnen API-Schicht für
+`POST /v1/audio/speech`. `pockettts.cpp` liefert die fertige WAV-Ausgabe; die API-Schicht
+konvertiert sie bei Bedarf zu MP3 oder Ogg mit echtem Opus-Codec (`libopus`).
+WAV wird direkt zurückgegeben. Umsetzung und Prüfung der vorhandenen GGUFs stehen aus.
+
+**Streaming bleibt vorerst außen vor.** `pockettts.cpp` kann PCM während der Synthese
+liefern, aber kein MP3-/Opus-Streaming direkt. Eine durchgehende PCM-/FFmpeg-/HTTP-Pipeline
+wäre möglich, benötigt jedoch zusätzliche Abbruchbehandlung, Pufferungs- und Client-Tests.
+Die erste Umsetzung wartet deshalb auf die vollständige Generierung und Konvertierung.
 
 # Ungeeignet
 
