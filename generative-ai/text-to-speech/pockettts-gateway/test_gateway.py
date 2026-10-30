@@ -186,13 +186,86 @@ class GatewayTests(unittest.TestCase):
                     gateway.register_voice("A/B", {"name": "A/B"})
                 handler = self.handler()
                 handler.path = "/v1/audio/voices/A%2FB"
-                with patch.object(handler, "_forward_simple", return_value=500):
+                with patch.object(gateway, "backend_request", side_effect=OSError("offline")):
                     handler.do_DELETE()
+                self.assertEqual(handler.error[0], 500)
                 self.assertTrue(os.path.exists(gateway.voice_path("a/b")))
-                with patch.object(handler, "_forward_simple", return_value=200) as forward:
+                response = Stream(b'{}')
+                response.status = 200
+                response.headers = Message()
+                handler.send_response = lambda status: setattr(handler, "status", status)
+                handler.send_header = lambda *args: None
+                handler.end_headers = lambda: None
+                with patch.object(gateway, "backend_request", return_value=response) as forward:
                     handler.do_DELETE()
-                forward.assert_called_once_with("/v1/audio/voices/a%2Fb", method="DELETE")
+                forward.assert_called_once_with("/v1/audio/voices/a%2Fb", "DELETE", None, timeout=120)
+                self.assertEqual(handler.status, 200)
                 self.assertFalse(os.path.exists(gateway.voice_path("a/b")))
+
+    def test_store_failures_do_not_mutate_backend(self):
+        for existing in (False, True):
+            for operation in ("fsync", "replace"):
+                with self.subTest(existing=existing, operation=operation), tempfile.TemporaryDirectory() as directory:
+                    with patch.object(gateway, "STATE_DIR", directory):
+                        if existing:
+                            gateway.store_voice(gateway.voice_path("lucy"), b'previous bytes')
+                        gateway.store_voice(gateway.voice_path("other"), b'unrelated')
+                        with patch.object(gateway.os, operation, side_effect=OSError("disk failure")):
+                            with patch.object(gateway, "backend_request") as backend:
+                                handler = self.handler()
+                                handler.path = "/v1/audio/voices"
+                                body = b'{"name":"lucy","wav_b64":"new"}'
+                                handler.headers = Message()
+                                handler.headers["Content-Length"] = str(len(body))
+                                handler.rfile = Stream(body)
+                                handler.do_POST()
+                                self.assertEqual(handler.error[0], 500)
+                                backend.assert_not_called()
+                        self.assertEqual(os.path.exists(gateway.voice_path("lucy")), existing)
+                        if existing:
+                            with open(gateway.voice_path("lucy"), "rb") as file:
+                                self.assertEqual(file.read(), b'previous bytes')
+                        self.assertEqual(len(os.listdir(directory)), 2 if existing else 1)
+
+    def test_delete_filesystem_failure_does_not_mutate_backend_or_send_success(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(gateway, "STATE_DIR", directory):
+            gateway.store_voice(gateway.voice_path("lucy"), b'previous bytes')
+            handler = self.handler()
+            handler.path = "/v1/audio/voices/lucy"
+            with patch.object(gateway.os, "remove", side_effect=PermissionError("read only")):
+                with patch.object(gateway, "backend_request") as backend:
+                    handler.do_DELETE()
+                    backend.assert_not_called()
+            self.assertEqual(handler.error[0], 500)
+            with open(gateway.voice_path("lucy"), "rb") as file:
+                self.assertEqual(file.read(), b'previous bytes')
+
+    def test_backend_failure_restores_exact_previous_state(self):
+        for existing in (False, True):
+            for delete in (False, True):
+                with self.subTest(existing=existing, delete=delete), tempfile.TemporaryDirectory() as directory:
+                    with patch.object(gateway, "STATE_DIR", directory):
+                        if existing:
+                            gateway.store_voice(gateway.voice_path("lucy"), b'previous bytes')
+                        gateway.store_voice(gateway.voice_path("other"), b'unrelated')
+                        with patch.object(gateway, "backend_request", side_effect=OSError("offline")):
+                            with self.assertRaises(OSError):
+                                gateway.mutate_voice("lucy", None if delete else {"wav_b64": "new"})
+                        self.assertEqual(os.path.exists(gateway.voice_path("lucy")), existing)
+                        if existing:
+                            with open(gateway.voice_path("lucy"), "rb") as file:
+                                self.assertEqual(file.read(), b'previous bytes')
+                        with open(gateway.voice_path("other"), "rb") as file:
+                            self.assertEqual(file.read(), b'unrelated')
+
+    def test_rollback_failure_reports_possible_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(gateway, "STATE_DIR", directory):
+            with patch.object(gateway, "backend_request", side_effect=OSError("offline")):
+                with patch.object(gateway.os, "remove", side_effect=PermissionError("read only")):
+                    with patch.object(gateway, "log") as log:
+                        with self.assertRaisesRegex(RuntimeError, "backend and disk may differ"):
+                            gateway.register_voice("lucy", {"wav_b64": "new"})
+                        log.assert_called_once()
 
     def test_default_voice_is_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:

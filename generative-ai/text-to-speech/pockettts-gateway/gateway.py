@@ -127,25 +127,60 @@ def voice_path(name):
 
 # ---------------------------------------------------------------- voice registry
 
-def register_voice(name, body_json):
-    """Forwards a voice registration to the backend and persists it."""
-    name = canonical_name(name)
-    body_json = dict(body_json, name=name)
-    with VOICE_LOCK:
-        with backend_request("/v1/audio/voices", "POST", json.dumps(body_json).encode(), timeout=120) as resp:
-            resp.read()
-        os.makedirs(STATE_DIR, exist_ok=True)
-        temporary = None
+def store_voice(path, data):
+    if data is None:
         try:
-            with tempfile.NamedTemporaryFile(mode="w", dir=STATE_DIR, suffix=".tmp", delete=False) as f:
-                temporary = f.name
-                json.dump(body_json, f)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(temporary, voice_path(name))
-        finally:
-            if temporary and os.path.exists(temporary):
-                os.remove(temporary)
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+        return
+    os.makedirs(STATE_DIR, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="wb", dir=STATE_DIR, suffix=".tmp", delete=False) as f:
+            temporary = f.name
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary and os.path.exists(temporary):
+            os.remove(temporary)
+
+
+def mutate_voice(name, body_json=None):
+    name = canonical_name(name)
+    path = voice_path(name)
+    data = None if body_json is None else json.dumps(dict(body_json, name=name)).encode()
+    with VOICE_LOCK:
+        try:
+            with open(path, "rb") as f:
+                previous = f.read()
+        except FileNotFoundError:
+            previous = None
+        # Fail filesystem operations before changing the live backend registry.
+        store_voice(path, data)
+        try:
+            route = "/v1/audio/voices"
+            if data is None:
+                route += "/" + urllib.parse.quote(name, safe="")
+            with backend_request(route, "DELETE" if data is None else "POST", data, timeout=120) as resp:
+                result = resp.read()
+                if data is None:
+                    return result, resp.status, resp.headers.get("Content-Type", "application/json")
+        except Exception as error:
+            try:
+                store_voice(path, previous)
+            except Exception as rollback_error:
+                message = f"voice '{name}' persistence rollback failed; backend and disk may differ: {error}; {rollback_error}"
+                log("ERROR:", message)
+                raise RuntimeError(message) from rollback_error
+            raise
+
+
+def register_voice(name, body_json):
+    """Persists a registration, restoring previous state if the backend fails."""
+    mutate_voice(name, body_json)
     log(f"voice '{name}' registered and persisted")
 
 
@@ -311,6 +346,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(200, {"object": "list", "data": [{"id": payload.get("name")}]})
             except urllib.error.HTTPError as e:
                 self._send_json(e.code, {"error": {"message": e.read().decode(errors="replace")}})
+            except (OSError, RuntimeError) as e:
+                self._send_json(500, {"error": {"message": str(e)}})
             except Exception as e:
                 self._send_json(400, {"error": {"message": str(e)}})
         else:
@@ -320,15 +357,21 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/v1/audio/voices/"):
             try:
                 name = canonical_name(urllib.parse.unquote(self.path.rsplit("/", 1)[-1]))
-                with VOICE_LOCK:
-                    status = self._forward_simple("/v1/audio/voices/" + urllib.parse.quote(name, safe=""), method="DELETE")
-                    if 200 <= status < 300:
-                        try:
-                            os.remove(voice_path(name))
-                        except FileNotFoundError:
-                            pass
+                data, status, ctype = mutate_voice(name)
             except ValueError as e:
                 self._send_json(400, {"error": {"message": str(e)}})
+                return
+            except urllib.error.HTTPError as e:
+                self._send_json(e.code, {"error": {"message": e.read().decode(errors="replace")}})
+                return
+            except Exception as e:
+                self._send_json(500, {"error": {"message": str(e)}})
+                return
+            self.send_response(status)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
         else:
             self._send_json(404, {"error": {"message": "not found"}})
 
