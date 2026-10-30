@@ -187,74 +187,35 @@ Opus-Konvertierungsstrategie sind noch offen.
 
 ### Offene Baustelle: german_24l klingt lokal deutlich schlechter als in der Web-Demo
 
-Ungeklärtes Problem (Stand 2026-10-29 abends): `german_24l` erzeugt **lokal
-Kauderwelsch** — besonders bei Ziffern ("13:05") und englischen Wörtern ("Sprites",
-"gerendered") — während die Demo
-<https://copersian1-pocket-tts-demo.static.hf.space/index.html> mit den Settings
-"German - 24 layer", "juergen (de)", "Standard - quantised, 3x smaller", "8 steps"
-saubere Ausgabe liefert. Das Problem ist nicht auf die Stimme `juergen` beschränkt
-(auch die geklonte sample.wav klingt lokal schlecht); `juergen` ist nur der einzige
-Fall, in dem gute Referenzausgabe nachweislich existiert.
+Stand 2026-10-30: Der Browser-ONNX-Stack der
+[Demo](https://copersian1-pocket-tts-demo.static.hf.space/index.html) wurde lokal
+auf einem Ryzen 7 PRO 7840U reproduziert. Er klingt gut, die native Python-Version
+weiterhin schlecht. Die genaue Ursache ist noch offen.
 
-Testfall war jeweils: „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."
+Testtext: „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."
+Ergebnisse nach Anhören durch Andreas:
 
-Was bereits ausgeschlossen werden konnte:
+- **ONNX, INT8, juergen:** alle sechs Aufnahmen gut, sowohl mit 1 als auch 8 Steps.
+- **Python 4.0.1, neuerer Checkpoint:** Zahlen unverständlich, englische Wörter zu
+  deutsch ausgesprochen. Temperatur 0,7 statt 0,3 löst das Qualitätsproblem nicht.
+- **Demo-Tokenizer mit neueren Python-Gewichten:** komplettes Kauderwelsch. Die
+  Token-IDs haben andere Bedeutungen; ein einfacher Tokenizer-Austausch funktioniert nicht.
+- **April-Voice-State mit neueren Gewichten:** alle zwölf Aufnahmen brechen nach
+  0,72 Sekunden ab und klingen fast nur wie Rauschen. Das ist kein passender April-Test.
 
-- **Quantisierung/Präzision:** Die unquantisierte Python-Referenz (f32, LocalAI) klingt
-  lokal genauso schlecht wie Q8_/BF16-GGUF (`e-`, `g-`, `h-`-Dateien). Die Demo nutzt
-  sogar nur INT8. -> Ist es nicht.
-- **Backend/Pfad (Vulkan vs. CPU, Flash-Attention):** mit `--no-fa` und CPU unverändert.
-- **LSD-Steps als simpler Parameter:** Die Python-Referenz (`lsd_decode`, n=8) und
-  `pockettts.cpp --lsd-steps 8` erzeugen beide Früh-Abbrüche (~1,4 s statt ~7-10 s).
-  Die Demo-Portierung kann "8 steps" also nicht auf dieselbe Weise belegen.
-- **„Demo nutzt ein Multilingual-Modell":** Stimmt nicht. `KevinAHM/pocket-tts-onnx`
-  enthält pro einsprachige Kyutai-Checkpoints ein Bundle ("multilingual bundles" =
-  viele Sprachen im Repo, nicht pro Bundle). Ein deutsch/englisches PocketTTS
-  existiert nicht.
-- **„Demo nutzt einen anderen (alten) Checkpoint" allein:** teilweise widerlegt. Die
-  Demo pinnt Voice-Embeddings auf Revision `e041936c` (April) von
-  `kyutai/pocket-tts-without-voice-cloning`; Kyutai hat `languages/german_24l/` danach
-  stillschweigend ersetzt (HEAD `a7056f50`; Modell-ETags und juergen.safetensors
-  unterscheiden sich bei gleicher Dateigröße von unseren `/srv`-Dateien). Aber: Der
-  April-Checkpoint + April-juergen mit der lokalen Python-Referenz erzeugt ebenfalls
-  Kauderwelsch bzw. Früh-Abbrüche (`i-april-run1/2.wav`). -> Allein der Alters-
-  unterschied erklärt es nicht.
+Der Gewichtsvergleich zeigt: ONNX und der neuere native Checkpoint sind unterschiedliche
+Gewichtssätze, nicht nur unterschiedlich quantisiert. Der Demo-Tokenizer und die gesamte
+Text-Embedding-Tabelle stimmen exakt mit dem öffentlichen April-Checkpoint `e041936c`
+überein. Weitere geprüfte Transformer-, Flow- und Decoder-Gewichte passen ebenfalls;
+ein vollständiger Vergleich aller Parameter steht noch aus.
 
-Offene Hypothesen:
+**Nächster Schritt:** April-Gewichte, April-Tokenizer und April-Jürgen gemeinsam in
+Python testen, zunächst mit 1 Step und Temperatur 0,7. Falls das weiterhin schlecht
+klingt, die Laufzeit-/Sampling-Unterschiede zu ONNX untersuchen.
 
-1. Die ONNX-Portierung implementiert Sampler (externer Flow-Loop), EOS oder
-   Text-Vorverarbeitung anders als Referenz/GGUF und genau das macht den Qualitäts-
-   unterschied aus.
-2. Der ONNX-Export (April) könnte aus dem **gated** Repo `kyutai/pocket-tts` von einer
-   anderen Revision stammen als der verglichene ungated Zwilling — lokal nicht prüfbar
-   ohne HF-Zugang (Gated-Repo hier nicht gemeldet).
-3. Die Voice-Embeddings der Demo wurden möglicherweise mit dem ONNX-Mimi neu gerechnet
-   und passen nicht 1:1 zu den safetensors-States aus dem HF-Repo.
-
-Zusätzlich aufgefallen (unabhängig vom Qualitätsproblem): Früher EOS-Abbruch der
-Generierung tritt in **allen** Runtimes in etwa jedem 3. Lauf auf (Seed-Lotterie bei
-temp 0.3 / eos_threshold -4). Für den Produktivbetrieb ggf. `eos_threshold` erhöhen
-oder Ausgabe auf Mindestlänge prüfen.
-
-Nächste sinnvolle Schritte:
-
-- In der Demo selbst die Settings durchhören (1 step vs. 8 steps, fp32 vs. quantised,
-  `german` 6L vs. `german_24l`): isoliert, welche Zutat die Qualität trägt.
-- Den ONNX-Stack lokal reproduzieren (onnxruntime + KevinAHM-Dateien + gepinnte
-  Voices): klingt es dort gut, wäre das entweder direkt nutzbare Basis oder man kann die
-  Gewichte daraus in GGUF überführen.
-- Kyutai auf den ausgetauschten Checkpoint ansprechen (Regression bei Ziffern/Englisch?).
-
-Testmaterial (alle `/tmp/opencode`, Satz 2, Voice juergen, locale Runtimes):
-
-| Datei | Runtime/Konfiguration | Urteil |
-|---|---|---|
-| `e-f32-python-juergen.wav` | LocalAI, Python 4.0.1, f32, 1 step | schlecht |
-| `g-bf16-vulkan.wav` | pockettts.cpp, BF16-GGUF, Vulkan | schlecht |
-| `h-bf16-cpu-nofa.wav` | pockettts.cpp, BF16-GGUF, CPU, FP32-Attn | schlecht |
-| `c-cpu-nofa-temp0.wav` | pockettts.cpp, Q8_0, CPU, temp 0 | (nicht bewertet) |
-| `p-steps1.wav` / `p-steps8.wav` | Python 4.0.1, HEAD-Checkpoint, 1/8 steps | 8 steps: Früh-Abbruch |
-| `i-april-run1/2.wav` | Python 4.0.1, April-Checkpoint (e041936c) + April-juergen | Kauderwelsch |
+Alle 33 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
+`/home/andreas/Desktop/2026-10-30 Pocket-TTS german_24l Test vs. onnx/`.
+Details zum Gewichtsvergleich: `weight-analysis/WEIGHT_COMPARISON.md` im Archiv.
 
 # Ungeeignet
 
