@@ -1,5 +1,12 @@
 # LocalAI mit PocketTTS German
 
+> **Status 2026-10-30: abgelöst.** Die Sprachausgabe übernimmt das
+> PocketTTS.cpp-Vulkan-Container-Setup in [`pockettts-gateway/`](pockettts-gateway/)
+> (Host-Loopback :8081, Modellname `pocket-tts-german` bleibt als Drop-in identisch).
+> Grund: Qualität und Tempo des 24l-April-Modells auf Vulkan
+> (Vergleich: [`2026-10-30-benchmark.md`](2026-10-30-benchmark.md)).
+> Dieses Dokument bleibt als Aufzeichnung des LocalAI-Setups erhalten.
+
 <https://github.com/mudler/localai>
 
 Der LocalAI-Dienst laeuft als Teil des Hermes-Stacks in

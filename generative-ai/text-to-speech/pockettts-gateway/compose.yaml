@@ -10,7 +10,8 @@ services:
     container_name: pockettts-gateway
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8081:8080"     # same as localai before; Hermes reaches it via host.docker.internal
+      - "8081:8080"               # all interfaces (like gufo): containers reach this via host.docker.internal;
+                                  # 127.0.0.1-only would be invisible to them. See README "Networking upgrade".
     devices:
       - /dev/dri:/dev/dri          # iGPU for Vulkan (RADV)
     group_add:

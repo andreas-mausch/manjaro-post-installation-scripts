@@ -37,9 +37,15 @@ docker compose up -d --build    # first build needs internet + a few minutes
 docker compose logs -f pockettts-gateway   # wait for "[gateway] ready"
 ```
 
-The service listens on `127.0.0.1:8081` (same port as LocalAI before; host
-port 8080 is taken by gufo). **Stop `localai` first**, otherwise the two fight
-over 8081 (see "Cutover").
+The service listens on host port `8081` (same port as LocalAI before; host
+port 8080 is taken by gufo). It is published on **all interfaces** — like
+gufo — because Docker port bindings only match the published address, so a
+`127.0.0.1` bind would be unreachable for containers (their
+`host.docker.internal` is the host's bridge IP). The API has no auth; that
+is the same trade-off gufo accepts on a trusted LAN. A cleaner alternative
+(shared Docker network, loopback-only again) is sketched in "Networking
+upgrade" below. **Stop `localai` first**, otherwise the two fight over 8081
+(see "Cutover").
 
 ## Test
 
@@ -83,25 +89,19 @@ The bootstrap waits for the backend, registers the reference once via its native
 API, then execs the gateway. Registration failure prevents gateway startup and
 lets supervision restart the stack rather than silently using another voice.
 
-## Cutting Hermes over to this stack
+## Cutting Hermes over to this stack (done 2026-10-30)
 
-While the `localai` service is still running:
-
-```bash
-(cd ../../hermes && docker compose stop localai)   # frees port 8081
-docker compose up -d
-```
-
-Hermes keeps seeing `http://host.docker.internal:8081/v1` with model
-`pocket-tts-german` (the gateway reports exactly that model id). If the Hermes
-configuration pointed at `http://localai:8080` (compose network), switch it to
-`host.docker.internal:8081` — the concrete `config set` commands are in
-[`../../hermes/README.md`](../../hermes/README.md), section 6.
-
-Once everything works, the `localai` service block can be removed from
-`../../hermes/compose.yaml`; clean up the LocalAI volumes (`localai-*`)
-afterwards with `docker volume rm`. Details of the old setup:
-[`LocalAI.md`](LocalAI.md).
+* Hermes agent config (volume `hermes_hermes-data`, `config.yaml`):
+  `tts.openai.base_url: http://host.docker.internal:8081/v1`,
+  `model: pocket-tts-german` (the gateway reports exactly that model id —
+  drop-in), `voice: lucy`. The pre-switch config is backed up in the volume
+  as `backups/config/config.yaml.bak.tts-switch.*`.
+* The `localai` service block has been removed from
+  `../../hermes/compose.yaml`; the LocalAI volumes (`localai-*`) are still
+  there until a rollback is ruled out (`docker volume rm` them then).
+  Details of the old setup: [`LocalAI.md`](LocalAI.md).
+* Verified: synthesis request from inside the `hermes` container
+  (`host.docker.internal:8081`) returns real MP3.
 
 ## Configuration (compose.yaml `environment`)
 
@@ -148,6 +148,10 @@ afterwards with `docker volume rm`. Details of the old setup:
   stops both services and their encoder children (five-second grace period).
 - The gateway is deliberately minimal (no auth — loopback-only, as before);
   handle encryption/exposure the same way as LocalAI.
+- Model load takes < 1 s; health check at `/health`.
+- The gateway is deliberately minimal (no auth). Published on all interfaces
+  (see "Startup"), the API is reachable from the LAN — same policy as gufo on
+  this machine; only run on networks you trust.
 
 ## Regression tests
 
@@ -157,3 +161,16 @@ deliver audio before the mock backend finishes; truncated upstream streams and
 expired deadlines must not produce a successful HTTP terminal chunk. They also
 cover encoder errors, health, child exits, unchanged voice proxying, separate startup reference
 registration and capacity limits. Codec tests exercise all supported formats.
+
+### Networking upgrade (optional, not done)
+
+Publishing 8081 host-wide works but exposes the unauthenticated API. The
+clean alternative is one shared external network for both stacks:
+
+```bash
+docker network create tts
+```
+
+declare `networks: tts: { external: true }` in both compose files (with the
+services joining `[default, tts]`), point Hermes at `http://pockettts-gateway:8080/v1`
+— and the gateway can go back to a loopback-only bind (`127.0.0.1:8081:8080`).
