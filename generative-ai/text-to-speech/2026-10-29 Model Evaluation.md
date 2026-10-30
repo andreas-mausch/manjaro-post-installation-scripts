@@ -185,17 +185,21 @@ Erkenntnisse:
 Fazit: Speed-Technik wäre gegeben; Audioqualität 24l-Q8 vs. german-f32 und eine
 Opus-Konvertierungsstrategie sind noch offen.
 
-### Offene Baustelle: german_24l klingt lokal deutlich schlechter als in der Web-Demo
+### german_24l: gute Aussprache mit passendem April-Modellpaket
 
 Stand 2026-10-30: Der Browser-ONNX-Stack der
 [Demo](https://copersian1-pocket-tts-demo.static.hf.space/index.html) wurde lokal
-auf einem Ryzen 7 PRO 7840U reproduziert. Er klingt gut, die native Python-Version
-weiterhin schlecht. Die genaue Ursache ist noch offen.
+auf einem Ryzen 7 PRO 7840U reproduziert. Mit zusammenpassenden April-Gewichten,
+April-Tokenizer und April-Jürgen klingt auch die native Python-Version gut.
+Der entscheidende Unterschied ist das Modellpaket, nicht Python gegenüber ONNX.
 
 Testtext: „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß."
 Ergebnisse nach Anhören durch Andreas:
 
 - **ONNX, INT8, juergen:** alle sechs Aufnahmen gut, sowohl mit 1 als auch 8 Steps.
+- **Python 4.0.1, passendes April-Paket, 1 Step, Temperatur 0,7:** Aussprache passt,
+  auch bei Zahlen und englischen Wörtern. Seed 101 klingt am besten; bei Seed 202
+  fehlt am Anfang „Es ist“, bei Seed 303 klingt die Stimme etwas aggressiv.
 - **Python 4.0.1, neuerer Checkpoint:** Zahlen unverständlich, englische Wörter zu
   deutsch ausgesprochen. Temperatur 0,7 statt 0,3 löst das Qualitätsproblem nicht.
 - **Demo-Tokenizer mit neueren Python-Gewichten:** komplettes Kauderwelsch. Die
@@ -203,19 +207,50 @@ Ergebnisse nach Anhören durch Andreas:
 - **April-Voice-State mit neueren Gewichten:** alle zwölf Aufnahmen brechen nach
   0,72 Sekunden ab und klingen fast nur wie Rauschen. Das ist kein passender April-Test.
 
+Asset-Kombinationen der hier verifizierten Python-Tests:
+
+| Test                       | Gewichte         | Tokenizer          | Jürgen-Voice-State        |
+| -------------------------- | ---------------- | ------------------ | ------------------------- |
+| Native Baseline            | Neuer `4e1e0a3e` | Neuerer Tokenizer  | Release-Default `a7056f50` |
+| Checkpoint-passende Stimme  | Neuer `4e1e0a3e` | Neuerer Tokenizer  | `4e1e0a3e`                |
+| Roher Tokenizer-Tausch      | Neuer `4e1e0a3e` | April/Demo         | Release-Default oder April |
+| Gemischter April-Voice-Test | Neuer `4e1e0a3e` | Neuerer oder April | April `e041936c`          |
+| Funktionierendes Paket     | April `e041936c` | April `e041936c`   | April `e041936c`          |
+
+Auch die zum neueren Checkpoint passende Stimme liefert schlechte Aussprache.
+Es liegt also nicht bloß an einer abweichenden Voice-Version. Erfolgreich war der
+Wechsel des gesamten zusammengehörenden Pakets; welcher Teil der Änderungen am
+neueren Paket das Ausspracheproblem verursacht, ist noch nicht isoliert.
+
 Der Gewichtsvergleich zeigt: ONNX und der neuere native Checkpoint sind unterschiedliche
 Gewichtssätze, nicht nur unterschiedlich quantisiert. Der Demo-Tokenizer und die gesamte
 Text-Embedding-Tabelle stimmen exakt mit dem öffentlichen April-Checkpoint `e041936c`
 überein. Weitere geprüfte Transformer-, Flow- und Decoder-Gewichte passen ebenfalls;
 ein vollständiger Vergleich aller Parameter steht noch aus.
 
-**Nächster Schritt:** April-Gewichte, April-Tokenizer und April-Jürgen gemeinsam in
-Python testen, zunächst mit 1 Step und Temperatur 0,7. Falls das weiterhin schlecht
-klingt, die Laufzeit-/Sampling-Unterschiede zu ONNX untersuchen.
+**Passender April-Test ausgeführt (2026-10-30):** vollständiger öffentlicher Checkpoint,
+SentencePiece-Tokenizer und Jürgen-State aus derselben Revision `e041936c`, native
+Python 4.0.1, CPU-f32, 1 Step, Temperatur 0,7. Alle drei Asset-Hashes und alle 358
+geladenen Tensoren geprüft; Seed 101 wiederholt bit-identisch. Native EOS-Einstellungen
+beibehalten: Schwelle -4, Mindestframe 6, Nachlauf 3 Frames.
 
-Alle 33 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
+| Seed | Audio  | Generierung ohne Modellladen | EOS-Frame |
+| ---- | ------ | ---------------------------- | --------- |
+| 101  | 5,20 s | 5,345 s                      | 62        |
+| 202  | 6,08 s | 6,257 s                      | 73        |
+| 303  | 7,28 s | 7,504 s                      | 88        |
+
+**Fazit:** Das passende April-Paket löst das Ausspracheproblem für diesen Testtext.
+Warum das neuere Paket schlechter abschneidet, ist nicht geklärt; eine allgemeine
+Qualitätsregression ist damit nicht nachgewiesen. Vollständigkeit und Tonfall schwanken
+noch zwischen Seeds. Weitere Temperatur- oder Laufzeitvergleiche sind vorerst nicht geplant.
+OmniVoice bleibt eine Alternative, die Andreas in eigenen Tests vielversprechend fand;
+hier nicht installiert.
+
+Alle 36 Aufnahmen, Hörvergleich-Seiten, Skripte und Berichte sind gesichert unter
 `/home/andreas/Desktop/2026-10-30 Pocket-TTS german_24l Test vs. onnx/`.
 Details zum Gewichtsvergleich: `weight-analysis/WEIGHT_COMPARISON.md` im Archiv.
+Details zum passenden Lauf: `april-matched/MATCHED_APRIL.md`.
 
 # Ungeeignet
 
