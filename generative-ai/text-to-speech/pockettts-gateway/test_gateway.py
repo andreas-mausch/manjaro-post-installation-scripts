@@ -53,6 +53,16 @@ class GatewayTests(unittest.TestCase):
                 self.assertTrue(handler.wfile.getvalue().endswith(b"0\r\n\r\n"))
                 self.assertFalse(handler.close_connection)
 
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_wav_has_deliberate_unknown_lengths(self):
+        chunks = []
+        self.handler()._transcode(Stream(b"\0" * 48000), "wav", chunks.append)
+        wav = b"".join(chunks)
+        self.assertEqual(wav[:8], b"RIFF\xff\xff\xff\xff")
+        offset = wav.index(b"data")
+        self.assertEqual(wav[offset + 4:offset + 8], b"\xff" * 4)
+        self.assertEqual(len(wav[offset + 8:]), 48000)
+
 
 if __name__ == "__main__":
     unittest.main()

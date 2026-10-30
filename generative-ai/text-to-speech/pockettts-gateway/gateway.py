@@ -40,7 +40,8 @@ FFMPEG_FORMATS = {
     "ogg":  ["-c:a", "libopus", "-b:a", "48k", "-f", "ogg"],
     "aac":  ["-c:a", "aac", "-b:a", "64k", "-f", "adts"],
     "flac": ["-c:a", "flac", "-f", "flac"],
-    "wav":  ["-c:a", "pcm_s16le", "-f", "wav"],
+    # Non-seekable RIFF uses 0xffffffff lengths, deliberately not a final WAV.
+    "wav":  ["-c:a", "pcm_s16le", "-rf64", "never", "-f", "wav"],
 }
 CONTENT_TYPES = {
     "mp3": "audio/mpeg", "opus": "audio/ogg", "ogg": "audio/ogg",

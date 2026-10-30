@@ -283,14 +283,14 @@ sind per SHA256 unverändert.
 
 Selbst gebaute `german_24l`-GGUFs liegen dem User bereits vor. Geplant ist ein eigenes
 Docker-Image mit `pockettts.cpp` (Vulkan), FFmpeg und einer dünnen API-Schicht für
-`POST /v1/audio/speech`. `pockettts.cpp` liefert die fertige WAV-Ausgabe; die API-Schicht
-konvertiert sie bei Bedarf zu MP3 oder Ogg mit echtem Opus-Codec (`libopus`).
-WAV wird direkt zurückgegeben. Umsetzung und Prüfung der vorhandenen GGUFs stehen aus.
+`POST /v1/audio/speech`. Der inzwischen implementierte
+[`pockettts-gateway`](pockettts-gateway/README.md) konvertiert den PCM-Stream
+zu WAV, MP3 oder Ogg mit echtem Opus-Codec (`libopus`).
 
-**Streaming bleibt vorerst außen vor.** `pockettts.cpp` kann PCM während der Synthese
-liefern, aber kein MP3-/Opus-Streaming direkt. Eine durchgehende PCM-/FFmpeg-/HTTP-Pipeline
-wäre möglich, benötigt jedoch zusätzliche Abbruchbehandlung, Pufferungs- und Client-Tests.
-Die erste Umsetzung wartet deshalb auf die vollständige Generierung und Konvertierung.
+**Streaming bleibt erhalten (aktualisierte Entscheidung).** Die durchgehende
+PCM-/FFmpeg-/HTTP-Pipeline funktioniert beim User und wartet nicht auf die
+vollständige Generierung. Streaming-WAV hat unbekannte RIFF-/Datenlängen;
+Clients müssen diese Konvention unterstützen. Details stehen im Gateway-README.
 
 # Ungeeignet
 

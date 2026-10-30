@@ -39,7 +39,7 @@ over 8081 (see "Cutover").
 ## Test
 
 ```bash
-# WAV (pass-through path)
+# WAV (streaming RIFF, unknown length)
 curl --fail-with-body http://localhost:8081/v1/audio/speech -H 'Content-Type: application/json' \
   -d '{"model":"pocket-tts-german","input":"Hallo, sag mal etwas zu mir.","response_format":"wav"}' \
   --output test.wav
@@ -98,6 +98,13 @@ afterwards with `docker volume rm`. Details of the old setup:
 - `response_format`: `mp3|opus|ogg|aac|flac|wav|pcm` (default `mp3`, like OpenAI).
 - Streaming: responses are always chunked. Measured (24l, Vulkan): TTFB 0.02 s
   (mp3/wav) or 0.28 s (opus), total time 0.4–0.9 s for the test sentence.
+- WAV is encoded from streaming PCM, not passed through from the backend.
+  Its RIFF and data sizes are deliberately `0xffffffff` (unknown length on a
+  non-seekable output). HTTP chunk termination marks completion; these sizes
+  are not the actual audio length. Players requiring finalized WAV sizes may
+  reject it or report a wrong duration. Use MP3/Opus for those clients, or
+  remux the downloaded WAV locally into a seekable file. No buffering of the
+  complete answer is introduced. FLAC also has unknown duration while streaming.
 - Model load takes < 1 s; health check at `/health`.
 - The gateway is deliberately minimal (no auth — loopback-only, as before);
   handle encryption/exposure the same way as LocalAI.
