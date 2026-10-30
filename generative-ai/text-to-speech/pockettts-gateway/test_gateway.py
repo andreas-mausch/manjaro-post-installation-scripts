@@ -2,6 +2,7 @@ import io
 import json
 import shutil
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -20,6 +21,23 @@ class BrokenStream(Stream):
 
 
 class GatewayTests(unittest.TestCase):
+    def test_default_voice_is_not_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.multiple(gateway, STATE_DIR=directory, DEFAULT_VOICE="lucy", REF_WAV=__file__):
+                for listing in (b'{"voices":[{"name":"lucy"}]}', b'{"voices":["lucy"]}', b'{}'):
+                    with patch.object(gateway, "backend_request", side_effect=[Stream(b"{}"), Stream(listing)]):
+                        with patch.object(gateway, "register_voice") as register:
+                            gateway.startup_voices()
+                            register.assert_not_called()
+
+    def test_missing_default_voice_is_registered(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.multiple(gateway, STATE_DIR=directory, DEFAULT_VOICE="lucy", REF_WAV=__file__):
+                with patch.object(gateway, "backend_request", side_effect=[Stream(b"{}"), Stream(b'{"voices":[]}')]):
+                    with patch.object(gateway, "register_voice") as register:
+                        gateway.startup_voices()
+                        self.assertEqual(register.call_args.args[0], "lucy")
+
     def test_supervisor_exits_on_either_child_failure(self):
         for commands in (("raise SystemExit(0)", "import time; time.sleep(60)"),
                          ("import time; time.sleep(60)", "raise SystemExit(2)")):

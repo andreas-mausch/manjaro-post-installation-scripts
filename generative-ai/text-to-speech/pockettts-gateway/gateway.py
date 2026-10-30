@@ -104,11 +104,12 @@ def startup_voices():
     # Register the reference voice as default if not present yet.
     if DEFAULT_VOICE and REF_WAV and os.path.isfile(REF_WAV):
         try:
-            names = json.load(backend_request("/v1/audio/voices", timeout=10))
-            existing = names.get("data", names) if isinstance(names, dict) else names
+            with backend_request("/v1/audio/voices", timeout=10) as response:
+                existing = json.load(response)["voices"]
             have = any((v.get("name") if isinstance(v, dict) else v) == DEFAULT_VOICE for v in existing)
-        except Exception:
-            have = False
+        except Exception as e:
+            log(f"warning: cannot check default voice, leaving it unchanged: {e}")
+            have = True
         if not have:
             with open(REF_WAV, "rb") as f:
                 body = {"name": DEFAULT_VOICE, "wav_b64": base64.b64encode(f.read()).decode()}
