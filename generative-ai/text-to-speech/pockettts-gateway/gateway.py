@@ -13,15 +13,17 @@ startup.
 Python stdlib only; ffmpeg must be on PATH.
 """
 import base64
+import hashlib
 import json
 import os
-import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BACKEND = os.environ.get("TTS_BACKEND", "http://127.0.0.1:8085")
@@ -61,19 +63,41 @@ def backend_request(path, method="GET", body=None, timeout=None):
     return urllib.request.urlopen(req, timeout=timeout)
 
 
-def safe_name(name):
-    return re.sub(r"[^A-Za-z0-9._-]", "_", name or "")[:100] or "voice"
+VOICE_LOCK = threading.RLock()
+
+
+def canonical_name(name):
+    if not isinstance(name, str) or not name or len(name) > 100:
+        raise ValueError("voice name must contain 1 to 100 characters")
+    return name.lower()
+
+
+def voice_path(name):
+    digest = hashlib.sha256(canonical_name(name).encode()).hexdigest()
+    return os.path.join(STATE_DIR, digest + ".json")
 
 
 # ---------------------------------------------------------------- voice registry
 
 def register_voice(name, body_json):
     """Forwards a voice registration to the backend and persists it."""
-    resp = backend_request("/v1/audio/voices", "POST", json.dumps(body_json).encode(), timeout=120)
-    resp.read()
-    os.makedirs(STATE_DIR, exist_ok=True)
-    with open(os.path.join(STATE_DIR, safe_name(name) + ".json"), "w") as f:
-        json.dump(body_json, f)
+    name = canonical_name(name)
+    body_json = dict(body_json, name=name)
+    with VOICE_LOCK:
+        with backend_request("/v1/audio/voices", "POST", json.dumps(body_json).encode(), timeout=120) as resp:
+            resp.read()
+        os.makedirs(STATE_DIR, exist_ok=True)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", dir=STATE_DIR, suffix=".tmp", delete=False) as f:
+                temporary = f.name
+                json.dump(body_json, f)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(temporary, voice_path(name))
+        finally:
+            if temporary and os.path.exists(temporary):
+                os.remove(temporary)
     log(f"voice '{name}' registered and persisted")
 
 
@@ -98,6 +122,9 @@ def startup_voices():
                 with open(os.path.join(STATE_DIR, fn)) as f:
                     body = json.load(f)
                 register_voice(body.get("name", fn), body)
+                # Migrate the previously shipped sanitized filenames.
+                if os.path.join(STATE_DIR, fn) != voice_path(body["name"]):
+                    os.remove(os.path.join(STATE_DIR, fn))
             except Exception as e:
                 log(f"warning: could not re-activate voice from {fn}: {e}")
 
@@ -106,7 +133,8 @@ def startup_voices():
         try:
             with backend_request("/v1/audio/voices", timeout=10) as response:
                 existing = json.load(response)["voices"]
-            have = any((v.get("name") if isinstance(v, dict) else v) == DEFAULT_VOICE for v in existing)
+            have = any(canonical_name(v.get("name") if isinstance(v, dict) else v)
+                       == canonical_name(DEFAULT_VOICE) for v in existing)
         except Exception as e:
             log(f"warning: cannot check default voice, leaving it unchanged: {e}")
             have = True
@@ -157,11 +185,15 @@ class Handler(BaseHTTPRequestHandler):
             data, status, ctype = resp.read(), resp.status, resp.headers.get("Content-Type", "application/json")
         except urllib.error.HTTPError as e:
             data, status, ctype = e.read(), e.code, e.headers.get("Content-Type", "application/json")
+        except Exception as e:
+            self._send_json(502, {"error": {"message": f"backend: {e}"}})
+            return 502
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+        return status
 
     # -- routes ---------------------------------------------------------------
     def do_GET(self):
@@ -206,12 +238,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         if self.path.startswith("/v1/audio/voices/"):
-            name = self.path.rsplit("/", 1)[-1]
-            self._forward_simple(self.path, method="DELETE")
             try:
-                os.remove(os.path.join(STATE_DIR, safe_name(name) + ".json"))
-            except FileNotFoundError:
-                pass
+                name = canonical_name(urllib.parse.unquote(self.path.rsplit("/", 1)[-1]))
+                with VOICE_LOCK:
+                    status = self._forward_simple("/v1/audio/voices/" + urllib.parse.quote(name, safe=""), method="DELETE")
+                    if 200 <= status < 300:
+                        try:
+                            os.remove(voice_path(name))
+                        except FileNotFoundError:
+                            pass
+            except ValueError as e:
+                self._send_json(400, {"error": {"message": str(e)}})
         else:
             self._send_json(404, {"error": {"message": "not found"}})
 

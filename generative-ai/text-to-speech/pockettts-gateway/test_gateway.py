@@ -1,8 +1,10 @@
 import io
 import json
+import os
 import shutil
 import sys
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -21,6 +23,50 @@ class BrokenStream(Stream):
 
 
 class GatewayTests(unittest.TestCase):
+    def test_concurrent_registration_keeps_complete_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(gateway, "STATE_DIR", directory):
+                with patch.object(gateway, "backend_request", side_effect=lambda *a, **k: Stream()):
+                    threads = [threading.Thread(target=gateway.register_voice,
+                               args=("lucy", {"name": "lucy", "wav_b64": str(i) * 1000}))
+                               for i in range(8)]
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join()
+                self.assertEqual(len(os.listdir(directory)), 1)
+                with open(gateway.voice_path("lucy")) as file:
+                    self.assertEqual(len(json.load(file)["wav_b64"]), 1000)
+
+    def test_voice_filenames_and_atomic_updates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(gateway, "STATE_DIR", directory):
+                with patch.object(gateway, "backend_request", side_effect=lambda *a, **k: Stream()):
+                    for name in ("a/b", "a_b", "LUCY", "lucy"):
+                        gateway.register_voice(name, {"name": name, "wav_b64": name})
+                self.assertEqual(len(os.listdir(directory)), 3)
+                with open(gateway.voice_path("LUCY")) as file:
+                    self.assertEqual(json.load(file), {"name": "lucy", "wav_b64": "lucy"})
+                with patch.object(gateway, "backend_request", side_effect=OSError("offline")):
+                    with self.assertRaises(OSError):
+                        gateway.register_voice("lucy", {"name": "lucy"})
+                self.assertTrue(os.path.exists(gateway.voice_path("lucy")))
+
+    def test_delete_only_removes_state_after_backend_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(gateway, "STATE_DIR", directory):
+                with patch.object(gateway, "backend_request", return_value=Stream()):
+                    gateway.register_voice("A/B", {"name": "A/B"})
+                handler = self.handler()
+                handler.path = "/v1/audio/voices/A%2FB"
+                with patch.object(handler, "_forward_simple", return_value=500):
+                    handler.do_DELETE()
+                self.assertTrue(os.path.exists(gateway.voice_path("a/b")))
+                with patch.object(handler, "_forward_simple", return_value=200) as forward:
+                    handler.do_DELETE()
+                forward.assert_called_once_with("/v1/audio/voices/a%2Fb", method="DELETE")
+                self.assertFalse(os.path.exists(gateway.voice_path("a/b")))
+
     def test_default_voice_is_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch.multiple(gateway, STATE_DIR=directory, DEFAULT_VOICE="lucy", REF_WAV=__file__):

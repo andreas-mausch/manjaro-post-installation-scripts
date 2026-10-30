@@ -59,6 +59,10 @@ curl -s http://localhost:8081/v1/audio/voices
 Omitting `voice` is fine (→ `lucy`). Register your own reference voices via
 `POST /v1/audio/voices` with `{"name":"…","wav_b64":"…"}` (base64 WAV; for
 large files use `--data @file`); they survive restarts.
+Names are case-insensitive (stored lowercase), with 1 to 100 characters.
+State filenames use SHA-256 instead of lossy character replacement; existing
+registrations migrate on startup. Updates use atomic replacement, and registry
+mutations are serialized. A failed backend deletion retains the saved voice.
 
 ## Cutting Hermes over to this stack
 
