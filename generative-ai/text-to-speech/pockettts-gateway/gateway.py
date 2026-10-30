@@ -165,7 +165,12 @@ class Handler(BaseHTTPRequestHandler):
     # -- routes ---------------------------------------------------------------
     def do_GET(self):
         if self.path == "/health":
-            self._send_json(200, {"status": "ok"})
+            try:
+                with backend_request("/v1/models", timeout=2) as response:
+                    json.load(response)
+                self._send_json(200, {"status": "ok"})
+            except Exception as e:
+                self._send_json(503, {"status": "unavailable", "error": str(e)})
         elif self.path == "/v1/models":
             try:
                 resp = backend_request("/v1/models", timeout=10)

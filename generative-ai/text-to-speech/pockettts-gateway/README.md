@@ -105,6 +105,9 @@ afterwards with `docker volume rm`. Details of the old setup:
   reject it or report a wrong duration. Use MP3/Opus for those clients, or
   remux the downloaded WAV locally into a seekable file. No buffering of the
   complete answer is introduced. FLAC also has unknown duration while streaming.
-- Model load takes < 1 s; health check at `/health`.
+- Model load takes < 1 s; `/health` queries the backend with a two-second
+  timeout and returns 503 if unavailable. The container supervisor exits if
+  either service dies so the compose restart policy can recover both. SIGTERM
+  stops both services and their encoder children (five-second grace period).
 - The gateway is deliberately minimal (no auth — loopback-only, as before);
   handle encryption/exposure the same way as LocalAI.

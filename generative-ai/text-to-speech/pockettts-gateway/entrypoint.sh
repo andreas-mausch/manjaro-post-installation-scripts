@@ -17,5 +17,4 @@ if [ -n "${PKTTS_SERVER_VOICE:-}" ]; then
     ARGS="$ARGS --voice $PKTTS_SERVER_VOICE"
 fi
 
-tts-server $ARGS &
-exec python3 /opt/tts/gateway.py
+exec python3 /opt/tts/supervisor.py tts-server $ARGS

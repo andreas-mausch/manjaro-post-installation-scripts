@@ -1,10 +1,12 @@
 import io
 import json
 import shutil
+import sys
 import unittest
 from unittest.mock import patch
 
 import gateway
+import supervisor
 
 
 class Stream(io.BytesIO):
@@ -18,6 +20,23 @@ class BrokenStream(Stream):
 
 
 class GatewayTests(unittest.TestCase):
+    def test_supervisor_exits_on_either_child_failure(self):
+        for commands in (("raise SystemExit(0)", "import time; time.sleep(60)"),
+                         ("import time; time.sleep(60)", "raise SystemExit(2)")):
+            self.assertEqual(supervisor.supervise(
+                [sys.executable, "-c", commands[0]],
+                [sys.executable, "-c", commands[1]]), 1)
+
+    def test_health_depends_on_backend(self):
+        handler = self.handler()
+        handler.path = "/health"
+        with patch.object(gateway, "backend_request", side_effect=OSError("offline")):
+            handler.do_GET()
+        self.assertEqual(handler.error[0], 503)
+        with patch.object(gateway, "backend_request", return_value=Stream(b'{"data":[]}')):
+            handler.do_GET()
+        self.assertEqual(handler.error[0], 200)
+
     def handler(self):
         handler = object.__new__(gateway.Handler)
         handler.close_connection = False
