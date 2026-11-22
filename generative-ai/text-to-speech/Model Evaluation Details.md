@@ -428,8 +428,17 @@ Produktiv-Stack (24l Vulkan ~5,5–6,6×) also Faktor ~7–8.
 
 **Emotionssteuerung (Code- + Praxischeck):**
 
+Qwen verteilt Klonbarkeit und Emotionskontrolle auf getrennte Checkpoints —
+pro Modellvariante entscheidet man sich für eines von beidem:
+
+| 1.7B-Variante | Voice Cloning | Emotionen (`instruct`) |
+|---|---|---|
+| **1.7B-Base** | ✓ (3-s-Klon aus Referenz-WAV + Transkript) | ✗ |
+| **1.7B-CustomVoice** | ✗ (nur 9 Preset-Stimmen) | ✓ |
+| **1.7B-VoiceDesign** | ✗ (Stimme per Beschreibung erfunden) | ✓ |
+
 - kein Tag-Vokabular; Steuerung über natürliches Sprach-Kommando im API-Feld
-  `instruct` („Sprich wütend und schroff.“). Eckige Inline-Tags im Text sind keine
+  `instruct` („Sprich wütend und schroff."). Eckige Inline-Tags im Text sind keine
   Steuerelemente.
 - Nur **1.7B-CustomVoice** und **1.7B-VoiceDesign** unterstützen `instruct`;
   Base (unser Klon-Weg) und alle 0.6B-Varianten nicht — `qwen3_tts_model.py`
