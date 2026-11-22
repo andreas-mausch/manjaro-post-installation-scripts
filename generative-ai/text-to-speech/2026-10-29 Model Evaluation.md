@@ -279,6 +279,58 @@ Details zum passenden Lauf: `april-matched/MATCHED_APRIL.md`.
 Details zum 6L-Lauf: `april-german-6l/APRIL_GERMAN_6L.md`; die vorherigen 36 WAVs
 sind per SHA256 unverändert.
 
+1. Die ONNX-Portierung implementiert Sampler (externer Flow-Loop), EOS oder
+   Text-Vorverarbeitung anders als Referenz/GGUF und genau das macht den Qualitäts-
+   unterschied aus.
+2. Der ONNX-Export (April) könnte aus dem **gated** Repo `kyutai/pocket-tts` von einer
+   anderen Revision stammen als der verglichene ungated Zwilling — lokal nicht prüfbar
+   ohne HF-Zugang (Gated-Repo hier nicht gemeldet).
+3. Die Voice-Embeddings der Demo wurden möglicherweise mit dem ONNX-Mimi neu gerechnet
+   und passen nicht 1:1 zu den safetensors-States aus dem HF-Repo.
+
+Zusätzlich aufgefallen (unabhängig vom Qualitätsproblem): Früher EOS-Abbruch der
+Generierung tritt in **allen** Runtimes in etwa jedem 3. Lauf auf (Seed-Lotterie bei
+temp 0.3 / eos_threshold -4). Für den Produktivbetrieb ggf. `eos_threshold` erhöhen
+oder Ausgabe auf Mindestlänge prüfen.
+
+Nächste sinnvolle Schritte:
+
+- In der Demo selbst die Settings durchhören (1 step vs. 8 steps, fp32 vs. quantised,
+  `german` 6L vs. `german_24l`): isoliert, welche Zutat die Qualität trägt.
+- Den ONNX-Stack lokal reproduzieren (onnxruntime + KevinAHM-Dateien + gepinnte
+  Voices): klingt es dort gut, wäre das entweder direkt nutzbare Basis oder man kann die
+  Gewichte daraus in GGUF überführen.
+- Kyutai auf den ausgetauschten Checkpoint ansprechen (Regression bei Ziffern/Englisch?).
+
+Testmaterial und Fundorte (persistent, übersteht Neustart):
+
+- Test-Ausgaben (WAV), Mess-Skripte und die LocalAI-Modell-YAML für 24l:
+  `~/Documents/coding/tts/proben-2026-10-29/`
+- April-Checkpoint + April-juergen (ungated, Revision `e041936c`):
+  `~/Documents/coding/tts/modelle/german_24l-april-e041936c/` — bei Bedarf neu ladbar
+  von `kyutai/pocket-tts-without-voice-cloning@e041936c` unter
+  `languages/german_24l/model.safetensors` bzw. `.../embeddings/juergen.safetensors`
+  (ungated, kein Token nötig). Der April-Tokener wurde NICHT verglichen.
+- BF16-GGUF (für Präzisionstest): `~/Documents/coding/tts/modelle/`
+  (von `Serveurperso/pocket-tts-GGUF`)
+- pockettts.cpp mit Vulkan-Build: `~/Documents/coding/tts/pockettts.cpp/build/`
+- Python-Referenz (4.0.1) reproduzierbar im LocalAI-Image: `docker run` mit
+  `localai/localai:v4.12.1`, Volumes `localai-models:/models` + `localai-backends:/backends`,
+  `HF_HUB_OFFLINE=1`, Gewichte auf den im LocalAI-Benchmark-Abschnitt genannten
+  Snapshot-Pfad mounten, dann `/backends/cpu-pocket-tts/venv/bin/python`
+  (`TTSModel.load_model(language="german_24l")`).
+
+Alle Testdateien: Satz 2, Voice juergen, lokale Runtimes:
+
+| Datei | Runtime/Konfiguration | Urteil |
+|---|---|---|
+| `e-f32-python-juergen.wav` | LocalAI, Python 4.0.1, f32, 1 step | schlecht |
+| `g-bf16-vulkan.wav` | pockettts.cpp, BF16-GGUF, Vulkan | schlecht |
+| `h-bf16-cpu-nofa.wav` | pockettts.cpp, BF16-GGUF, CPU, FP32-Attn | schlecht |
+| `c-cpu-nofa-temp0.wav` | pockettts.cpp, Q8_0, CPU, temp 0 | (nicht bewertet) |
+| `p-steps1.wav` / `p-steps8.wav` | Python 4.0.1, HEAD-Checkpoint, 1/8 steps | 8 steps: Früh-Abbruch |
+| `i-april-run1/2.wav` | Python 4.0.1, April-Checkpoint (e041936c) + April-juergen | Kauderwelsch |
+
 ### Geplantes Serving: Vulkan, OpenAI-API, WAV/MP3/Opus
 
 Selbst gebaute `german_24l`-GGUFs liegen dem User bereits vor. Geplant ist ein eigenes
