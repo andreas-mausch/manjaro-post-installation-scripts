@@ -476,9 +476,40 @@ pro Modellvariante entscheidet man sich für eines von beidem:
 **Fazit:** Die Qualitätsfrage ist beantwortet: **Ja** — der 1.7B-Base-Klon (ohne
 Runtime-Normalisierung) klingt besser als unser Pocket-TTS-Stack. Ausgeschieden ist
 Qwen3-TTS trotzdem, und zwar allein an der Geschwindigkeit: ~0,7× Realtime hier,
-~1× auf einer RTX 3090 upstream, gebraucht werden 5–10×. Der einzige denkbare Hebel
-bleibt gufos integrierte Qwen3-TTS-Variante (ungetestet,
-[Doku](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md)).
+~1× auf einer RTX 3090 upstream, gebraucht werden 5–10×. Gufos integrierter
+Qwen3-TTS-Server (nächster Abschnitt) ist der schnellste bekannte Weg — reicht
+mit ~1,7× ebenfalls nicht.
+
+## Test 23.11.2026: gufo serve tts (GPU, Container 0.35.0)
+
+Aufbau mit [`gufo-tts.sh`](../gufo-tts.sh): Modellkopie aus dem HF-Cache
+(`cp -rL` nach `/srv/llama/models/Qwen3-TTS-12Hz-1.7B-Base`), Voice-Registrierung
+über `--voice lucy=/voices/lucy.wav --voice-text … --voice-lang lucy=German`.
+Stolperstein: die Referenz-`.txt` darf nur das reine Transkript enthalten — die
+`sample.txt` im Repo hat angehängte Quellenzeilen, die wandern sonst als
+„gesprochener Text“ ins Modell. Läßt parallel zum gufo-LLM-Container (8080) auf
+Port 8082; `/ready` nach ~2 s.
+
+Ergebnis (1 Warmup + 3 Läufe, GPU neben LLM-Container):
+
+| Fall | rf (api/audio) | Realtime-Faktor |
+|---|---|---|
+| s1 | 0,57 | **1,75×** |
+| s2 (Ziffern direkt) | 0,61 | 1,64× |
+| s2g („gerendert“) | 0,62 | 1,61× |
+
+Das ist ~2,3× schneller als der venv-Aufsetzer auf der CPU (0,7×) — gufos eigene
+Angabe für Base-ICL (RTF 0,436 ≈ 2,3×) wird bei geteiltem GPU/RAM leicht verfehlt.
+Weitere Pluspunkte: PCM-Streaming mit Erstem Byte < 0,02 s (upstream: erstes Audio
+nach ~0,2–0,35 s), deterministische Seeded-Replays, Ziffern gehen **ohne
+Textnormalisierung** direkt ans Modell (unser noTN-Befund vom venv ist dort
+somit Standard). NPU-Modus (`--npu`) ist laut gufo-Benchmarks langsamer (1,4×)
+und damit irrelevant.
+
+**Einordnung:** schnellster bekannter Qwen3-TTS-Weg auf dieser Hardware, aber
+~1,7× bleibt weit unter 5–10× (und unter dem Pocket-TTS-Gateway mit 5,5–6,6×).
+Qualität = gleichesCheckpoint wie der noTN-Hörtest = bisher bestes Deutsch;
+Gegenhörblöcke `gufotts-lucy-*` in `listen.html`.
 
 # OmniVoice
 
