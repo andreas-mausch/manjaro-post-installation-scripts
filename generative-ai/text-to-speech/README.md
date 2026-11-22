@@ -13,6 +13,9 @@ Dieses Dokument bündelt am 22.11.2026 vier Datums-Notizen (Originalfassung: Git
 - deutlich schneller als Real-Time: Faktor 5-10x wünschenswert
 - Optional: Emotion Tags werden unterstützt
 - Optional: Support für unterschiedliche Sprecher
+- OpenAI API
+- [api]: Support für Streaming
+- Optional [api]: Output als .wav, .ogg oder .mp3
 
 # Getestete Modelle
 
@@ -21,21 +24,27 @@ Testtext „Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß.“;
 Messmethoden in [Details](Model%20Evaluation%20Details.md#geschwindigkeits-benchmarks).
 Spalten: ✓ = ja, ✗ = nein, — = nicht geprüft.
 „Englisch“ = englische Wörter im deutschen Testtext („Sprites“, „gerendered“).
+„Streaming“ = die API liefert Audio während der Generierung aus (HTTP-chunked),
+ohne auf die vollständige Synthese zu warten.
+„Mehrere Speaker“ = mehrere Stimmen in **einem** Request (Dialog-Modus), nicht
+blöß „verschiedene Stimmen pro Request möglich“. Das erfüllt keine getestete
+Kombination: jeder Läufer bekommt genau eine Stimme pro Request
+(`voice` / `--voice-ref` / `--ref-wav`).
 
-| Modell | Runtime | Release-Date | Größe (MB) | Quantisierung | Realtime-Faktor | Voice Cloning | Deutsch | Englisch | Emotion-Tags | Mehrere Speaker |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **Pocket-TTS `german_24l` (April, `e041936c`) ✅ gewählt** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via `pockettts-gateway` | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ | ✓ | ✓ | — | ✓ (juergen, vera + Klon `lucy`) |
-| Pocket-TTS `german_24l` (April, `e041936c`) | ONNX-Export der KevinAHM-Demo, onnxruntime (Ryzen 7 PRO 7840U) | 2026-04 | — | INT8 | — | — | ✓ | ✓ | — | ✓ (Demo-Stimmen) |
-| ~~Pocket-TTS `german` 6l (April)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-04 | 138 | Q8_0 (eigenkonvertiert) | ~11× (sustain ~9×) | ✓ | ✓¹ | ✗ | — | ✓ (26 April-Stimmen) |
-| ~~Pocket-TTS `german` 6l (09/2026)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-09 | 138 | Q8_0 (Serveurperso) | ~12× (sustain ~9×) | ✓ | ✓¹ | ✗ | — | ✓ |
-| ~~Pocket-TTS `german_24l` (Checkpoint 10/2026)~~ | LocalAI v4.12.1 (Backend `pocket_tts` 4.0.1), CPU | 2026-09 | — | f32 | ~0,9–1,1× | ✓ | ✗² | ✗ | — | ✓ |
-| Pocket-TTS `german` 6l (Stand Okt 2026) | audio.cpp `ghcr.io/0xshug0/audio.cpp:full-cpu` | — | — | Q8_0 | — („sehr schnell“, ungemessen) | ✓ | — | — | — | ✓ |
-| ~~OmniVoice `omnivoice-base`~~ | `omnivoice.cpp 1a468d8`, Vulkan0 | — | 626 + 276 (Codec) | Q8_0 | 0,95× (32 Schritte) / 2,8× (8) | ✓³ | ✓ | ✗ | — | ✓ |
-| ~~Qwen3-TTS 0.6B Base~~ | `groxaxo/Qwen3-TTS-OpenAI-Fastapi` @ `783bf0e`, Python-venv | — | — | — | ungemessen („noch etwas langsam“) | ✓ | ✓ | — | ✗⁴ | ✓ |
-| ~~Qwen3-TTS 1.7B Base~~ | wie oben | — | — | — | ungemessen („zu langsam“) | ✓ | ✓ | — | ✗⁴ | ✓ |
-| ~~Chatterbox~~ | audio.cpp `full-cpu`, `chatterbox_q8_0` | — | — | Q8_0 | ungemessen („zu langsam“) | ✓ | ✓ | — | — | ✓ |
-| ~~Chatterbox-Turbo~~ | nicht gelaufen (per Release-Notes raus) | — | — | — | — | ✗ | nur Englisch (350M) | — | ✗ | ✗ |
-| ~~Kokoro~~ | nicht getestet | — | — | — | — | ✗ (vermutlich) | — | — | — | — |
+| Modell | Runtime | Release-Date | Größe (MB) | Quantisierung | Realtime-Faktor | Streaming | Voice Cloning | Deutsch | Englisch | Emotion-Tags | Mehrere Speaker |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Pocket-TTS `german_24l` (April, `e041936c`) ✅ gewählt** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via `pockettts-gateway` | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ (immer chunked; wav/pcm/mp3/opus/aac/flac; TTFB 0,02–0,28 s) | ✓ | ✓ | ✓ | — | ✗ |
+| Pocket-TTS `german_24l` (April, `e041936c`) | ONNX-Export der KevinAHM-Demo, onnxruntime (Ryzen 7 PRO 7840U) | 2026-04 | — | INT8 | — | — | — | ✓ | ✓ | — | ✗ |
+| ~~Pocket-TTS `german` 6l (April)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-04 | 138 | Q8_0 (eigenkonvertiert) | ~11× (sustain ~9×) | ✓ (tts-server: pcm/wav) | ✓ | ✓¹ | ✗ | — | ✗ |
+| ~~Pocket-TTS `german` 6l (09/2026)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-09 | 138 | Q8_0 (Serveurperso) | ~12× (sustain ~9×) | ✓ (tts-server: pcm/wav) | ✓ | ✓¹ | ✗ | — | ✗ |
+| ~~Pocket-TTS `german_24l` (Checkpoint 10/2026)~~ | LocalAI v4.12.1 (Backend `pocket_tts` 4.0.1), CPU | 2026-09 | — | f32 | ~0,9–1,1× | — (nicht gemessen) | ✓ | ✗² | ✗ | — | ✗ |
+| Pocket-TTS `german` 6l (Stand Okt 2026) | audio.cpp `ghcr.io/0xshug0/audio.cpp:full-cpu` | — | — | Q8_0 | — („sehr schnell“, ungemessen) | — (nur WAV-Datei; Server ungetestet) | ✓ | — | — | — | ✗ |
+| ~~OmniVoice `omnivoice-base`~~ | `omnivoice.cpp 1a468d8`, Vulkan0 | — | 626 + 276 (Codec) | Q8_0 | 0,95× (32 Schritte) / 2,8× (8) | — (tts-server vorhanden, ungemessen) | ✓³ | ✓ | ✗ | — | ✗ |
+| ~~Qwen3-TTS 0.6B Base~~ | `groxaxo/Qwen3-TTS-OpenAI-Fastapi` @ `783bf0e`, Python-venv | — | — | — | ungemessen („noch etwas langsam“) | — | ✓ | ✓ | — | ✗⁴ | ✗ |
+| ~~Qwen3-TTS 1.7B Base~~ | wie oben | — | — | — | ungemessen („zu langsam“) | — | ✓ | ✓ | — | ✗⁴ | ✗ |
+| ~~Chatterbox~~ | audio.cpp `full-cpu`, `chatterbox_q8_0` | — | — | Q8_0 | ungemessen („zu langsam“) | — | ✓ | ✓ | — | — | ✗ |
+| ~~Chatterbox-Turbo~~ | nicht gelaufen (per Release-Notes raus) | — | — | — | — | — | ✗ | nur Englisch (350M) | — | ✗ | ✗ |
+| ~~Kokoro~~ | nicht getestet | — | — | — | — | — | ✗ (vermutlich) | — | — | — | — |
 
 ¹ Deutsch insgesamt okay, aber Ziffern („13:05“) und englische Begriffe schlecht.
 ² Ziffern unverständlich, englische Wörter eingedeutscht (Hörurteil 29./30.10.2026).
@@ -45,7 +54,8 @@ Spalten: ✓ = ja, ✗ = nein, — = nicht geprüft.
 **Anmerkungen (Hörurteile und Entscheidungsgründe):**
 
 - **Pocket-TTS 24l April — die Wahl.** Bestes Qualitäts-/Tempo-Verhältnis; Ziffern und
-  englische Begriffe okay. Auf Vulkan ~5,5×, über das Gateway ~6,6×.
+  englische Begriffe okay. Auf Vulkan ~5,5×, über das Gateway ~6,6×
+  (Stimmen: juergen, vera + Klon `lucy`, jeweils eine pro Request).
   Bekannte Modelleigenschaft: gelegentlich verschluckte Anfangswörter und verfrühter
   Endabbruch — in **allen** Runtimes, nichtbehebbar (Details
   [Fehlerbilder](Model%20Evaluation%20Details.md#fehlerbilder-im-produktivbetrieb-analyse-22112026)).
