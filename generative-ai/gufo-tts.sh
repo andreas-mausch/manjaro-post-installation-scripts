@@ -8,7 +8,7 @@ set -euo pipefail
 IMAGE="${IMAGE:-ghcr.io/gufo-org/toolboxes/gufo-runtime:0.35.0}"
 MODELS_DIR="${MODELS_DIR:-/srv/llama/models}"
 MODEL="${MODEL:-/models/Qwen3-TTS-12Hz-1.7B-Base}"
-VOICES_DIR="${VOICES_DIR:-/srv/llama/models/tts-voices}"
+VOICES_DIR="${VOICES_DIR:-/srv/llama/tts-voices}"
 VOICE_NAME="${VOICE_NAME:-lucy}"
 HOST="${HOST:-127.0.0.1}" # set HOST=0.0.0.0 to expose the server on your LAN
 PORT="${PORT:-8082}"
