@@ -2,7 +2,7 @@
 # Source (commit): https://github.com/wakamex/pockettts.cpp/commit/11fc27200c79d7a81b63ab0b322559c1537691fd
 # Source (PR):     https://github.com/ServeurpersoCom/pockettts.cpp/pull/1 (open; base 6187e69)
 # Applies cleanly to our pin fab7972 (verified 2026-11-22 with git apply --check).
-# Analysis: ../2026-11-22 Onset Clipping (pockettts.cpp).md
+# Analysis: ../Model Evaluation Details.md
 
 From 11fc27200c79d7a81b63ab0b322559c1537691fd Mon Sep 17 00:00:00 2001
 From: wakamex <mcosma@gmail.com>

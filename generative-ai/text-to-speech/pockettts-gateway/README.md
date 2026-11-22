@@ -4,7 +4,8 @@ Standalone TTS stack replacing the `localai` service from
 [`../../hermes/compose.yaml`](../../hermes/compose.yaml). Model: **Pocket-TTS
 german 24l, April checkpoint, Q8_0** (`/srv/llama/models/pocket-tts/german_24l/`),
 synthesis on the iGPU via Vulkan — ~5.5× realtime instead of ~0.9×
-(LocalAI/Python/CPU with 24l); see the [benchmark](2026-10-30-benchmark.md).
+(LocalAI/Python/CPU with 24l); see the
+[benchmarks](../Model%20Evaluation%20Details.md#geschwindigkeits-benchmarks).
 
 ```
 Hermes/WebUI/curl ──> gateway :8080 (in container) ──> tts-server 127.0.0.1:8085 ──> Vulkan
@@ -18,7 +19,8 @@ endpoints but only WAV/PCM — in exchange, PCM streams during generation.
 The build applies `onset-keep-first-frame.patch` (the not-yet-merged onset
 fix from [pockettts.cpp#1](https://github.com/ServeurpersoCom/pockettts.cpp/pull/1)):
 stock `fab7972` drops the first 80 ms frame of every chunk, which clips
-word onsets — see the [analysis](../2026-11-22%20Onset%20Clipping%20(pockettts.cpp).md).
+word onsets — see the
+[analysis](../Model%20Evaluation%20Details.md#fehlerbilder-im-produktivbetrieb-analyse-22112026).
 The bundled Python gateway (`gateway.py`, stdlib only + ffmpeg) adds the
 **mp3, opus, aac, flac** formats (ogg alias = real Opus, better than LocalAI's
 "ogg" which delivered Vorbis) and encodes from the PCM stream — the client
@@ -103,7 +105,8 @@ lets supervision restart the stack rather than silently using another voice.
 * The `localai` service block has been removed from
   `../../hermes/compose.yaml`; the LocalAI volumes (`localai-*`) are still
   there until a rollback is ruled out (`docker volume rm` them then).
-  Details of the old setup: [`LocalAI.md`](LocalAI.md).
+  Details of the old setup:
+  [Model Evaluation Details](../Model%20Evaluation%20Details.md#localai-ehemaliges-produktiv-setup-bis-30102026).
 * Verified: synthesis request from inside the `hermes` container
   (`host.docker.internal:8081`) returns real MP3.
 

@@ -7,7 +7,7 @@ RUN pacman -Syu --noconfirm --needed base-devel cmake git pkgconf python glslang
 ARG PKTTS_REPO=https://github.com/ServeurpersoCom/pockettts.cpp.git
 ARG PKTTS_REF=fab7972
 # Onset fix from ServeurpersoCom/pockettts.cpp#1 (keep first frame + 5 ms fade):
-# without it, every chunk starts clipped. Analysis: ../2026-11-22 Onset Clipping (pockettts.cpp).md
+# without it, every chunk starts clipped. Analysis: ../Model Evaluation Details.md
 COPY onset-keep-first-frame.patch /tmp/onset-keep-first-frame.patch
 RUN git clone ${PKTTS_REPO} /src \
  && cd /src && git checkout ${PKTTS_REF} \

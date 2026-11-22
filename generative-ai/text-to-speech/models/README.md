@@ -13,7 +13,7 @@ converted from.**
 
 Production consumes the April 24l GGUFs via
 [`../pockettts-gateway/`](../pockettts-gateway/); quality/speed comparison of
-all packs: [`../2026-10-30-benchmark.md`](../2026-10-30-benchmark.md).
+all packs: [Model Evaluation Details](../Model%20Evaluation%20Details.md#geschwindigkeits-benchmarks).
 
 ## Why the April GGUFs are self-converted
 

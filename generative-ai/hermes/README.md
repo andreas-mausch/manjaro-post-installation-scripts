@@ -27,7 +27,8 @@ agent — holds `config.yaml`, `.env`, plugins, OMEMO store, sessions, logs). Wh
 models stay on the host at **`/srv/llama/models/whisper`** and are mounted **read-only**
 into Speaches. The TTS weights live on the host at **`/srv/llama/models/pocket-tts/german`**
 and the reference voice at **`../text-to-speech/sample.wav`** (git-ignored) — see
-[`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md).
+[`../text-to-speech/README.md`](../text-to-speech/README.md) (production has since moved
+to [`../text-to-speech/pockettts-gateway/`](../text-to-speech/pockettts-gateway/README.md)).
 
 ```
 Browser ──► hermes-webui:8787 ──(gateway runs API)──► hermes:8642 ──LLM──► gufo (host :8080)
@@ -51,7 +52,7 @@ Spoken reply ─► hermes-agent ──(tts.provider=openai)──► localai:80
   whisper/audio.cpp setups don't). The weights are bind-mounted at fixed HF snapshot paths
   and it runs **offline** (`HF_HUB_OFFLINE=1`). Why this model over the alternatives
   (Qwen3-TTS, Chatterbox, Kokoro, …) is documented in
-  [`../text-to-speech/2026-10-29 Model Evaluation.md`](../text-to-speech/2026-10-29%20Model%20Evaluation.md).
+  [`../text-to-speech/README.md`](../text-to-speech/README.md#getestete-modelle).
   Because gufo occupies host `8080`, LocalAI is published on host `8081`; inside the
   compose network the agent reaches it at `http://localai:8080`.
 - **XMPP** via the community plugin
@@ -75,7 +76,7 @@ Spoken reply ─► hermes-agent ──(tts.provider=openai)──► localai:80
    reference voice at `../text-to-speech/sample.wav` (git-ignored). Without these files the
    `localai` container won't start (bind mounts use `create_host_path: false` on purpose,
    so missing files fail loudly instead of silently mounting empty dirs). See
-   [`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md).
+   [`../text-to-speech/Model Evaluation Details.md`](../text-to-speech/Model%20Evaluation%20Details.md#localai-ehemaliges-produktiv-setup-bis-30102026).
 
 ---
 
@@ -147,7 +148,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/health
 On first start the agent creates its home + `config.yaml` in the volume. `localai`'s
 first start can take a long time: it installs the pocket-tts backend online and preloads
 the model (healthcheck allows up to 60 min; then test a real `/v1/audio/speech` call,
-see [`../text-to-speech/LocalAI.md`](../text-to-speech/LocalAI.md)). If you skip the TTS
+see [`../text-to-speech/Model Evaluation Details.md`](../text-to-speech/Model%20Evaluation%20Details.md#localai-ehemaliges-produktiv-setup-bis-30102026)). If you skip the TTS
 assets, `localai` is the only service that fails — stop it with
 `docker compose stop localai` or comment the service out.
 
@@ -293,7 +294,7 @@ docker compose exec hermes grep -aE "xmpp connected|Gateway running with" \
 docker compose ps
 curl -s http://127.0.0.1:8000/v1/models | head
 
-# TTS health (LocalAI): model list + real synthesis (details in ../text-to-speech/LocalAI.md)
+# TTS health (LocalAI): model list + real synthesis (details in ../text-to-speech/README.md)
 curl -s http://127.0.0.1:8081/v1/models | head
 curl -s --fail-with-body -o /tmp/tts-test.wav http://127.0.0.1:8081/v1/audio/speech \
   -H 'Content-Type: application/json' \
@@ -375,7 +376,7 @@ See also [`TODO.md`](./TODO.md).
 - Volume `hermes_hermes-data` → `/opt/data` (config.yaml, .env, plugins, xmpp_omemo.json, logs)
 - Host `/srv/llama/models/whisper/hub` → read-only whisper cache
 - Host `/srv/llama/models/pocket-tts/german` → read-only PocketTTS German weights
-- Host `../text-to-speech/` → reference voice `sample.wav` (git-ignored) + `LocalAI.md`
+- Host `../text-to-speech/` → reference voice `sample.wav` (git-ignored) + `README.md`
   + the TTS model evaluation
 - Volumes `localai-models` / `localai-backends` / `localai-configuration` / `localai-data`
 
