@@ -100,7 +100,7 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   `/srv/llama/models/pocket-tts/german_2026-09_24l/`, offener Gegenhörtest April vs. 09
   (April-Paket ist Basis, auf der Produktiv läuft)
 - gufo-integriertes Qwen3-TTS — **getestet 23.11.2026** (siehe Tabelle, Zeile
-  „1.7B Base (gufo)"): ~1,7× Realtime auf dem GPU, Start in 2 s, echtes PCM-
+  „1.7B Base (gufo)"): ~1,7× Realtime auf dem GPU, Start in ~14 s, echtes PCM-
   Streaming, Ziffern gehen unnormalisiert ans Modell. Deutlich schneller als der
   Python-venv-Aufsetzer, aber die 5–10×-Anforderung weiterhin klar verfehlt.
 

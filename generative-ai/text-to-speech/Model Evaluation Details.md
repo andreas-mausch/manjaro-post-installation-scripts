@@ -488,7 +488,8 @@ Aufbau mit [`gufo-tts.sh`](../gufo-tts.sh): Modellkopie aus dem HF-Cache
 Stolperstein: die Referenz-`.txt` darf nur das reine Transkript enthalten — die
 `sample.txt` im Repo hat angehängte Quellenzeilen, die wandern sonst als
 „gesprochener Text“ ins Modell. Läßt parallel zum gufo-LLM-Container (8080) auf
-Port 8082; `/ready` nach ~2 s.
+Port 8082; `/ready` nach ~14 s (loggemessene Ladezeit; unser erster „2-s"-Wert traf
+einen warmen Container).
 
 Ergebnis (1 Warmup + 3 Läufe, GPU neben LLM-Container):
 
@@ -520,7 +521,7 @@ Konsolidierung aller Messungen und Hörurteile dieses und des Oktober-Durchgangs
 | Deutsch-Qualität | „okay“, **Ziffern unverständlich**, EN-Wörter eingedeutscht | **bestes Deutsch aller Tests**, „13:05“ einwandfrei, keine Vor-Normalisierung | Qwen |
 | Geschwindigkeit | **~5,5–6,6×** Realtime | ~1,7× (GPU, parallel zum LLM) | Pocket |
 | Streaming | ✓ chunked, TTFB 0,02–0,28 s | ✓✓ pcm/sse/WebSocket, erstes Byte < 0,02 s | Qwen |
-| Startzeit | Container-Minuten (Stack mit Patch) | **~2 s** | Qwen |
+| Startzeit | Container-Minuten (Stack mit Patch) | **~14 s** | Qwen |
 | Stimmen-Pflege | GGUF-Bau-Ritual (`spm2json.py`, Patches, onset-Fix) | `lucy.wav` + `lucy.txt` auf Disk, fertig | Qwen |
 | API | OpenAI-API + wav/ogg/mp3 | OpenAI-API + wav/pcm/sse; kein mp3/ogg | Pocket |
 | Ressourcen | eigener Vulkan-Container, klein | ~4 GB RAM + GPU geteilt mit dem 125B-LLM | Pocket |
