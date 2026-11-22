@@ -400,8 +400,57 @@ TTS_MODEL_NAME=Qwen/Qwen3-TTS-12Hz-0.6B-Base python -m api.main
 - Erst 1.7B getestet — zu langsam; 0.6B „klang noch gut genug, war aber immer noch
   etwas langsam“.
 - Repo hat alles dabei (WebUI, API, Docs) — wirkt sehr gut.
-- Emotion-Tags wie `[serious]`/`[excited]` funktionierten nicht
-  (Referenz: [qwen3tts.net Prompt-Guide](https://www.qwen3tts.net/qwen3-tts-prompt-guide)).
+- Emotion-Tags wie `[serious]`/`[excited]` funktionierten nicht — Aufklärung siehe
+  Retest unten: Inline-Tags sind nicht vorgesehen, und Base-Modelle haben
+  prinzipbedingt keine Emotionssteuerung.
+
+## Retest 22.11.2026 (Ryzen AI Max 395+, Repo e17c1c9)
+
+Aufbau: `uv`-venv Python 3.12, `torch`-CPU-Wheels, Repo-Stand `e17c1c9`;
+Server mit `TTS_BACKEND=pytorch TTS_DEVICE=cpu TTS_DTYPE=bfloat16`. Stolperstein:
+`TTS_LAZY_LOAD=True` ist Standard — `/health` bleibt bis zur ersten Sprachanfrage
+unready. Lucy-Klon als Voice-Library-Profil (`voice=clone:lucy`, ICL mit
+`ref_text`), Referenz wie im Gateway: `sample.wav` + Transkript.
+
+**Geschwindigkeit** (1 Warmup + 3 Läufe, Sätze wie im Oktober-Protokoll;
+Realtime-Faktor = Audiosekunden pro API-Sekunde):
+
+| Konfiguration | s1 | s2 | Bemerkung |
+|---|---|---|---|
+| 0.6B-Base, lucy-Klon, **bf16** | **0,92×** | 0,90× | schnellster CPU-Pfad (Zen5 nativ AVX512-BF16) |
+| 0.6B-Base, lucy-Klon, fp32 | 0,26× | 0,27× | Server-Warnung „bf16 unsupported“ gilt für ältere CPUs, hier umgekehrt |
+| 1.7B-CustomVoice, Preset Aiden | — | **0,78×** | Preset ohne Klon-Encoding — trotzdem langsamer als 0,6B-Klon |
+
+Zum Einordnen: die upstream-eigenen Benchmarks des Repos erreichen mit 1.7B auf einer
+**RTX 3090** nur RTF ~0,97 (Official) bzw. ~0,83 (vLLM-Omni). Qwen3-TTS ist
+aktuell auf keinem Backend in der Nähe der 5–10×-Anforderung; Abstand zum
+Produktiv-Stack (24l Vulkan ~5,5–6,6×) also Faktor ~7–8.
+
+**Emotionssteuerung (Code- + Praxischeck):**
+
+- kein Tag-Vokabular; Steuerung über natürliches Sprach-Kommando im API-Feld
+  `instruct` („Sprich wütend und schroff.“). Eckige Inline-Tags im Text sind keine
+  Steuerelemente.
+- Nur **1.7B-CustomVoice** und **1.7B-VoiceDesign** unterstützen `instruct`;
+  Base (unser Klon-Weg) und alle 0.6B-Varianten nicht — `qwen3_tts_model.py`
+  setzt `instruct` für 0.6B hart auf `None`. **Klonbare Stimme + Emotion schließen
+  sich bei Qwen3-TTS derzeit aus** (Workaround laut Modellkarte: VoiceDesign →
+  Referenz-Clip erzeugen → davon klonen, Emotion geht dabei aber flöten).
+- Hörtest-Material (Aiden, identischer Satz): `instruct` wirkt sichtbar —
+  „fröhlich“ 8,5 s / „traurig“ 8,8 s / „wütend“ 6,0 s / ohne 6,2 s (unterschiedliches
+  Sprechtempo). Dateien + Gegenhören:
+  `~/Documents/coding/tts/qwen3-tts-bench-2026-11/listen.html` (dort auch
+  Gateway-`lucy` vs. Qwen-0.6B-`lucy`-Klon, je 3 Läufe).
+- CustomVoice hat **keine deutschsprachige Preset-Stimme** (9 Voices: Ch/Beijing/
+  Sichuan/En/Ja/Ko); offizielles German-WER 1,057 (1.7B-CV) bzw. 2,722 (0.6B-CV),
+  Base zero-shot DE: 1,089 (0.6B) / 1,235 (1.7B). Deutsche Qualität der Presets ist
+  Hörtest-offen.
+
+**Fazit:** Qualität „besser als Pocket-TTS?“ steht auf einem Klon-Hörtest (offen,
+siehe listen.html), aber selbst bei besserer Qualität scheidet Qwen3-TTS wegen der
+~0,8–0,9× Realtime aus — außer gufos integrierte Qwen3-TTS-Variante (ungetestet,
+[Doku](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md))
+sollte deutlich schneller sein.
 
 # OmniVoice
 
