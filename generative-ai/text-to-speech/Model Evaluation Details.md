@@ -404,7 +404,7 @@ TTS_MODEL_NAME=Qwen/Qwen3-TTS-12Hz-0.6B-Base python -m api.main
   Retest unten: Inline-Tags sind nicht vorgesehen, und Base-Modelle haben
   prinzipbedingt keine Emotionssteuerung.
 
-## Retest 22.11.2026 (Ryzen AI Max 395+, Repo e17c1c9)
+## Retest 22./23.11.2026 (Ryzen AI Max 395+, Repo e17c1c9)
 
 Aufbau: `uv`-venv Python 3.12, `torch`-CPU-Wheels, Repo-Stand `e17c1c9`;
 Server mit `TTS_BACKEND=pytorch TTS_DEVICE=cpu TTS_DTYPE=bfloat16`. Stolperstein:
@@ -419,7 +419,8 @@ Realtime-Faktor = Audiosekunden pro API-Sekunde):
 |---|---|---|---|
 | 0.6B-Base, lucy-Klon, **bf16** | **0,92×** | 0,90× | schnellster CPU-Pfad (Zen5 nativ AVX512-BF16) |
 | 0.6B-Base, lucy-Klon, fp32 | 0,26× | 0,27× | Server-Warnung „bf16 unsupported“ gilt für ältere CPUs, hier umgekehrt |
-| 1.7B-CustomVoice, Preset Aiden | — | **0,78×** | Preset ohne Klon-Encoding — trotzdem langsamer als 0,6B-Klon |
+| 1.7B-Base, lucy-Klon, bf16 | 0,73× | 0,70× | fairer Vergleich: gleiche Stimme/Modus, nur größere Modelle werden **langsamer** |
+| 1.7B-CustomVoice, Preset Aiden | — | **0,78×** | Preset ohne Klon-Encoding — schnellste Emotions-Variante |
 
 Zum Einordnen: die upstream-eigenen Benchmarks des Repos erreichen mit 1.7B auf einer
 **RTX 3090** nur RTF ~0,97 (Official) bzw. ~0,83 (vLLM-Omni). Qwen3-TTS ist

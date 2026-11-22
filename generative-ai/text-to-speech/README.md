@@ -41,6 +41,7 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 | Pocket-TTS `german` 6l (Stand Okt 2026) | audio.cpp `ghcr.io/0xshug0/audio.cpp:full-cpu` | — | — | Q8_0 | — („sehr schnell“, ungemessen) | — (nur WAV-Datei; Server ungetestet) | ✓ | — | — | — | ✗ |
 | ~~OmniVoice `omnivoice-base`~~ | `omnivoice.cpp 1a468d8`, Vulkan0 | — | 626 + 276 (Codec) | Q8_0 | 0,95× (32 Schritte) / 2,8× (8) | — (tts-server vorhanden, ungemessen) | ✓³ | ✓ | ✗ | — | ✗ |
 | ~~Qwen3-TTS 0.6B Base~~ | `groxaxo/Qwen3-TTS-OpenAI-Fastapi` @ `e17c1c9`, Python-venv, CPU bf16 | — | 1829 | bf16 | ~0,9× gemessen (fp32 nur ~0,27×) | — | ✓ | ✓ | — | ✗⁴ | ✗ |
+| ~~Qwen3-TTS 1.7B Base~~ | wie oben, CPU bf16 | — | 3860 | bf16 | ~0,7× gemessen | — | ✓ | ✓ | — | ✗⁴ | ✗ |
 | ~~Qwen3-TTS 1.7B CustomVoice~~ | wie oben, CPU bf16 | — | 3840 | bf16 | ~0,8× gemessen | — | ✗ (nur 9 Preset-Stimmen) | ✓⁵ | ✓ | ✓⁶ | ✗ |
 | ~~Chatterbox~~ | audio.cpp `full-cpu`, `chatterbox_q8_0` | — | — | Q8_0 | ungemessen („zu langsam“) | — | ✓ | ✓ | — | — | ✗ |
 | ~~Chatterbox-Turbo~~ | nicht gelaufen (per Release-Notes raus) | — | — | — | — | — | ✗ | nur Englisch (350M) | — | ✗ | ✗ |
@@ -74,11 +75,11 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   wählbar (CLI funktioniert); nur WAV-Ausgabe.
 - ~~OmniVoice~~: selbst 8 MaskGIT-Schritte sehr gut (nur „gerendered“ auffällig), aber
   0,95–2,8× → Anforderung verletzt; Pflicht-Transkript; ~900 MB Fußabdruck.
-- ~~Qwen3-TTS~~: 0.6B-Klon klang auf Anhieb gut, aber langsam; Nachmessung 22.11.:
-  ~0,9× Realtime (CPU bf16) — auch upstream kommen auf einer RTX 3090 nur ~1× heraus,
-  die 5–10×-Anforderung ist mit dieser Modellfamilie aktuell auf keinem Backend
-  erreichbar. Emotionen: nur über `instruct`-Feld mit 1.7B-CustomVoice/VoiceDesign —
-  Base/Klonen kann keine (Details unter
+- ~~Qwen3-TTS~~: 0.6B-Klon klang auf Anhieb gut, aber langsam; Nachmessung 22./23.11.:
+  ~0,9× Realtime (CPU bf16), 1.7B-Base nur ~0,7× — auch upstream kommen auf einer
+  RTX 3090 nur ~1× heraus, die 5–10×-Anforderung ist mit dieser Modellfamilie aktuell
+  auf keinem Backend erreichbar. Emotionen: nur über `instruct`-Feld mit
+  1.7B-CustomVoice/VoiceDesign — Base/Klonen kann keine (Details unter
   [Qwen3-TTS](Model%20Evaluation%20Details.md#qwen3-tts)).
   Repo (WebUI, API, Docs) sonst sehr gut.
 - ~~Chatterbox~~: klingt sehr gut, aber zu langsam; Turbo = nur Englisch + kein Cloning.
@@ -107,4 +108,4 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 | audio.cpp (`0xshug0`) | | Sehr schnelle CLI, aber WebUI-Bug (Pocket-TTS nicht auswählbar) und nur WAV → keine Serving-Basis |
 | ONNX (KevinAHM-Demo-Stack) | | Lokal reproduziert, guter Klang (INT8, 1 und 8 Steps); ohne eigenes Serving — nur Erkenntnisquelle |
 | omnivoice.cpp @ `1a468d8` | | Läuft sauber, eigener OpenAI-Server vorhanden; aber nur 0,95–2,8× |
-| Qwen3-TTS-FastAPI (`groxaxo` @ `e17c1c9`) | | Sauberstes Repo (WebUI, API, Docs, ROCm-Image); CPU-Nachmessung 22.11.: ~0,8–0,9× Realtime, upstream ~1× auf RTX 3090 → Qwen3-TTS zu langsam |
+| Qwen3-TTS-FastAPI (`groxaxo` @ `e17c1c9`) | | Sauberstes Repo (WebUI, API, Docs, ROCm-Image); CPU-Nachmessung 22./23.11.: ~0,7–0,9× Realtime, upstream ~1× auf RTX 3090 → Qwen3-TTS zu langsam |
