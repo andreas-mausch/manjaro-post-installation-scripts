@@ -41,7 +41,7 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 | Pocket-TTS `german` 6l (Stand Okt 2026) | audio.cpp `ghcr.io/0xshug0/audio.cpp:full-cpu` | — | — | Q8_0 | — („sehr schnell“, ungemessen) | — (nur WAV-Datei; Server ungetestet) | ✓ | — | — | — | ✗ |
 | ~~OmniVoice `omnivoice-base`~~ | `omnivoice.cpp 1a468d8`, Vulkan0 | — | 626 + 276 (Codec) | Q8_0 | 0,95× (32 Schritte) / 2,8× (8) | — (tts-server vorhanden, ungemessen) | ✓³ | ✓ | ✗ | — | ✗ |
 | ~~Qwen3-TTS 0.6B Base~~ | `groxaxo/Qwen3-TTS-OpenAI-Fastapi` @ `e17c1c9`, Python-venv, CPU bf16 | — | 1829 | bf16 | ~0,9× gemessen (fp32 nur ~0,27×) | — | ✓ | ✓ | — | ✗⁴ | ✗ |
-| ~~Qwen3-TTS 1.7B Base~~ | wie oben, CPU bf16 | — | 3860 | bf16 | ~0,7× gemessen | — | ✓ | ✓ | — | ✗⁴ | ✗ |
+| ~~Qwen3-TTS 1.7B Base~~ | wie oben, CPU bf16 | — | 3860 | bf16 | ~0,7× gemessen | — | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
 | ~~Qwen3-TTS 1.7B CustomVoice~~ | wie oben, CPU bf16 | — | 3840 | bf16 | ~0,8× gemessen | — | ✗ (nur 9 Preset-Stimmen) | ✓⁵ | ✓ | ✓⁶ | ✗ |
 | ~~Chatterbox~~ | audio.cpp `full-cpu`, `chatterbox_q8_0` | — | — | Q8_0 | ungemessen („zu langsam“) | — | ✓ | ✓ | — | — | ✗ |
 | ~~Chatterbox-Turbo~~ | nicht gelaufen (per Release-Notes raus) | — | — | — | — | — | ✗ | nur Englisch (350M) | — | ✗ | ✗ |
@@ -56,6 +56,9 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   dabei (9 Presets: Ch/Beijing/Sichuan/En/Ja/Ko) — Hörtest offen.
 ⁶ Keine eckigen Tags, sondern natürlichsprachliche Anweisung im API-Feld `instruct`
   (nur 1.7B-CustomVoice und VoiceDesign).
+⁷ Mit deaktivierter Runtime-Normalisierung (`normalize:false`) und „gerendert“ statt
+  „gerendered“: **bestes Deutsch aller Tests** (Hörurteil 23.11.2026) — die
+  Normalisierung des Runtimes spricht englisch und muss aus.
 
 **Anmerkungen (Hörurteile und Entscheidungsgründe):**
 
@@ -75,10 +78,11 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   wählbar (CLI funktioniert); nur WAV-Ausgabe.
 - ~~OmniVoice~~: selbst 8 MaskGIT-Schritte sehr gut (nur „gerendered“ auffällig), aber
   0,95–2,8× → Anforderung verletzt; Pflicht-Transkript; ~900 MB Fußabdruck.
-- ~~Qwen3-TTS~~: 0.6B-Klon klang auf Anhieb gut, aber langsam; Nachmessung 22./23.11.:
-  ~0,9× Realtime (CPU bf16), 1.7B-Base nur ~0,7× — auch upstream kommen auf einer
-  RTX 3090 nur ~1× heraus, die 5–10×-Anforderung ist mit dieser Modellfamilie aktuell
-  auf keinem Backend erreichbar. Emotionen: nur über `instruct`-Feld mit
+- ~~Qwen3-TTS~~: Nachmessung 22./23.11.: ~0,9× Realtime (CPU bf16), 1.7B-Base nur
+  ~0,7× — auch upstream kommen auf einer RTX 3090 nur ~1× heraus, die 5–10×-
+  Anforderung ist mit dieser Modellfamilie aktuell auf keinem Backend erreichbar.
+  Qualität dagegen bestätigt: 1.7B-Base-Klon ohne Runtime-Normalisierung = bestes
+  Deutsch aller Tests (siehe Fußnote ⁷). Emotionen: nur über `instruct`-Feld mit
   1.7B-CustomVoice/VoiceDesign — Base/Klonen kann keine (Details unter
   [Qwen3-TTS](Model%20Evaluation%20Details.md#qwen3-tts)).
   Repo (WebUI, API, Docs) sonst sehr gut.

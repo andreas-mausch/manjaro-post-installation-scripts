@@ -450,17 +450,35 @@ pro Modellvariante entscheidet man sich für eines von beidem:
   „fröhlich“ 8,5 s / „traurig“ 8,8 s / „wütend“ 6,0 s / ohne 6,2 s (unterschiedliches
   Sprechtempo). Dateien + Gegenhören:
   `~/Documents/coding/tts/qwen3-tts-bench-2026-11/listen.html` (dort auch
-  Gateway-`lucy` vs. Qwen-0.6B-`lucy`-Klon, je 3 Läufe).
+  Gateway-`lucy` vs. Qwen-0.6B- und 1.7B-`lucy`-Klon je 3 Läufe sowie die
+  Textvarianten aus dem nächsten Absatz).
 - CustomVoice hat **keine deutschsprachige Preset-Stimme** (9 Voices: Ch/Beijing/
   Sichuan/En/Ja/Ko); offizielles German-WER 1,057 (1.7B-CV) bzw. 2,722 (0.6B-CV),
   Base zero-shot DE: 1,089 (0.6B) / 1,235 (1.7B). Deutsche Qualität der Presets ist
   Hörtest-offen.
 
-**Fazit:** Qualität „besser als Pocket-TTS?“ steht auf einem Klon-Hörtest (offen,
-siehe listen.html), aber selbst bei besserer Qualität scheidet Qwen3-TTS wegen der
-~0,8–0,9× Realtime aus — außer gufos integrierte Qwen3-TTS-Variante (ungetestet,
-[Doku](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md))
-sollte deutlich schneller sein.
+**Textvorverarbeitung — der eigentliche Qualitätssprung (Hörtest 23.11.):**
+
+- Der Normalisierer des Runtimes (`api/services/text_processing.py`, inflect-basiert)
+  arbeitet **englisch** und hatte den Testsatz vor der Synthese umgeschrieben:
+  `Es ist 13:05.` → `Es ist thirteen oh five.` — das englische „13:05" im Audio ging
+  also auf die Vorverarbeitung, nicht aufs Modell.
+- Die API nimmt pro Request `normalization_options: {"normalize": false}` durch und
+  lässt den Text unverändert. Ergebnis: **lucy spricht „13:05" einwandfrei Deutsch** —
+  und mit der Korrektur `gerendered` → `gerendert` ist das mit Abstand das beste
+  deutsche Ergebnis aller Tests (Hörurteil 23.11.2026, besser als der
+  Produktiv-Gateway).
+- Pseudo-Anglizismen wie „gerendered" beißen das Modell; gängiges „gerendert" macht
+  den Satz rund. Wer Qwen3-TTS Deutsch betreibt, muss die eingebaute Normalisierung
+  abschalten und ggf. selbst deutsch normalisieren (oder vornormalisierte Texte
+  anliefern).
+
+**Fazit:** Die Qualitätsfrage ist beantwortet: **Ja** — der 1.7B-Base-Klon (ohne
+Runtime-Normalisierung) klingt besser als unser Pocket-TTS-Stack. Ausgeschieden ist
+Qwen3-TTS trotzdem, und zwar allein an der Geschwindigkeit: ~0,7× Realtime hier,
+~1× auf einer RTX 3090 upstream, gebraucht werden 5–10×. Der einzige denkbare Hebel
+bleibt gufos integrierte Qwen3-TTS-Variante (ungetestet,
+[Doku](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md)).
 
 # OmniVoice
 
