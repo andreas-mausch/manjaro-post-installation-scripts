@@ -82,6 +82,10 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 - Pocket-TTS `german_2026-09_24l` auf dem gepatchten Vulkan-Stack — GGUF liegt unter
   `/srv/llama/models/pocket-tts/german_2026-09_24l/`, offener Gegenhörtest April vs. 09
   (April-Paket ist Basis, auf der Produktiv läuft)
+- gufo-integriertes Qwen3-TTS — gufo bietet Qwen3-TTS selbst an und ist damit vermutlich
+  optimierter als unser Python-venv-Aufsetzer; vor eigenem Qwen3-TTS-Einsatz erst das
+  testen ([Doku](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md),
+  Notiz 22.11.2026)
 
 # Runtimes
 
