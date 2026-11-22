@@ -14,8 +14,12 @@ Hermes/WebUI/curl ──> gateway :8080 (in container) ──> tts-server 127.0.
 ```
 
 `pockettts.cpp`'s `tts-server` (pinned to `fab7972`) speaks the OpenAI
-endpoints but only WAV/PCM — in exchange, PCM streams during generation. The
-bundled Python gateway (`gateway.py`, stdlib only + ffmpeg) adds the
+endpoints but only WAV/PCM — in exchange, PCM streams during generation.
+The build applies `onset-keep-first-frame.patch` (the not-yet-merged onset
+fix from [pockettts.cpp#1](https://github.com/ServeurpersoCom/pockettts.cpp/pull/1)):
+stock `fab7972` drops the first 80 ms frame of every chunk, which clips
+word onsets — see the [analysis](../2026-11-22%20Onset%20Clipping%20(pockettts.cpp).md).
+The bundled Python gateway (`gateway.py`, stdlib only + ffmpeg) adds the
 **mp3, opus, aac, flac** formats (ogg alias = real Opus, better than LocalAI's
 "ogg" which delivered Vorbis) and encodes from the PCM stream — the client
 receives bytes before the answer is complete.

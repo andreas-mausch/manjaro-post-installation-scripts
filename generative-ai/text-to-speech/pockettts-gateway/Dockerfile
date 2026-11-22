@@ -6,8 +6,12 @@ FROM archlinux:latest AS build
 RUN pacman -Syu --noconfirm --needed base-devel cmake git pkgconf python glslang spirv-headers spirv-tools vulkan-headers vulkan-icd-loader shaderc
 ARG PKTTS_REPO=https://github.com/ServeurpersoCom/pockettts.cpp.git
 ARG PKTTS_REF=fab7972
+# Onset fix from ServeurpersoCom/pockettts.cpp#1 (keep first frame + 5 ms fade):
+# without it, every chunk starts clipped. Analysis: ../2026-11-22 Onset Clipping (pockettts.cpp).md
+COPY onset-keep-first-frame.patch /tmp/onset-keep-first-frame.patch
 RUN git clone ${PKTTS_REPO} /src \
  && cd /src && git checkout ${PKTTS_REF} \
+ && git apply /tmp/onset-keep-first-frame.patch \
  && git submodule update --init --recursive \
  && ./buildvulkan.sh
 # Runtime libraries with resolved symlinks (names kept as real files).

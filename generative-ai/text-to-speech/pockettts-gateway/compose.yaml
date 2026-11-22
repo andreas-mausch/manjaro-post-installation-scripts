@@ -6,7 +6,7 @@ name: pockettts-gateway
 services:
   pockettts-gateway:
     build: .
-    image: local/pocket-tts-vulkan:fab7972
+    image: local/pocket-tts-vulkan:fab7972-onset1
     container_name: pockettts-gateway
     restart: unless-stopped
     ports:

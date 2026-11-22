@@ -1,0 +1,106 @@
+# Onset fix for clipped word onsets, carried locally until upstream merges it.
+# Source (commit): https://github.com/wakamex/pockettts.cpp/commit/11fc27200c79d7a81b63ab0b322559c1537691fd
+# Source (PR):     https://github.com/ServeurpersoCom/pockettts.cpp/pull/1 (open; base 6187e69)
+# Applies cleanly to our pin fab7972 (verified 2026-11-22 with git apply --check).
+# Analysis: ../2026-11-22 Onset Clipping (pockettts.cpp).md
+
+From 11fc27200c79d7a81b63ab0b322559c1537691fd Mon Sep 17 00:00:00 2001
+From: wakamex <mcosma@gmail.com>
+Date: Thu, 15 Oct 2026 11:37:30 -0400
+Subject: [PATCH] Keep the first frame of every chunk, fade in its first 5 ms
+
+Speech can start inside the first 80 ms frame of a chunk, and dropping
+that frame clips it: with english_2026-09 Q8_0, voice alba and seed 42,
+"I found the bug." and "I checked the three log files" lose their
+leading "I". Kyutai's pocket-tts keeps the frame and fades in only the
+first 5 ms of each chunk (kyutai-labs/pocket-tts#332, #335), which
+removes the step a fresh Mimi decoder state puts in its first samples.
+This port now does the same: a chunk is one frame longer, matching the
+reference length for a seed, and the first audio block is one frame.
+---
+ docs/ARCHITECTURE.md |  7 +++----
+ src/pocket.cpp       | 31 ++++++++++++++-----------------
+ 2 files changed, 17 insertions(+), 21 deletions(-)
+
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+index 883745c..1909924 100644
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -91,10 +91,9 @@ KV rows of the reference voice state file.
+   arena so CUDA graph replay applies.
+ - Mimi decoder: a persistent state buffer (conv tails, transposed conv
+   carries, transformer windows) cleared at each chunk; latents decode
+-  in blocks of 1, 2, 4, 8 then 16 frames. The audio of the first frame of
+-  every chunk is dropped: the first latent after BOS reproduces the Mimi
+-  encoder cold start frame that opens the training sequences and decodes
+-  to a short click ahead of the speech.
++  in blocks of 1, 2, 4, 8 then 16 frames. The first 5 ms of every chunk
++  fade in, like the reference: a fresh decoder state puts a small step
++  in its first samples, heard as a click.
+ - Noise: `torch-rng.h` reproduces `torch.manual_seed` + `normal_` on a
+   CPU float tensor (MT19937, 24 bit uniforms, Box-Muller over blocks of
+   16). Each text prefill draws one discarded noise vector like the
+diff --git a/src/pocket.cpp b/src/pocket.cpp
+index 52a66c2..b89e550 100644
+--- a/src/pocket.cpp
++++ b/src/pocket.cpp
+@@ -7,10 +7,9 @@
+ // until EOS (ignored on the first frames) plus frames_after_eos, or until
+ // the length budget of the chunk. Latents stream into the Mimi decoder,
+ // whose state restarts at every chunk, in blocks growing 1, 2, 4 ... 16
+-// frames. The audio of the first frame of every chunk is dropped (its
+-// latent is still decoded): the first latent after BOS reproduces the Mimi
+-// encoder cold start frame that opens the training sequences and decodes
+-// to a short click ahead of the speech.
++// frames. The first 5 ms of every chunk fade in: a fresh Mimi decoder
++// state puts a small step in its first samples, heard as a click. Speech
++// can start in the first frame, so the frame itself is kept.
+ //
+ // The noise of every step comes from a torch compatible generator seeded
+ // once per synthesis; each text prefill draws one discarded noise vector
+@@ -590,23 +589,21 @@ int pt_synthesize(struct pt_context * c, const struct pt_tts_params * p, struct
+     Timer              t_all;
+     bool               cancelled = false;
+ 
+-    // skip counts the samples of the chunk start still to drop.
+-    size_t skip = 0;
+-    auto   emit = [&](const std::vector<float> & a) -> bool {
+-        const size_t  drop = a.size() < skip ? a.size() : skip;
+-        const float * s    = a.data() + drop;
+-        const size_t  n    = a.size() - drop;
+-        skip -= drop;
+-        if (n == 0) {
+-            return true;
++    // faded counts the samples of the chunk start already faded in, as the
++    // reference does with torch.linspace(0, 1, sample_rate / 200).
++    const size_t n_fade = (size_t) hp.sample_rate / 200;
++    size_t       faded  = 0;
++    auto         emit   = [&](std::vector<float> & a) -> bool {
++        for (size_t i = 0; i < a.size() && faded < n_fade; i++, faded++) {
++            a[i] *= (float) faded / (float) (n_fade - 1);
+         }
+         if (out) {
+-            all.insert(all.end(), s, s + n);
++            all.insert(all.end(), a.begin(), a.end());
+         }
+         if (dump.enabled) {
+-            dump_audio.insert(dump_audio.end(), s, s + n);
++            dump_audio.insert(dump_audio.end(), a.begin(), a.end());
+         }
+-        return !p->on_chunk || p->on_chunk(s, (int) n, p->user_data);
++        return !p->on_chunk || p->on_chunk(a.data(), (int) a.size(), p->user_data);
+     };
+ 
+     for (size_t ci = 0; ci < chunks.size() && !cancelled; ci++) {
+@@ -640,7 +637,7 @@ int pt_synthesize(struct pt_context * c, const struct pt_tts_params * p, struct
+         const double ms_pre = t_pre.ms();
+ 
+         mimi_state_reset(&c->ms);
+-        skip = (size_t) hp.frame_size;
++        faded = 0;
+         latent.assign(c->w.bos_emb.begin(), c->w.bos_emb.end());
+         pending.clear();
+         int n_past   = vo.n + ntok;
+-- 
+2.56.0
+
