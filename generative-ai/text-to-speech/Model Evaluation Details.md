@@ -508,8 +508,48 @@ und damit irrelevant.
 
 **Einordnung:** schnellster bekannter Qwen3-TTS-Weg auf dieser Hardware, aber
 ~1,7× bleibt weit unter 5–10× (und unter dem Pocket-TTS-Gateway mit 5,5–6,6×).
-Qualität = gleichesCheckpoint wie der noTN-Hörtest = bisher bestes Deutsch;
+Qualität = gleiches Checkpoint wie der noTN-Hörtest = bisher bestes Deutsch;
 Gegenhörblöcke `gufotts-lucy-*` in `listen.html`.
+
+## Wechsel-Abschätzung: Pocket-TTS 24l ↔ gufo Qwen3-TTS (Stand 23.11.2026)
+
+Konsolidierung aller Messungen und Hörurteile dieses und des Oktober-Durchgangs:
+
+| Aspekt | Pocket-TTS 24l (Produktion) | gufo Qwen3-TTS Base | Vorteil |
+|---|---|---|---|
+| Deutsch-Qualität | „okay“, **Ziffern unverständlich**, EN-Wörter eingedeutscht | **bestes Deutsch aller Tests**, „13:05“ einwandfrei, keine Vor-Normalisierung | Qwen |
+| Geschwindigkeit | **~5,5–6,6×** Realtime | ~1,7× (GPU, parallel zum LLM) | Pocket |
+| Streaming | ✓ chunked, TTFB 0,02–0,28 s | ✓✓ pcm/sse/WebSocket, erstes Byte < 0,02 s | Qwen |
+| Startzeit | Container-Minuten (Stack mit Patch) | **~2 s** | Qwen |
+| Stimmen-Pflege | GGUF-Bau-Ritual (`spm2json.py`, Patches, onset-Fix) | `lucy.wav` + `lucy.txt` auf Disk, fertig | Qwen |
+| API | OpenAI-API + wav/ogg/mp3 | OpenAI-API + wav/pcm/sse; kein mp3/ogg | Pocket |
+| Ressourcen | eigener Vulkan-Container, klein | ~4 GB RAM + GPU geteilt mit dem 125B-LLM | Pocket |
+| Emotion | ✗ | ✗ für lucy (Base); CustomVoice nur mit Preset-Stimmen | — |
+| Reife | eigener gepatchter Stack | Rust-Binär, dedizierte Tests, deterministische Seeded-Replays, aktive Entwicklung | Qwen |
+
+Die zwei echten Knackpunkte:
+
+1. **Tempo** ist der einzige Grund, warum Pocket-TTS läuft — und der bleibt:
+   Bei einer 60-Sekunden-Antwort rechnet gufo ~35 s statt ~10 s. Beim
+   *gepufferten* Senden merkbar; mit gufos sehr gutem Streaming nur am Ende
+   jeder Antwort.
+2. **GPU-Konkurrenz:** Pocket-TTS nervt den LLM-Betrieb kaum. Qwen3-TTS legt
+   sich als 1,7B-BF16-Worker daneben; bei gleichzeitigen Anfragen streiten zwei
+   Modelle um Speicherbandbreite (Messung 0,61 rf statt gufos allein gemessener
+   0,44). Bei ohnehin vollem 395+ der eigentliche Betriebs-Risikopunkt.
+
+Einordnung:
+
+- **Sprachassistent/Hermes-Standardstimme:** Anforderung 5–10× weiterhin
+  verletzt → Wechsel lohnt nicht.
+- **Qualitätskritische Ausgaben** (Vorlesen langer Texte, Benachrichtigungen,
+  bei denen 100 % Verständlichkeit Pflicht sind): Qwen3 via gufo wäre heute
+  schon besser als das Gateway — und wartungsärmer als der gepatchte
+  Vulkan-Stack.
+- **Mittelweg:** `gufo-tts.sh` läuft parallel-fähig auf Port 8082; pro Request
+  wählbar — kurz → Gateway (5,5×), quality-kritisch/lang → gufo (1,7× mit
+  Streaming). Kostet ~4 GB RAM, wenn beide geladen sind (maschine aktuell
+  ~7 G frei: eng, aber machbar).
 
 # OmniVoice
 
