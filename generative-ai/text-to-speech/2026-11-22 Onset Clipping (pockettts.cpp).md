@@ -60,12 +60,30 @@ komplett neu gelöst werden. **Wechseln ist keine Option.**
    `onset-keep-first-frame.patch` im Gateway-Verzeichnis, angewandt im Dockerfile.
    Hinweis: Jeder Chunk wird 80 ms länger (der Frame bleibt erhalten); für den
    Gateway transparent, nur die Audiolänge pro Seed ändert sich.
-2. **`end_on_pause` für `lucy` prüfen** (offen): Vorverarbeitung von `sample.wav`
-   reicht ohne C++-Änderung aus (ffmpeg: trailing silence cut → 20 ms Fade-out →
-   80 ms Stille anhängen), z. B. in `startup.py` vor der Registrierung oder einmalig
-   an der Referenz. Nach Maßnahme 1 nicht mehr gegen Clipping nötig, aber gegen
-   Fortsetzungs-Bursts/falsche erste Wörter; erst nach Hörtest des gepatchten Builds
-   entscheiden.
+2. **`end_on_pause` für `lucy` geprüft und NICHT übernommen** (Messung 22.11., s. u.):
+   Die Vorverarbeitung (ffmpeg: trailing silence cut → 20 ms Fade-out → 80 ms Stille
+   anhängen) zeigte seed-identisch keine Wirkung — `sample.wav` endet bereits nach
+   ~133 ms Stille, also nahe einer Sprechpause, damit fehlt der Effekt aus #334.
+
+## Ergebnis 2026-11-22: Deployment + STT-Messung
+
+- **Patch deployed:** Image `local/pocket-tts-vulkan:fab7972-onset1` läuft. Seed-gleich
+  ist jede Aufnahme exakt 80 ms länger; die verworfenen Frames enthielten hörbares
+  Material (RMS ≈ −25 dB, keine Stille). A/B-Material + `listen.html`:
+  `/tmp/opencode/tts-onset/` (tmpfs, überlebt keinen Reboot).
+- **STT-Kontrolle** (whisper.cpp `small`, Image `ghcr.io/ggml-org/whisper.cpp:main-d1be6fde`,
+  8 Seeds): Restfehler bleiben — „Es ist 13:05 …" wird in 2/8 Seeds zu „Das ist…"/fehlt,
+  „Okay, los geht's" trifft „Okay" in 4/8 Seeds. Seed 4 produziert degenerate Ausgaben
+  (whisper halluziniert „Copyright WDR 2020") über alle Voices/Temperaturen.
+- **`end_on_pause`-Experiment:** `sample.wav` (44,1 kHz stereo) als `lucyfix` mit
+  vorverarbeitetem Ende registriert → transkript-identisch zu `lucy` pro Seed, kein
+  messbarer Nutzen. **Nicht übernommen**; `startup.py` bleibt unverändert.
+- **Temperatur 0,4** vs. Standard: 5/8 vs. 4/8 „Okay" — bei n=8 kein clear winner.
+- **Einordnung:** Die verbleibenden Anfangsfehler sind Modell-Lotterie bei kurzen
+  Texten, kein Runtime-Bug mehr — Kyutai misst selbst nach allen Fixes (#334) noch
+  ~6 % Fehlstarts bei Ein-Wort-Texten. Denkbare Gegenmittel wären Retry-Strategien
+  (Output-Länge/ASR gegen den Input prüfen) oder längere Eingaben; das wäre Aufgabe
+  einer Konsumenten-Schicht, nicht des Backends.
 
 ## Nicht betroffen / separat
 
