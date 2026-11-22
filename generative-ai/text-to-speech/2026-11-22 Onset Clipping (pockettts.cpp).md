@@ -85,6 +85,58 @@ komplett neu gelöst werden. **Wechseln ist keine Option.**
   (Output-Länge/ASR gegen den Input prüfen) oder längere Eingaben; das wäre Aufgabe
   einer Konsumenten-Schicht, nicht des Backends.
 
+## Update (22.11., abends): Fehlerklassen, Sampler-Sweep, Verhältnis zu den Online-Demos
+
+Zwei Fehlerklassen sauber trennen:
+
+1. **Runtime-Bug (war pockettts.cpp, behoben):** konstantes Onset-Clipping durch den
+   Frame-Drop (Ursache 1). Die Online-Demos liefen nie mit diesem Bug.
+2. **Modell-Lotterie (nicht fixbar, nur abfederbar):** kurzes erstes Wort wird
+   übersprungen/ersetzt. Zeigt sich in **allen** Runtimes: Kyutai misst nach allen
+   Fixes noch ~6 % Fehlstarts (Ein-Wort-Texte), und unser eigener Python-4.0.1-Lauf
+   vom 30.10. auf April-Gewichten verlor bei Seed 202 „Es ist" — ohne eine Zeile
+   cpp-Code. wakamex belegte zudem Frame-Äquivalenz des Ports gegen F32-Referenz.
+
+**Sampler-Sweep** (Voice lucy, gepatchter Build, whisper.cpp small, 8 Seeds):
+
+| Einstellung | s1 „Es ist…" | s3 „Okay…" | Bemerkung |
+|---|---|---|---|
+| Standard | 6/8 | 4/8 | Referenz |
+| + end_on_pause (lucyfix) | 5/8 | 4/8 | seed-identische Transkripte → kein Effekt |
+| temperature 0,4 | — | 5/8 | kein clear winner |
+| temperature 0,1 | 6/8 | 5/8 Onset | Satzmitte degeneriert („Okay, no skates") |
+| temperature 0,0 | degenerate | degenerate | s1 bricht nach „Das ist 1305." ab → **greedy-Kollaps, vermutlich Port-Bug**, upstream meldbar |
+
+Caveat: whisper small ist konservativ; „Das ist" kann sich korrekt anhören (Ende-Abschneiden
+hören ist aber bestätigt).
+
+**Warum die Online-Demos „perfect" wirken, obwohl Klasse 2 überall existiert:**
+(1) kuratierte, nach-#334-regenerierte Voice-States statt Hausklon `lucy` und
+Vor-#334-GGUF-States; (2) neuere/andere Modellpakete bzw. beim ONNX-Demo möglicherweise
+anderes Sampler-/EOS-Verhalten (Hypothese 1 aus dem [Eval 29.10.](2026-10-29%20Model%20Evaluation.md));
+(3) der Mensch drückt bei versemmelter Antwort einfach erneut Generate — genau die
+Retry-Schicht, die uns im automatischen Betrieb fehlt; (4) Demo-Texte sind meist volle
+Sätze, die Lotterie trifft vor allem Kurzantworten.
+
+## Offene Experimente (Entscheidungshilfe Modellwechsel)
+
+1. **`german_2026-09_24l` (Serveurperso-GGUF Q8_0, liegt unter
+   `/srv/llama/models/pocket-tts/german_2026-09_24l/`) auf dem gepatchten Stack** mit den
+   s1/s3-Seeds 1–8 + Hörtest — entscheidet „unser konkretes Modell?" und ist zugleich
+   der im Benchmark-Doc vermerkte offene Gegenhörtest April vs. 2026-09. Aufwand ~10 min.
+2. **Python-`main` (nach allen Fixes) + April-Weights + `sample.wav`-Klon + Seed** —
+   entscheidet „Port?". Aufwand ~1 h, Assets vorhanden.
+3. Optional: greedy-Kollaps bei temperature 0 als Issue an ServeurpersoCom/pockettts.cpp
+   melden (mit Repro `t0.0-*.wav`).
+
+## Entscheidung (22.11., Andreas)
+
+Der gepatchte April-Stack läuft unverändert weiter; keine Verifikations-/Retry-Schicht
+(ASR-Roundtrip + Seed-Retry wäre machbar, ~87–99 % Erfolg in 3 Versuchen, wurde aber
+nicht gebaut). Wenn eh ein Modellwechsel ansteht, zuerst Experiment 1 fahren und
+gegen den Zahlen-/Englisch-Nachteil der neueren Pakete abwägen; Class-2-Fehler
+(„Okay" verschluckt) gelten bis dahin als hingenommene Modelleigenschaft.
+
 ## Nicht betroffen / separat
 
 - **Gateway unschuldig:** reine Byte-Pipe (Backend-PCM → ffmpeg → HTTP-Chunk),
