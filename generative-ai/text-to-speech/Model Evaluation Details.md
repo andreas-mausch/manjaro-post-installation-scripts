@@ -684,10 +684,15 @@ zwei parallele gufo-Instanzen (LLM + TTS) Probleme machten.
   täglich von main). Offizielle Images nur für cpu/cuda12/cuda13/vulkan; **kein
   HIP/ROCm-Image**. Der HIP-Pfad (gfx1151, `--backend-impl gfx1151_v1`, hipBLASLt) wäre
   der schnellere Weg, bräuchte ein eigenes Image — bewusst zurückgestellt.
-- Server: `audiocpp_server --config server.json --backend vulkan`, Config mit
-  `mode: streaming` + `voice_presets.lucy` (voice_ref + reference_text), identische
-  Model-id `qwen3-tts-12hz-1.7b-base` → Clients (Gateway, Hermes) bleiben unverändert.
-  Setup: [`audio-cpp/README.md`](audio-cpp/README.md).
+- Server: `audiocpp_server --config server.json --backend vulkan` (gestartet via
+  [`../audio-cpp-tts.sh`](../audio-cpp-tts.sh), Container `audio-cpp-tts`, Host-Port
+  8083; Gateway dazu: `docker compose -f tts-gateway/compose.yaml up -d`). Config
+  [`audio-cpp/server.json`](audio-cpp/server.json) mit `mode: streaming` +
+  `voice_presets.lucy` (voice_ref + reference_text aus dem read-only Mount
+  `/srv/llama/tts-voices/`), identische Model-id `qwen3-tts-12hz-1.7b-base` →
+  Clients (Gateway, Hermes) bleiben unverändert. Clients senden `"voice": "lucy"`
+  oder lassen es weg (Gateway setzt `TTS_DEFAULT_VOICE`); eine POST-Registrierung
+  wie beim ehemaligen pockettts.cpp-Backend gibt es nicht.
 - Messungen 23.11.2026, parallel zum residenten 125B-LLM, seed 42:
   - Erstes Audiobyte (direkt, `stream_format=audio`): ~0,65 s; Inkremente ~1 s
     Audio/Sekunde.

@@ -49,7 +49,7 @@ volumes are not deleted or migrated.
 ## Startup
 
 ```bash
-../../audio-cpp-tts.sh &       # backend container audio-cpp-tts on :8083 (setup: ../audio-cpp/README.md)
+../../audio-cpp-tts.sh &       # backend container audio-cpp-tts on :8083 (setup: ../Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026)
 docker compose up -d           # gateway proxy
 docker compose logs -f tts-gateway   # wait for "[gateway] ready"
 ```
@@ -126,7 +126,7 @@ lets supervision restart the stack rather than silently using another voice.
 `compose.yaml` runs the image with an entrypoint override — `gateway.py` alone
 as a pure proxy in front of the audio.cpp server (`../../audio-cpp-tts.sh`,
 host port 8083, Qwen3-TTS 12Hz 1.7B Base + lucy preset; setup:
-[`../audio-cpp/README.md`](../audio-cpp/README.md)). Chosen because two
+[Model Evaluation Details](../Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026)). Chosen because two
 parallel gufo instances (LLM + TTS) did not run cleanly together. Two env
 vars adapt the upstream request (both unset = pockettts/gufo behavior):
 

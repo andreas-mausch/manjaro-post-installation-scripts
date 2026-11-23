@@ -1,15 +1,14 @@
 # Text-to-Speech (Pocket-TTS / Qwen3-TTS)
 
 Seit **23.11.2026** produktiv: **Qwen3-TTS 12Hz 1.7B Base** (lucy-Klon) mit
-[`gufo-tts.sh`](../gufo-tts.sh) (`gufo serve tts`, GPU, Host-Port 8082,
-[`gufo-Doku`](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md))
-hinter dem [`tts-gateway/`](tts-gateway/README.md) im Proxy-Modus
+[`audio-cpp-tts.sh`](../audio-cpp-tts.sh) (audio.cpp `audiocpp_server`, Vulkan,
+Host-Port 8083) hinter dem [`tts-gateway/`](tts-gateway/README.md) im Proxy-Modus
 (`tts-gateway`, OpenAI-API + mp3/opus-Streaming-Transcode, Host-Port 8081).
-Grund: bestes Deutsch aller Tests (Ziffern einwandfrei), ~1,7× Realtime — der
-5–10×-Punkt wurde dabei bewusst gegen Qualität getauscht. Der alte
-Vulkan-Stack (~5,5–6,6×) wurde am 23.11. aus der compose-Datei entfernt —
-Service-Definition und Bild-Bau liegen in der Git-Geschichte.
-Ausführliche Findings: [Model Evaluation Details](Model%20Evaluation%20Details.md).
+Grund: bestes Deutsch aller Tests (Ziffern einwandfrei), ~2× Realtime im
+Systemsstillstand — der 5–10×-Punkt wurde bewusst gegen Qualität getauscht.
+Fallback: [`gufo-tts.sh`](../gufo-tts.sh) (gufo `serve tts`, ~1,7×).
+Ausführliche Findings **und Setup**:
+[Model Evaluation Details](Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026).
 Dieses Dokument bündelt am 22.11.2026 vier Datums-Notizen (Originalfassung: Git-Log).
 
 # Anforderungen
@@ -39,7 +38,8 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 
 | Modell | Runtime | Release-Date | Größe (MB) | Quantisierung | Realtime-Faktor | Streaming | Voice Cloning | Deutsch | Englisch | Emotion-Tags | Mehrere Speaker |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **Qwen3-TTS 1.7B Base (gufo) ✅ in Produktion (23.11.)** | gufo-runtime `0.35.0`, `serve tts`, GPU (HIP), [`gufo-tts.sh`](../gufo-tts.sh) + Gateway-Proxy | — | 3860 | bf16 | ~1,7× gemessen | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
+| **Qwen3-TTS 1.7B Base (audio.cpp) ✅ in Produktion (23.11.)** | audio.cpp `full-vulkan-20261123-f79c880`, [`audio-cpp-tts.sh`](../audio-cpp-tts.sh) + Gateway-Proxy | — | 2695 | Q8_0_v2 (offizielles GGUF) | ~2–2,3× (Systemsstillstand) / ~1× (LLM-Volllast) | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
+| Qwen3-TTS 1.7B Base (gufo) — Fallback | gufo-runtime `0.35.0`, `serve tts`, GPU (HIP), [`gufo-tts.sh`](../gufo-tts.sh) + Gateway-Proxy | — | 3860 | bf16 | ~1,7× gemessen | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
 | **Pocket-TTS `german_24l` (April, `e041936c`) ✓ Fallback** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via Gateway (alter Dienst, Git-Geschichte) | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ (immer chunked; wav/pcm/mp3/opus/aac/flac; TTFB 0,02–0,28 s) | ✓ | ✓ | ✓ | — | ✗ |
 | Pocket-TTS `german_24l` (April, `e041936c`) | ONNX-Export der KevinAHM-Demo, onnxruntime (Ryzen 7 PRO 7840U) | 2026-04 | — | INT8 | — | — | — | ✓ | ✓ | — | ✗ |
 | ~~Pocket-TTS `german` 6l (April)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-04 | 138 | Q8_0 (eigenkonvertiert) | ~11× (sustain ~9×) | ✓ (tts-server: pcm/wav) | ✓ | ✓¹ | ✗ | — | ✗ |
@@ -94,8 +94,8 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   Erstproduktiv war gufos GPU-Server (~1,7×); zwei parallele gufo-Instanzen
   (LLM+TTS) machten aber Probleme → Umstieg auf audio.cpp `audiocpp_server`
   (Vulkan, Q8_0-GGUF, eigenes Image): ~2× Realtime im Systemsstillstand,
-  ~1× unter Volllast des LLM; Setup unter
-  [`audio-cpp/`](audio-cpp/README.md).
+  ~1× unter Volllast des LLM; Setup in den
+  [Eval-Details](Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026).
 - ~~Chatterbox~~: klingt sehr gut, aber zu langsam; Turbo = nur Englisch + kein Cloning.
 - ~~Kokoro~~: offenbar kein Voice Cloning.
 
@@ -112,7 +112,7 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 
 | Runtime | ✓ | Kurzbewertung |
 |---|---|---|
-| **audio.cpp `audiocpp_server` + Gateway** (`0xshug0`, Vulkan/ggml) | ✅ | Produktiv seit 23.11.2026 (Qwen3-TTS 1.7B Base Q8_0_v2 GGUF, lucy-Preset): Image `full-vulkan-20261123-f79c880` (enthält v0.9.6), `mode: streaming` liefert PCM während der Generierung (erstes Audiobyte ~0,65 s), ~2× Realtime im Systemsstillstand / ~1× unter LLM-Volllast, `/v1/audio/voices` aus Config-Presets. Braucht Gateway-Env `stream_format=audio`. Kein HIP/ROCm-Image (nur cpu/cuda/vulkan); `gfx1151_v1`-Kernel-Preset existiert nur im HIP-Pfad. Setup: [`audio-cpp/README.md`](audio-cpp/README.md) |
+| **audio.cpp `audiocpp_server` + Gateway** (`0xshug0`, Vulkan/ggml) | ✅ | Produktiv seit 23.11.2026 (Qwen3-TTS 1.7B Base Q8_0_v2 GGUF, lucy-Preset): Image `full-vulkan-20261123-f79c880` (enthält v0.9.6), `mode: streaming` liefert PCM während der Generierung (erstes Audiobyte ~0,65 s), ~2× Realtime im Systemsstillstand / ~1× unter LLM-Volllast, `/v1/audio/voices` aus Config-Presets. Braucht Gateway-Env `stream_format=audio`. Kein HIP/ROCm-Image (nur cpu/cuda/vulkan); `gfx1151_v1`-Kernel-Preset existiert nur im HIP-Pfad. Setup: [Eval-Details](Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026) |
 | **gufo `serve tts` + Gateway-Proxy** (Rust, HIP/GPU) | Alternative | War kurz Produktiv (23.11.2026): `/ready` in ~14 s, ~1,7× Realtime, PCM/SSE/WebSocket-Streaming, Ziffern ohne Normalisierung, Voice = wav+txt auf Disk, deterministische Seeded-Replays. Braucht Gateway (`tts-gateway`) für mp3. Ablöst Grund: zwei parallele gufo-Instanzen (LLM+TTS) liefen nicht sauber zusammen (`gufo-tts.sh` bleibt als Fallback) |
 | **pockettts.cpp + Gateway** (C++/ggml-Port, Vulkan; alter Stack, Git-Geschichte) | Fallback | Schnellster Weg zu 24l: 4,5–6,6× Realtime; OpenAI-kompatibler `tts-server`. Nachteile: nur WAV/PCM → eigener Python-Gateway ergänzt mp3/opus/aac/flac aus dem PCM-Stream (echtes Streaming bleibt); registrierte Stimmen nur im RAM (flüchtig); Onset-Fix (upstream PR#1) als eigener Patch angewandt |
 | Python-Referenz (kyutai/pocket-tts 4.0.1) | | ~0,97× Realtime auf CPU (f32) → Anforderung klar verletzt; April-Asset-/Tokenizer-Rätsel müssten neu gelöst werden |

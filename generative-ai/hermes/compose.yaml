@@ -2,9 +2,9 @@
 # TTS (since 2026-11-23): Qwen3-TTS 1.7B Base via the audio.cpp server (:8083, ../audio-cpp-tts.sh)
 # behind the gateway proxy tts-gateway -> ../text-to-speech/tts-gateway/ (host :8081, reached
 # from here via http://host.docker.internal:8081/v1; agent config uses model
-# qwen3-tts-12hz-1.7b-base). Brief first backend was gufo serve tts (:8082); setup docs:
-# ../text-to-speech/audio-cpp/README.md. The old embedded-Vulkan backend was removed
-# 2026-11-23 (Git history).
+# qwen3-tts-12hz-1.7b-base). Brief first backend was gufo serve tts (:8082); setup details:
+# generative-ai/text-to-speech/Model Evaluation Details.md. The old embedded-Vulkan backend
+# was removed 2026-11-23 (Git history).
 # Adapted from nesquena/hermes-webui docker-compose.three-container.yml, but:
 #   * images pinned (agent tag v0.22.5; WebUI by immutable digest),
 #   * dashboard merged into the agent container (HERMES_DASHBOARD=1) to avoid a 3rd process on the shared home,
