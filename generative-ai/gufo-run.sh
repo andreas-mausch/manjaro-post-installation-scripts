@@ -8,7 +8,9 @@ MODELS_DIR="${MODELS_DIR:-/srv/llama/models/Qwen3.8-Flash-Next-125B-A6B}"
 MODEL="${MODEL:-/models/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf}"
 MTP_MODEL="${MTP_MODEL:-/models/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf}"
 MTPROJ="${MTPROJ:-/models/mmproj-BF16.gguf}"
-HOST="${HOST:-127.0.0.1}" # set HOST=0.0.0.0 to expose the server on your LAN
+HOST="${HOST:-0.0.0.0}" # 0.0.0.0: containers (hermes) reach this via host.docker.internal —
+                        # a loopback bind would be invisible to them (same trade-off as the
+                        # tts stack: no auth, trusted LAN only)
 PORT="${PORT:-8080}"
 RUN_AS="${RUN_AS:-1000:1000}"
 
