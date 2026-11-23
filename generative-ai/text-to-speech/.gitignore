@@ -1,3 +1,5 @@
-# Local-only TTS assets, mounted read-only by ../hermes/compose.yaml — never commit
+# Local-only TTS assets (lucy reference voice + transcript). Origin of the
+# lucy profiles: /srv/llama/tts-voices/ (gufo serve tts) and the former Vulkan
+# gateway mount — never commit
 sample.txt
 sample.wav
