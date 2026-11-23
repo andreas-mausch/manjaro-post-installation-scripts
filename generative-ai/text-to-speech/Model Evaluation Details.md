@@ -7,16 +7,18 @@ Originalfassungen im Git-Log.
 
 # Pocket-TTS
 
-Produktives Modell. Paketstand und Eigenkonversion:
-[`models/README.md`](models/README.md). Kurz: April-Checkpoint `e041936c`
-(gated `kyutai/pocket-tts`), selbst zu Q8_0-GGUF konvertiert (das ungated Mirror
-nullt `mimi.encoder.*` → Klonen defekt; Encoder lässt sich nicht vom neueren
-Checkpoint anpfropfen, Mimi-Codec wurde komplett neu trainiert). Ablage
+Produktives Modell (bis 22.11.2026). Paketstand und Eigenkonversion:
+April-Checkpoint `e041936c` (gated `kyutai/pocket-tts`), selbst zu Q8_0-GGUF
+konvertiert (das ungated Mirror nullt `mimi.encoder.*` → Klonen defekt; Encoder
+lässt sich nicht vom neueren Checkpoint anpfropfen, Mimi-Codec wurde komplett
+neu trainiert). Das detaillierte Baum-/Build-Rezept (pockettts.cpp @ `fab7972`,
+convert.py, quantize, `spm2json.py`) lag in `models/README.md` und liegt seit
+deren Löschung am 23.11.2026 in der Git-Geschichte. Ablage
 `/srv/llama/models/pocket-tts/`, jeweils GGUF neben den Ausgangsgewichten:
 
 | Verzeichnis | Inhalt |
 |---|---|
-| `german/` | April-6l + `pocket-tts-german_april-Q8_0.gguf` / `-voices.gguf` (26 Stimmen), `spm2json.py` |
+| `german/` | April-6l + `pocket-tts-german_april-Q8_0.gguf` / `-voices.gguf` (26 Stimmen); das `spm2json.py` liegt seit 23.11. in der Git-Geschichte |
 | `german_24l/` | April-24l + `pocket-tts-german_24l_april-Q8_0.gguf` / `-voices.gguf` (juergen, vera) — **Produktion** |
 | `german_2026-09/`, `german_2026-09_24l/` | Jüngerer Stand (Safetensors + Serveurperso-GGUFs Q8_0 + Stimmen) |
 
