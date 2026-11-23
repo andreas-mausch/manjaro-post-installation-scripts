@@ -1,0 +1,21 @@
+{
+  "host": "0.0.0.0",
+  "port": 8080,
+  "device": 0,
+  "models": [
+    {
+      "id": "qwen3-tts-12hz-1.7b-base",
+      "family": "qwen3_tts",
+      "path": "/models/Qwen3-TTS-12Hz-1.7B-Base-GGUF/qwen3-tts-12hz-1.7b-base-q8_0_v2.gguf",
+      "task": "tts",
+      "mode": "streaming",
+      "voice_presets": {
+        "lucy": {
+          "voice_ref": "/voices/lucy.wav",
+          "reference_text": "Hallo mein Engel. Schön, dass dich der Weg hierher geführt hat. Zuerst muss ich mich aber bei dir entschuldigen."
+        }
+      },
+      "default_voice_preset": "lucy"
+    }
+  ]
+}
