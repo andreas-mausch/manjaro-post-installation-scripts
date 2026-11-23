@@ -60,6 +60,17 @@ Spoken reply ─► hermes-agent ──(tts.provider=openai)──► tts-gatewa
   [`../text-to-speech/README.md`](../text-to-speech/README.md#getestete-modelle).
   The agent reaches it at `http://host.docker.internal:8081/v1` with model id
   `qwen3-tts-12hz-1.7b-base`.
+- **Voice messages on XMPP = native Opus** via the local patch
+  [`patches/tts_tool.py`](patches/tts_tool.py) (bind-mounted read-only over
+  `/opt/hermes/tools/tts_tool.py`): upstream v0.22.5 restricts `.ogg` output +
+  the `[[audio_as_voice]]` voice-bubble marker to
+  `OPUS_VOICE_PLATFORMS = {telegram, matrix, feishu, whatsapp, signal}`; the
+  patch adds `xmpp`, so XMPP requests ask the gateway for `response_format:
+  opus` instead of mp3 and are delivered as voice bubbles. The marker depends
+  only on the platform set — it applies whether audio comes from the gateway or
+  from a tool running `say`/ffmpeg. Survives restart **and** recreate; drop
+  the mount when upstream adds xmpp. The agent's dashboard is not a voice
+  surface (no session platform → default mp3, as before).
 - **XMPP** via the community plugin
   [`fastfinge/hermes-xmpp-plugin`](https://github.com/fastfinge/hermes-xmpp-plugin),
   installed through Hermes' own plugin machinery and **pinned to a commit**.

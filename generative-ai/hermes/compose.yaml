@@ -57,6 +57,11 @@ services:
 
     volumes:
       - hermes-data:/opt/data
+      # Local patch: xmpp added to OPUS_VOICE_PLATFORMS (upstream v0.22.5 lists only
+      # telegram/matrix/feishu/whatsapp/signal) so XMPP replies get .ogg -> the TTS
+      # gateway serves native Opus 24k + voice-bubble marker. Survives restarts and
+      # recreates; drop this mount when upstream includes xmpp. Details: README.
+      - ./patches/tts_tool.py:/opt/hermes/tools/tts_tool.py:ro
 
     stdin_open: true
     tty: true
