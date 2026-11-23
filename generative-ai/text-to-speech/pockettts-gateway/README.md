@@ -110,6 +110,26 @@ lets supervision restart the stack rather than silently using another voice.
 * Verified: synthesis request from inside the `hermes` container
   (`host.docker.internal:8081`) returns real MP3.
 
+## gufo upstream mode (productive since 2026-11-23)
+
+`compose.yaml` defines a second service `tts-gateway-gufo`: same image, but the
+entrypoint override runs `gateway.py` alone as a pure proxy in front of
+`gufo serve tts` (`../../gufo-tts.sh`, host port 8082, Qwen3-TTS 12Hz 1.7B Base
++ lucy). No gateway code change was needed — gufo streams s16le/24 kHz PCM just
+like `tts-server`, so `TTS_BACKEND=http://host.docker.internal:8082` keeps every
+transcoder (mp3/opus/aac/flac/wav, chunked) working unchanged.
+
+- No Vulkan devices, no `PKTTS_*` vars, no `PKTTS_REF_WAV` registration — lucy
+  comes from gufo's `--voice`/`--voice-text` serve flags.
+- Drop-in model id: gufo accepts `pocket-tts-german` thanks to
+  `MODEL_ALIAS=pocket-tts-german ./gufo-tts.sh`; `TTS_MODEL_NAME` keeps
+  `/v1/models` reporting the same id. gufo's mapping must be published on
+  `0.0.0.0` (script: `HOST=0.0.0.0`) or containers can't reach it.
+- Exactly one of the two services occupies :8081. Rollback:
+  `docker compose stop tts-gateway-gufo && docker compose up -d pockettts-gateway`.
+- Measured through the proxy (2026-11-23): mp3 first byte 1.9–2.9 s, ogg 1.2 s
+  (gufo's first audio ~0.2–0.35 s plus ffmpeg buffering), total ≈ synthesis time.
+
 ## Configuration (compose.yaml `environment`)
 
 | Variable | Default | Purpose |

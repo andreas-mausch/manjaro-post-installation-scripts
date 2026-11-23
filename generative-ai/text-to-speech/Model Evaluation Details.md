@@ -541,16 +541,16 @@ Die zwei echten Knackpunkte:
 
 Einordnung:
 
-- **Sprachassistent/Hermes-Standardstimme:** Anforderung 5–10× weiterhin
-  verletzt → Wechsel lohnt nicht.
-- **Qualitätskritische Ausgaben** (Vorlesen langer Texte, Benachrichtigungen,
-  bei denen 100 % Verständlichkeit Pflicht sind): Qwen3 via gufo wäre heute
-  schon besser als das Gateway — und wartungsärmer als der gepatchte
-  Vulkan-Stack.
-- **Mittelweg:** `gufo-tts.sh` läuft parallel-fähig auf Port 8082; pro Request
-  wählbar — kurz → Gateway (5,5×), quality-kritisch/lang → gufo (1,7× mit
-  Streaming). Kostet ~4 GB RAM, wenn beide geladen sind (maschine aktuell
-  ~7 G frei: eng, aber machbar).
+- **Vorgenommen am 23.11.2026:** Produktiv ist gufo-Qwen3 über den Gateway-Proxy
+  (`tts-gateway-gufo`, :8081 unverändert; Details im Gateway-README). Die
+  Temporeduktion auf ~1,7× wurde bewusst in Kauf genommen, weil die Ziffern- und
+  Gesamtqualität den Ausschlag gab. Der Vulkan-Dienst bleibt definierter
+  Rollback.
+- **Sprachassistent mit Latenzbudget** wäre der Wechsel bei strengem 5–10×-
+  Kriterium nicht; er steht jetzt unter „Qualität vor Tempo“.
+- **Mittelweg** (beide Backends pro Request) bleibt möglich, solange RAM es
+  zulässt: gateway-interner Vulkan-Dienst und gufo parallel, Hermes' `base_url`
+  entscheidet pro Konfiguration.
 
 # OmniVoice
 

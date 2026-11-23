@@ -1,7 +1,8 @@
 # Hermes stack: gateway + dashboard (pinned Nous image) + community chat Web UI + STT sidecar.
-# TTS is NOT part of this stack anymore (since 2026-10-30): it runs standalone as the
-# pocket-tts Vulkan container -> ../text-to-speech/pockettts-gateway/ (host loopback :8081,
-# reached from here via http://host.docker.internal:8081/v1).
+# TTS (since 2026-11-23): Qwen3-TTS 1.7B Base via gufo serve tts (:8082, ../gufo-tts.sh) behind
+# the gateway proxy tts-gateway-gufo -> ../text-to-speech/pockettts-gateway/ (host :8081,
+# reached from here via http://host.docker.internal:8081/v1; model id "pocket-tts-german" kept
+# as alias). Fallback: the same gateway with the embedded pocket-tts Vulkan backend.
 # Adapted from nesquena/hermes-webui docker-compose.three-container.yml, but:
 #   * images pinned (agent tag v0.22.5; WebUI by immutable digest),
 #   * dashboard merged into the agent container (HERMES_DASHBOARD=1) to avoid a 3rd process on the shared home,

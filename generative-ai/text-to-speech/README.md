@@ -1,8 +1,14 @@
-# Text-to-Speech (Pocket-TTS)
+# Text-to-Speech (Pocket-TTS / Qwen3-TTS)
 
-Produktive Sprachausgabe des Hermes-Stacks: **Pocket-TTS german_24l
-(April-Checkpoint)** mit [`pockettts-gateway/`](pockettts-gateway/README.md)
-(`pockettts.cpp` + Vulkan, OpenAI-kompatible API, Host-Port 8081).
+Seit **23.11.2026** produktiv: **Qwen3-TTS 12Hz 1.7B Base** (lucy-Klon) mit
+[`gufo-tts.sh`](../gufo-tts.sh) (`gufo serve tts`, GPU, Host-Port 8082,
+[`gufo-Doku`](https://github.com/gufo-org/gufo/blob/main/docs/models/qwen3-tts.md))
+hinter dem [`pockettts-gateway/`](pockettts-gateway/README.md) im Proxy-Modus
+(`tts-gateway-gufo`, OpenAI-API + mp3/opus-Streaming-Transcode, Host-Port 8081).
+Grund: bestes Deutsch aller Tests (Ziffern einwandfrei), ~1,7× Realtime — der
+5–10×-Punkt wurde dabei bewusst gegen Qualität getauscht. Fallback wie bisher:
+**Pocket-TTS german_24l (April-Checkpoint)** mit demselben Gateway, eingebettetem
+Vulkan-Backend und ~5,5–6,6× (Dienst `pockettts-gateway` in der compose-Datei).
 Ausführliche Findings: [Model Evaluation Details](Model%20Evaluation%20Details.md).
 Dieses Dokument bündelt am 22.11.2026 vier Datums-Notizen (Originalfassung: Git-Log).
 
@@ -33,7 +39,8 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 
 | Modell | Runtime | Release-Date | Größe (MB) | Quantisierung | Realtime-Faktor | Streaming | Voice Cloning | Deutsch | Englisch | Emotion-Tags | Mehrere Speaker |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **Pocket-TTS `german_24l` (April, `e041936c`) ✅ gewählt** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via `pockettts-gateway` | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ (immer chunked; wav/pcm/mp3/opus/aac/flac; TTFB 0,02–0,28 s) | ✓ | ✓ | ✓ | — | ✗ |
+| **Qwen3-TTS 1.7B Base (gufo) ✅ in Produktion (23.11.)** | gufo-runtime `0.35.0`, `serve tts`, GPU (HIP), [`gufo-tts.sh`](../gufo-tts.sh) + Gateway-Proxy | — | 3860 | bf16 | ~1,7× gemessen | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
+| **Pocket-TTS `german_24l` (April, `e041936c`) ✓ Fallback** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via `pockettts-gateway` | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ (immer chunked; wav/pcm/mp3/opus/aac/flac; TTFB 0,02–0,28 s) | ✓ | ✓ | ✓ | — | ✗ |
 | Pocket-TTS `german_24l` (April, `e041936c`) | ONNX-Export der KevinAHM-Demo, onnxruntime (Ryzen 7 PRO 7840U) | 2026-04 | — | INT8 | — | — | — | ✓ | ✓ | — | ✗ |
 | ~~Pocket-TTS `german` 6l (April)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-04 | 138 | Q8_0 (eigenkonvertiert) | ~11× (sustain ~9×) | ✓ (tts-server: pcm/wav) | ✓ | ✓¹ | ✗ | — | ✗ |
 | ~~Pocket-TTS `german` 6l (09/2026)~~ | `pockettts.cpp fab7972`, Vulkan0 | 2026-09 | 138 | Q8_0 (Serveurperso) | ~12× (sustain ~9×) | ✓ (tts-server: pcm/wav) | ✓ | ✓¹ | ✗ | — | ✗ |
@@ -42,7 +49,6 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 | ~~OmniVoice `omnivoice-base`~~ | `omnivoice.cpp 1a468d8`, Vulkan0 | — | 626 + 276 (Codec) | Q8_0 | 0,95× (32 Schritte) / 2,8× (8) | — (tts-server vorhanden, ungemessen) | ✓³ | ✓ | ✗ | — | ✗ |
 | ~~Qwen3-TTS 0.6B Base~~ | `groxaxo/Qwen3-TTS-OpenAI-Fastapi` @ `e17c1c9`, Python-venv, CPU bf16 | — | 1829 | bf16 | ~0,9× gemessen (fp32 nur ~0,27×) | — | ✓ | ✓ | — | ✗⁴ | ✗ |
 | ~~Qwen3-TTS 1.7B Base~~ | wie oben, CPU bf16 | — | 3860 | bf16 | ~0,7× gemessen | — | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
-| ~~Qwen3-TTS 1.7B Base (gufo)~~ | gufo-runtime `0.35.0`, `serve tts`, GPU (HIP), [`gufo-tts.sh`](../gufo-tts.sh) | — | 3860 | bf16 | ~1,7× gemessen | ✓ | ✓ | ✓ | — | ✗⁴ | ✗ |
 | ~~Qwen3-TTS 1.7B CustomVoice~~ | wie oben, CPU bf16 | — | 3840 | bf16 | ~0,8× gemessen | — | ✗ (nur 9 Preset-Stimmen) | ✓⁵ | ✓ | ✓⁶ | ✗ |
 | ~~Chatterbox~~ | audio.cpp `full-cpu`, `chatterbox_q8_0` | — | — | Q8_0 | ungemessen („zu langsam“) | — | ✓ | ✓ | — | — | ✗ |
 | ~~Chatterbox-Turbo~~ | nicht gelaufen (per Release-Notes raus) | — | — | — | — | — | ✗ | nur Englisch (350M) | — | ✗ | ✗ |
@@ -79,12 +85,10 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   wählbar (CLI funktioniert); nur WAV-Ausgabe.
 - ~~OmniVoice~~: selbst 8 MaskGIT-Schritte sehr gut (nur „gerendered“ auffällig), aber
   0,95–2,8× → Anforderung verletzt; Pflicht-Transkript; ~900 MB Fußabdruck.
-- ~~Qwen3-TTS~~: Nachmessung 22./23.11.: ~0,9× Realtime (CPU bf16), 1.7B-Base nur
-  ~0,7× — auch upstream kommen auf einer RTX 3090 nur ~1× heraus, die 5–10×-
-  Anforderung ist mit dieser Modellfamilie aktuell auf keinem Backend erreichbar
-  (gufos GPU-Server 23.11.: ~1,7×, s. Details).
-  Qualität dagegen bestätigt: 1.7B-Base-Klon ohne Runtime-Normalisierung = bestes
-  Deutsch aller Tests (siehe Fußnote ⁷). Emotionen: nur über `instruct`-Feld mit
+- **Qwen3-TTS ✅ in Produktion (23.11.2026)**: CPU-Wege bleiben disqualifiziert
+  (~0,7–0,9×; upstream ~1× auf RTX 3090), aber gufos GPU-Server erreicht ~1,7× und
+  die Qualität entschied: 1.7B-Base-Klon mit unnormalisierten Ziffern = bestes
+  Deutsch aller Tests (Fußnote ⁷). Emotionen: nur über `instruct`-Feld mit
   1.7B-CustomVoice/VoiceDesign — Base/Klonen kann keine (Details unter
   [Qwen3-TTS](Model%20Evaluation%20Details.md#qwen3-tts)).
   Repo (WebUI, API, Docs) sonst sehr gut.
@@ -98,17 +102,14 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 - Chatterbox-multilingual 500M (unklar, ob audio.cpp das lädt)
 - Pocket-TTS `german_2026-09_24l` auf dem gepatchten Vulkan-Stack — GGUF liegt unter
   `/srv/llama/models/pocket-tts/german_2026-09_24l/`, offener Gegenhörtest April vs. 09
-  (April-Paket ist Basis, auf der Produktiv läuft)
-- gufo-integriertes Qwen3-TTS — **getestet 23.11.2026** (siehe Tabelle, Zeile
-  „1.7B Base (gufo)"): ~1,7× Realtime auf dem GPU, Start in ~14 s, echtes PCM-
-  Streaming, Ziffern gehen unnormalisiert ans Modell. Deutlich schneller als der
-  Python-venv-Aufsetzer, aber die 5–10×-Anforderung weiterhin klar verfehlt.
+  (relevant nur für den Vulkan-Fallback-Dienst)
 
 # Runtimes
 
 | Runtime | ✓ | Kurzbewertung |
 |---|---|---|
-| **pockettts.cpp + pockettts-gateway** (C++/ggml-Port, Vulkan) | ✅ | Schnellster Weg zu 24l: 4,5–6,6× Realtime; OpenAI-kompatibler `tts-server`. Nachteile: nur WAV/PCM → eigener Python-Gateway ergänzt mp3/opus/aac/flac aus dem PCM-Stream (echtes Streaming bleibt); registrierte Stimmen nur im RAM (flüchtig); Onset-Fix (upstream PR#1) als eigener Patch angewandt |
+| **gufo `serve tts` + Gateway-Proxy** (Rust, HIP/GPU) | ✅ | Produktiv seit 23.11.2026 (Qwen3-TTS 1.7B Base, lucy): `/ready` in ~14 s, ~1,7× Realtime, PCM/SSE/WebSocket-Streaming, Ziffern ohne Normalisierung, Voice = wav+txt auf Disk, deterministische Seeded-Replays. Braucht `MODEL_ALIAS` + Gateway (`tts-gateway-gufo`) für mp3; teilt sich GPU/RAM mit dem LLM |
+| **pockettts.cpp + pockettts-gateway** (C++/ggml-Port, Vulkan) | ✅ Fallback | Schnellster Weg zu 24l: 4,5–6,6× Realtime; OpenAI-kompatibler `tts-server`. Nachteile: nur WAV/PCM → eigener Python-Gateway ergänzt mp3/opus/aac/flac aus dem PCM-Stream (echtes Streaming bleibt); registrierte Stimmen nur im RAM (flüchtig); Onset-Fix (upstream PR#1) als eigener Patch angewandt |
 | Python-Referenz (kyutai/pocket-tts 4.0.1) | | ~0,97× Realtime auf CPU (f32) → Anforderung klar verletzt; April-Asset-/Tokenizer-Rätsel müssten neu gelöst werden |
 | LocalAI v4.12.1 | | Produktiv bis 30.10.2026, dann abgelöst: echte OpenAI-API mit opus/mp3, aber Python-Backend mit 1 Intraop-Thread (24l unter Realtime) und „ogg“ lieferte Vorbis statt Opus |
 | audio.cpp (`0xshug0`) | | Sehr schnelle CLI, aber WebUI-Bug (Pocket-TTS nicht auswählbar) und nur WAV → keine Serving-Basis |
