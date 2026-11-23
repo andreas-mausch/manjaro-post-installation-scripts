@@ -47,7 +47,8 @@ class GatewayTests(unittest.TestCase):
                 self.handler()._transcode(upstream, "opus", disconnect)
         self.assertTrue(upstream.closed)
         self.assertIsNotNone(processes[0].poll())
-        self.assertTrue(all(pipe.closed for pipe in (processes[0].stdin, processes[0].stdout, processes[0].stderr)))
+        self.assertTrue(all(pipe.closed for pipe in (processes[0].stdout, processes[0].stderr)))
+        self.assertIsNone(processes[0].stdin)  # PCM comes via TCP, not stdin
 
     @contextmanager
     def serving(self, handler, server_class=ThreadingHTTPServer):
@@ -236,6 +237,29 @@ class GatewayTests(unittest.TestCase):
             with patch.object(gateway, "backend_request", return_value=Stream(b'pcm')) as backend:
                 self.handler()._speech(json.dumps(payload).encode())
             self.assertEqual(json.loads(backend.call_args.args[2]), payload)
+
+    def test_default_voice_and_stream_format_injected(self):
+        for fields, expected_voice in (({}, "lucy"), ({"voice": ""}, "lucy"),
+                                       ({"voice": None}, "lucy"), ({"voice": "other"}, "other")):
+            payload = {"input": "test", **fields}
+            with patch.object(gateway, "DEFAULT_VOICE", "lucy"), \
+                 patch.object(gateway, "STREAM_FORMAT", "audio"), \
+                 patch.object(gateway, "backend_request", return_value=Stream(b'pcm')) as backend:
+                self.handler()._speech(json.dumps(payload).encode())
+            sent = json.loads(backend.call_args.args[2])
+            self.assertEqual(sent.get("voice"), expected_voice)
+            self.assertEqual(sent.get("stream_format"), "audio")
+            self.assertEqual(sent.get("response_format"), "pcm")
+
+    def test_backend_without_env_defaults_gets_no_stream_format_or_voice(self):
+        # gufo/pockettts compatibility: unset env must not add fields (gufo rejects
+        # unknown stream fields; pockettts has no preset names).
+        payload = {"input": "test"}
+        with patch.object(gateway, "backend_request", return_value=Stream(b'pcm')) as backend:
+            self.handler()._speech(json.dumps(payload).encode())
+        sent = json.loads(backend.call_args.args[2])
+        self.assertNotIn("stream_format", sent)
+        self.assertNotIn("voice", sent)
 
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
     def test_accept_header_negotiates_format(self):

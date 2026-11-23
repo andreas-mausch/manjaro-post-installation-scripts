@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """OpenAI TTS gateway in front of a streaming PCM backend.
 
-Two backends speak the required shape (POST /v1/audio/speech streaming
-s16le/24 kHz/mono PCM): pockettts.cpp's tts-server (Vulkan stack) and
-gufo serve tts (Qwen3-TTS).
+Three backends speak the required shape (POST /v1/audio/speech streaming
+s16le/24 kHz/mono PCM): pockettts.cpp's tts-server (Vulkan stack),
+gufo serve tts (Qwen3-TTS) and audio.cpp's server (qwen3_tts family; needs
+"stream_format":"audio" in the request — set TTS_STREAM_FORMAT for it).
 
 The tts-server only speaks wav/pcm. This gateway exposes the same OpenAI API
 (POST /v1/audio/speech, GET /v1/models, GET/POST/DELETE /v1/audio/voices) and
@@ -11,8 +12,10 @@ additionally serves mp3/opus/aac/flac via ffmpeg transcoding — streamed
 (chunked), i.e. the client receives bytes while generation is still running.
 
 Format choice: response_format > Accept header (audio/ogg, audio/mpeg, …) >
-DEFAULT_FORMAT. Extension: a "bitrate" field (bits/s or "24k") tunes lossy
-encoders; it is consumed here and never forwarded to the backend.
+DEFAULT_FORMAT. Extensions: a "bitrate" field (bits/s or "24k") tunes lossy
+encoders; a missing/empty "voice" is filled from TTS_DEFAULT_VOICE (backend
+voice preset, e.g. audio.cpp voice_presets/voice_dir). Both are consumed
+here and never forwarded to the backend unchanged.
 
 Python stdlib only; ffmpeg must be on PATH.
 """
@@ -28,6 +31,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BACKEND = os.environ.get("TTS_BACKEND", "http://127.0.0.1:8085")
+DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "")   # e.g. lucy (backend voice preset)
+STREAM_FORMAT = os.environ.get("TTS_STREAM_FORMAT", "")   # e.g. audio (audio.cpp raw PCM stream)
 PORT = int(os.environ.get("GATEWAY_PORT", "8080"))
 MODEL_NAME = os.environ.get("TTS_MODEL_NAME", "")         # e.g. pocket-tts-german (drop-in)
 
@@ -340,6 +345,10 @@ class Handler(BaseHTTPRequestHandler):
                     "bitrate must be bits/s (e.g. 24000 or '24k')"}})
                 return
         payload["response_format"] = "pcm"  # backend streams s16le/24 kHz/mono
+        if STREAM_FORMAT:
+            payload["stream_format"] = STREAM_FORMAT  # audio.cpp only streams with it set
+        if DEFAULT_VOICE and not payload.get("voice"):
+            payload["voice"] = DEFAULT_VOICE
 
         try:
             up = backend_request("/v1/audio/speech", "POST", json.dumps(payload).encode())
@@ -401,11 +410,22 @@ class Handler(BaseHTTPRequestHandler):
         args = list(FFMPEG_FORMATS[fmt])
         if bitrate is not None and "-b:a" in args:  # lossy formats only
             args[args.index("-b:a") + 1] = bitrate
+        # PCM arrives over a local TCP socket, not ffmpeg's stdin: the file/
+        # pipe protocol pads reads up to PIPE_THRESHOLD (128 KiB) before the
+        # first demuxed packet, which delays the first output byte by ~3 s
+        # on a ~1x realtime backend (measured with ffmpeg n9.0). The tcp
+        # protocol has no such floor: first output byte at ~0.1 s. The
+        # listener is bound before Popen so ffmpeg connects without retrying.
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-loglevel", "error",
-             "-f", "s16le", "-ar", str(SAMPLE_RATE), "-ac", "1", "-i", "pipe:0",
+             "-f", "s16le", "-ar", str(SAMPLE_RATE), "-ac", "1",
+             "-i", f"tcp://127.0.0.1:{listener.getsockname()[1]}",
              *args, "pipe:1"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         errors = []
         stderr = bytearray()
         timer = threading.Timer(STREAM_TIMEOUT, ffmpeg.kill)
@@ -421,19 +441,27 @@ class Handler(BaseHTTPRequestHandler):
                 del stderr[:-8192]
 
         def feed():
+            conn = None
             try:
-                while True:
-                    chunk = up.read1(65536)
-                    if not chunk:
-                        break
-                    ffmpeg.stdin.write(chunk)
-            except Exception as e:
-                errors.append(e)
-            finally:
+                listener.settimeout(IO_TIMEOUT)
+                conn, _ = listener.accept()
                 try:
-                    ffmpeg.stdin.close()
-                except Exception:
-                    pass
+                    while True:
+                        chunk = up.read1(65536)
+                        if not chunk:
+                            break
+                        conn.sendall(chunk)
+                except Exception as e:
+                    errors.append(e)  # genuine upstream/feed failure
+            except OSError:
+                pass  # listener closed or ffmpeg never connected: the exit code tells why
+            finally:
+                if conn is not None:
+                    try:
+                        conn.shutdown(socket.SHUT_WR)  # orderly EOF for ffmpeg
+                    except OSError:
+                        pass
+                    conn.close()
 
         feeder = threading.Thread(target=feed, daemon=True)
         drainer = threading.Thread(target=drain, daemon=True)
@@ -445,6 +473,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not chunk:
                     break
                 emit(chunk)
+            listener.close()  # wake a pending accept() if ffmpeg died before connecting
             feeder.join(timeout=10)
             if feeder.is_alive():
                 raise RuntimeError("upstream feeder did not finish")
@@ -456,6 +485,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise RuntimeError(f"ffmpeg exited {code}: {stderr.decode(errors='replace')}")
         finally:
             timer.cancel()
+            listener.close()
             if ffmpeg.poll() is None:
                 ffmpeg.kill()
             ffmpeg.wait()
@@ -464,7 +494,8 @@ class Handler(BaseHTTPRequestHandler):
             feeder.join(timeout=10)
             drainer.join(timeout=10)
             for pipe in (ffmpeg.stdin, ffmpeg.stdout, ffmpeg.stderr):
-                pipe.close()
+                if pipe is not None:
+                    pipe.close()
 
 
 if __name__ == "__main__":
