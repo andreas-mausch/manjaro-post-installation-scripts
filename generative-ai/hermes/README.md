@@ -370,7 +370,7 @@ See also [`TODO.md`](./TODO.md).
 - Agent: `nousresearch/hermes-agent:v0.22.5`
 - Web UI: `ghcr.io/nesquena/hermes-webui:0.52.492`
 - STT: `ghcr.io/speaches-ai/speaches:0.8.3-cpu`
-- TTS (external): TTS gateway image `local/tts-gateway:fab7972-onset1` + gufo runtime
+- TTS (external): TTS gateway image `local/tts-gateway:fab7972-onset1-opus1` + gufo runtime
   image `ghcr.io/gufo-org/toolboxes/gufo-runtime:0.35.0` (see `../gufo-tts.sh`)
 - XMPP plugin: `fastfinge/hermes-xmpp-plugin` @ `d01087a7ab4f26d6624622582dc83b2124ba400d`
 
