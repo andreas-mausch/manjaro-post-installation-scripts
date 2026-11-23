@@ -266,6 +266,18 @@ class GatewayTests(unittest.TestCase):
             handler._speech(payload)
         self.assertEqual(types, ["audio/mpeg"])
 
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_ogg_alias_resolves_to_opus(self):
+        for fields in ({"response_format": "ogg"}, {"response_format": "opus"}):
+            with self.subTest(**fields):
+                handler = self.handler()
+                types = []
+                handler._begin_chunked = lambda status, ctype: types.append(ctype)
+                payload = json.dumps({"input": "test", **fields}).encode()
+                with patch.object(gateway, "backend_request", return_value=Stream(b"\0" * 48000)):
+                    handler._speech(payload)
+                self.assertEqual(types, ["audio/ogg"])
+
     def test_parse_bitrate(self):
         for value, expected in (("24k", "24000"), ("32K", "32000"), ("64kbps", "64000"),
                                 (48000, "48000"), ("1k", "6000"),  # clamped to the floor

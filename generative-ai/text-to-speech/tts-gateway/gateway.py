@@ -46,13 +46,12 @@ SYNTHESIS_SLOTS = threading.BoundedSemaphore(MAX_SYNTHESIS)
 # response_format -> ffmpeg encoder arguments (or raw pass-through for pcm)
 FFMPEG_FORMATS = {
     "mp3":  ["-c:a", "libmp3lame", "-b:a", "64k", "-f", "mp3"],
-    # Opus: speech-optimized tuning for voice messages — voip (SILK) mode and
+    # Speech-optimized tuning for voice messages — voip (SILK) mode and
     # 60 ms frames beat plain 24k on quality/bitrate; 24k mono is in the
     # WhatsApp/Signal/Telegram voice-note range and lossless for this source
-    # (s16le/24 kHz mono caps audio bandwidth at 12 kHz anyway).
+    # (s16le/24 kHz mono caps audio bandwidth at 12 kHz anyway). Served as
+    # Opus-in-Ogg; the legacy "ogg" spelling is normalized to "opus".
     "opus": ["-c:a", "libopus", "-b:a", "24k", "-application", "voip",
-             "-frame_duration", "60", "-f", "ogg"],
-    "ogg":  ["-c:a", "libopus", "-b:a", "24k", "-application", "voip",
              "-frame_duration", "60", "-f", "ogg"],
     "aac":  ["-c:a", "aac", "-b:a", "64k", "-f", "adts"],
     "flac": ["-c:a", "flac", "-f", "flac"],
@@ -64,15 +63,20 @@ FFMPEG_FORMATS = {
 DEFAULT_FORMAT = "opus"
 
 CONTENT_TYPES = {
-    "mp3": "audio/mpeg", "opus": "audio/ogg", "ogg": "audio/ogg",
+    "mp3": "audio/mpeg", "opus": "audio/ogg",
     "aac": "audio/aac", "flac": "audio/flac", "wav": "audio/wav",
     "pcm": "application/octet-stream",
 }
 
+# Historical spelling accepted in response_format, normalized before lookup.
+FORMAT_ALIASES = {"ogg": "opus"}
+
 # Content negotiation for clients that omit response_format: the reverse of
-# CONTENT_TYPES plus common aliases, so the two cannot drift apart.
-# pcm/octet-stream is intentionally not Accept-selectable; wildcards (*/*,
-# audio/*) express no preference and keep DEFAULT_FORMAT; q=0 rejects.
+# CONTENT_TYPES plus aliases that cannot be derived (audio/opus names the
+# codec, audio/ogg our Opus-in-Ogg container; x-wav/wave are legacy wav
+# spellings). pcm/octet-stream is intentionally not Accept-selectable;
+# wildcards (*/*, audio/*) express no preference and keep DEFAULT_FORMAT;
+# q=0 rejects.
 ACCEPT_MEDIA_TYPES = {ctype: fmt for fmt, ctype in CONTENT_TYPES.items() if fmt != "pcm"}
 ACCEPT_MEDIA_TYPES.update({
     "audio/opus": "opus", "audio/x-wav": "wav", "audio/wave": "wav",
@@ -320,6 +324,7 @@ class Handler(BaseHTTPRequestHandler):
             fmt = (payload.get("response_format")
                    or format_from_accept(self.headers.get("Accept"))
                    or DEFAULT_FORMAT).lower()
+            fmt = FORMAT_ALIASES.get(fmt, fmt)  # canonical codec names only
         except Exception:
             self._send_json(400, {"error": {"message": "invalid JSON"}})
             return
