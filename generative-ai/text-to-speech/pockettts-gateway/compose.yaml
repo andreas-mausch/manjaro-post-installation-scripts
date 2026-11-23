@@ -1,6 +1,11 @@
 # Standalone TTS stack: pockettts.cpp (Vulkan) + OpenAI gateway with
 # mp3/opus/aac/flac/wav/pcm. Replaces the localai service of the Hermes stack
 # (details + cutover: README.md).
+#
+# tts-gateway-gufo: SAME gateway in front of gufo serve tts (:8082, ../gufo-tts.sh)
+# instead of the embedded Vulkan backend — same image, entrypoint overridden to
+# run only gateway.py; it streams gufo's pcm and transcodes to mp3/opus/... .
+# Stop exactly one of the two services (both want :8081 after the cutover).
 name: pockettts-gateway
 
 services:
@@ -43,3 +48,26 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  tts-gateway-gufo:
+    # Gateway-only proxy in front of gufo serve tts on the host (no Vulkan
+    # devices, no reference registration — lucy lives in gufo's serve flags).
+    # MODEL_ALIAS=pocket-tts-german in ../gufo-tts.sh makes the drop-in model
+    # id accepted upstream; TTS_MODEL_NAME keeps it visible in /v1/models.
+    image: local/pocket-tts-vulkan:fab7972-onset1
+    container_name: tts-gateway-gufo
+    restart: unless-stopped
+    entrypoint: ["python3", "/opt/tts/gateway.py"]
+    ports:
+      - "8081:8080"               # the production TTS port; pockettts-gateway must stay stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      TTS_BACKEND: http://host.docker.internal:8082
+      TTS_MODEL_NAME: pocket-tts-german
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
