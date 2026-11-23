@@ -686,7 +686,7 @@ zwei parallele gufo-Instanzen (LLM + TTS) Probleme machten.
   der schnellere Weg, bräuchte ein eigenes Image — bewusst zurückgestellt.
 - Server: `audiocpp_server --config server.json --backend vulkan`, gestartet als
   Compose-Dienst `audio-cpp` in [`compose.yaml`](compose.yaml) (zusammen mit dem
-  Gateway-Dienst, Container `audio-cpp-tts`; Debug-Blick auf 127.0.0.1:8083,
+  Gateway-Dienst; Debug-Blick auf 127.0.0.1:8083,
   der Gateway erreicht ihn intern über `http://audio-cpp:8080`). Config
   [`audio-cpp/server.json`](audio-cpp/server.json) mit `mode: streaming` +
   `voice_presets.lucy` (voice_ref + reference_text aus dem read-only Mount
