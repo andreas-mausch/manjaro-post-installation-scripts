@@ -85,13 +85,17 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
   wählbar (CLI funktioniert); nur WAV-Ausgabe.
 - ~~OmniVoice~~: selbst 8 MaskGIT-Schritte sehr gut (nur „gerendered“ auffällig), aber
   0,95–2,8× → Anforderung verletzt; Pflicht-Transkript; ~900 MB Fußabdruck.
-- **Qwen3-TTS ✅ in Produktion (23.11.2026)**: CPU-Wege bleiben disqualifiziert
-  (~0,7–0,9×; upstream ~1× auf RTX 3090), aber gufos GPU-Server erreicht ~1,7× und
-  die Qualität entschied: 1.7B-Base-Klon mit unnormalisierten Ziffern = bestes
-  Deutsch aller Tests (Fußnote ⁷). Emotionen: nur über `instruct`-Feld mit
+- **Qwen3-TTS ✅ in Produktion (23.11.2026, Backend seit_dem selben Tag: audio.cpp)**:
+  CPU-Wege bleiben disqualifiziert (~0,7–0,9×; upstream ~1× auf RTX 3090); die
+  Qualität entschied: 1.7B-Base-Klon mit unnormalisierten Ziffern = bestes Deutsch
+  aller Tests (Fußnote ⁷). Emotionen: nur über `instruct`-Feld mit
   1.7B-CustomVoice/VoiceDesign — Base/Klonen kann keine (Details unter
   [Qwen3-TTS](Model%20Evaluation%20Details.md#qwen3-tts)).
-  Repo (WebUI, API, Docs) sonst sehr gut.
+  Erstproduktiv war gufos GPU-Server (~1,7×); zwei parallele gufo-Instanzen
+  (LLM+TTS) machten aber Probleme → Umstieg auf audio.cpp `audiocpp_server`
+  (Vulkan, Q8_0-GGUF, eigenes Image): ~2× Realtime im Systemsstillstand,
+  ~1× unter Volllast des LLM; Setup unter
+  [`audio-cpp/`](audio-cpp/README.md).
 - ~~Chatterbox~~: klingt sehr gut, aber zu langsam; Turbo = nur Englisch + kein Cloning.
 - ~~Kokoro~~: offenbar kein Voice Cloning.
 
@@ -108,11 +112,12 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 
 | Runtime | ✓ | Kurzbewertung |
 |---|---|---|
-| **gufo `serve tts` + Gateway-Proxy** (Rust, HIP/GPU) | ✅ | Produktiv seit 23.11.2026 (Qwen3-TTS 1.7B Base, lucy): `/ready` in ~14 s, ~1,7× Realtime, PCM/SSE/WebSocket-Streaming, Ziffern ohne Normalisierung, Voice = wav+txt auf Disk, deterministische Seeded-Replays. Braucht Gateway (`tts-gateway`) für mp3; teilt sich GPU/RAM mit dem LLM |
+| **audio.cpp `audiocpp_server` + Gateway** (`0xshug0`, Vulkan/ggml) | ✅ | Produktiv seit 23.11.2026 (Qwen3-TTS 1.7B Base Q8_0_v2 GGUF, lucy-Preset): Image `full-vulkan-20261123-f79c880` (enthält v0.9.6), `mode: streaming` liefert PCM während der Generierung (erstes Audiobyte ~0,65 s), ~2× Realtime im Systemsstillstand / ~1× unter LLM-Volllast, `/v1/audio/voices` aus Config-Presets. Braucht Gateway-Env `stream_format=audio`. Kein HIP/ROCm-Image (nur cpu/cuda/vulkan); `gfx1151_v1`-Kernel-Preset existiert nur im HIP-Pfad. Setup: [`audio-cpp/README.md`](audio-cpp/README.md) |
+| **gufo `serve tts` + Gateway-Proxy** (Rust, HIP/GPU) | Alternative | War kurz Produktiv (23.11.2026): `/ready` in ~14 s, ~1,7× Realtime, PCM/SSE/WebSocket-Streaming, Ziffern ohne Normalisierung, Voice = wav+txt auf Disk, deterministische Seeded-Replays. Braucht Gateway (`tts-gateway`) für mp3. Ablöst Grund: zwei parallele gufo-Instanzen (LLM+TTS) liefen nicht sauber zusammen (`gufo-tts.sh` bleibt als Fallback) |
 | **pockettts.cpp + Gateway** (C++/ggml-Port, Vulkan; alter Stack, Git-Geschichte) | Fallback | Schnellster Weg zu 24l: 4,5–6,6× Realtime; OpenAI-kompatibler `tts-server`. Nachteile: nur WAV/PCM → eigener Python-Gateway ergänzt mp3/opus/aac/flac aus dem PCM-Stream (echtes Streaming bleibt); registrierte Stimmen nur im RAM (flüchtig); Onset-Fix (upstream PR#1) als eigener Patch angewandt |
 | Python-Referenz (kyutai/pocket-tts 4.0.1) | | ~0,97× Realtime auf CPU (f32) → Anforderung klar verletzt; April-Asset-/Tokenizer-Rätsel müssten neu gelöst werden |
 | LocalAI v4.12.1 | | Produktiv bis 30.10.2026, dann abgelöst: echte OpenAI-API mit opus/mp3, aber Python-Backend mit 1 Intraop-Thread (24l unter Realtime) und „ogg“ lieferte Vorbis statt Opus |
-| audio.cpp (`0xshug0`) | | Sehr schnelle CLI, aber WebUI-Bug (Pocket-TTS nicht auswählbar) und nur WAV → keine Serving-Basis |
+| audio.cpp (`0xshug0`), Okt-Test via `full-cpu` | | Sehr schnelle CLI, aber WebUI-Bug (Pocket-TTS nicht auswählbar); dazumal als Serving-Basis verworfen — heute Produktiv-Runtime (siehe erste Zeile) |
 | ONNX (KevinAHM-Demo-Stack) | | Lokal reproduziert, guter Klang (INT8, 1 und 8 Steps); ohne eigenes Serving — nur Erkenntnisquelle |
 | omnivoice.cpp @ `1a468d8` | | Läuft sauber, eigener OpenAI-Server vorhanden; aber nur 0,95–2,8× |
 | Qwen3-TTS-FastAPI (`groxaxo` @ `e17c1c9`) | | Sauberstes Repo (WebUI, API, Docs, ROCm-Image); CPU-Nachmessung 22./23.11.: ~0,7–0,9× Realtime, gufos `serve tts` (GPU) ~1,7×, upstream ~1× auf RTX 3090 → Qwen3-TTS zu langsam |

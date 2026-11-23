@@ -671,6 +671,39 @@ dennoch ausreichend befunden). Merkwürdig: Pocket-TTS in der WebUI nicht auswä
 CLI funktioniert. Nur WAV-Ausgabe (MP3 evtl. mit Optionen?) → damals der Grund für
 den LocalAI-Umweg.
 
+## audio.cpp als Qwen3-TTS-Server (Produktiv-Schicht 23.11.2026)
+
+Zweiter Anlauf mit der Family `qwen3_tts` — Ziel: gufos `serve tts` ersetzen, weil
+zwei parallele gufo-Instanzen (LLM + TTS) Probleme machten.
+
+- Modell: offizielles Q8-Paket `Qwen3-TTS-12Hz-1.7B-Base-GGUF/qwen3-tts-12hz-1.7b-base-q8_0_v2.gguf`
+  (2,7 GB) von [audio-cpp/audio.cpp-gguf](https://huggingface.co/audio-cpp/audio.cpp-gguf),
+  abgelegt unter `/srv/llama/models/Qwen3-TTS-12Hz-1.7B-Base-GGUF/`.
+- Runtime: `ghcr.io/0xshug0/audio.cpp:full-vulkan-20261123-f79c880` (getaggt wie gepullt;
+  enthält v0.9.6, Release 21.11. — ein exaktes Release-Image existiert nicht, CI baut
+  täglich von main). Offizielle Images nur für cpu/cuda12/cuda13/vulkan; **kein
+  HIP/ROCm-Image**. Der HIP-Pfad (gfx1151, `--backend-impl gfx1151_v1`, hipBLASLt) wäre
+  der schnellere Weg, bräuchte ein eigenes Image — bewusst zurückgestellt.
+- Server: `audiocpp_server --config server.json --backend vulkan`, Config mit
+  `mode: streaming` + `voice_presets.lucy` (voice_ref + reference_text), identische
+  Model-id `qwen3-tts-12hz-1.7b-base` → Clients (Gateway, Hermes) bleiben unverändert.
+  Setup: [`audio-cpp/README.md`](audio-cpp/README.md).
+- Messungen 23.11.2026, parallel zum residenten 125B-LLM, seed 42:
+  - Erstes Audiobyte (direkt, `stream_format=audio`): ~0,65 s; Inkremente ~1 s
+    Audio/Sekunde.
+  - Tempo stark lastabhängig: Boot-/Warmup-Phase ~0,9–1,1× Realtime (5,9 s für 5,7 s;
+    17,2 s für 15,3 s sample.txt-Volltext), Systemsstillstand **~2–2,3×** (2,6 s für
+    6,0 s; 3,1 s Gateway/opus für 6,4 s). gufo-Vergleichswert: ~1,7×.
+  - RAM: Container ~1,4 GiB; Vulkan-Gerät `RADV GFX1151` mit coopmat.
+- **Gateway-Pipeline-Befund (ffmpeg):** beim pipe-Input polstert ffmpeg (n9.0) auf
+  `PIPE_THRESHOLD` = 131 072 B Input, bevor das erste Paket demuxed wird — bei einem
+  ~1×-Backend also ~2,8–3,9 s bis zum ersten opus/mp3-Byte (raten- und chunk-größen-
+  unabhängig gemessen; `-probesize/-analyzeduration/-fflags +nobuffer/-re/blocksize`
+  ändern nichts, Input als WAV verschlimmert es). Lösung im Gateway: ffmpeg liest den
+  PCM-Stream über ein Loopback-TCP-Socket statt stdin → erstes Ausgabebyte nach ~0,1 s
+  (Gegenprobe: TCP-Input). Vorher fiel das nicht auf, weil der pockettts.cpp-Backend
+  in ~0,5 s fertig war und die Polsterung unter der Generationszeit verschwand.
+
 ## ONNX (KevinAHM-Demo-Stack)
 
 Lokal reproduziert am 30.10.2026 auf Ryzen 7 PRO 7840U: alle sechs Aufnahmen gut

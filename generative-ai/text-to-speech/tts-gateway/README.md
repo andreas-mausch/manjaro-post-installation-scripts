@@ -1,11 +1,11 @@
-# TTS gateway (OpenAI API) — proxy in front of gufo serve tts
+# TTS gateway (OpenAI API) — proxy in front of the audio.cpp server
 
 Standalone TTS stack replacing the `localai` service from
 [`../../hermes/compose.yaml`](../../hermes/compose.yaml). The compose file
 defines **`tts-gateway`** (productive since 2026-11-23): `gateway.py` alone,
-proxying to `gufo serve tts` — Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id
-`qwen3-tts-12hz-1.7b-base` (see
-[gufo upstream mode](#gufo-upstream-mode-productive-since-2026-11-23)).
+proxying to the **audio.cpp server** (`../audio-cpp-tts.sh`, host port 8083) —
+Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id `qwen3-tts-12hz-1.7b-base`
+(see [audio.cpp upstream mode](#audiocpp-upstream-mode-productive-since-2026-11-23)).
 
 The gateway speaks the OpenAI `/v1/audio/speech` API and streams every
 `response_format` (`mp3|opus|ogg|aac|flac|wav|pcm`) by transcoding the
@@ -18,10 +18,10 @@ definition lives in this file's Git history. The sections below
 (voice bootstrap, `PKTTS_*` configuration) document that backend.
 
 ```
-Hermes/WebUI/curl ──> gateway :8080 (in container) ──> tts-server 127.0.0.1:8085 ──> Vulkan
-                      OpenAI API + ffmpeg:              OpenAI API, wav/pcm only
-                      mp3/opus/aac/flac/wav/pcm,        (pcm = stream while
-                      streamed (chunked)                 generating)
+Hermes/WebUI/curl ──> gateway :8081 (host) ──> audio.cpp server :8083 ──> Vulkan
+                      OpenAI API + ffmpeg:        OpenAI API, streams
+                      mp3/opus/aac/flac/wav/pcm,  s16le/24 kHz PCM while
+                      streamed (chunked)          generating
 ```
 
 `pockettts.cpp`'s `tts-server` (pinned to `fab7972`) speaks the OpenAI
@@ -49,7 +49,8 @@ volumes are not deleted or migrated.
 ## Startup
 
 ```bash
-docker compose up -d            # gufo proxy (gufo serve tts must run: ../gufo-tts.sh)
+../../audio-cpp-tts.sh &       # backend container audio-cpp-tts on :8083 (setup: ../audio-cpp/README.md)
+docker compose up -d           # gateway proxy
 docker compose logs -f tts-gateway   # wait for "[gateway] ready"
 ```
 
@@ -73,34 +74,29 @@ upgrade" below. **Stop `localai` first**, otherwise the two fight over 8081
 ```bash
 # WAV (streaming RIFF, unknown length)
 curl --fail-with-body http://localhost:8081/v1/audio/speech -H 'Content-Type: application/json' \
-  -d '{"model":"pocket-tts-german","input":"Hallo, sag mal etwas zu mir.","response_format":"wav"}' \
+  -d '{"model":"qwen3-tts-12hz-1.7b-base","input":"Hallo, sag mal etwas zu mir.","response_format":"wav"}' \
   --output test.wav
 
 # Opus, streaming: measures time-to-first-byte and total time
 curl -N --fail-with-body -o test.ogg -w 'TTFB: %{time_starttransfer}s  total: %{time_total}s\n' \
   http://localhost:8081/v1/audio/speech -H 'Content-Type: application/json' \
-  -d '{"model":"pocket-tts-german","input":"Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß.","response_format":"opus"}'
+  -d '{"model":"qwen3-tts-12hz-1.7b-base","input":"Es ist 13:05. Die Items werden mit Sprites gerendered. Tschüß.","response_format":"opus"}'
 
 # Verify codec (expected: opus, mono)
 ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -of json test.ogg
 
-# Voices: lucy (cloned, default) + built-ins (juergen, vera) + your own
+# Voices: audio.cpp returns its configured presets (lucy + default)
 curl -s http://localhost:8081/v1/audio/voices
 ```
 
-Omitting `voice` is fine (→ `lucy`). Register your own reference voices via
-`POST /v1/audio/voices` with `{"name":"…","wav_b64":"…"}` (base64 WAV; for
-large files use `--data @file`); re-register them after a backend restart.
-Registration, listing and deletion are proxied to the backend, including its
-response body and status. Names are case-insensitive in the backend. Deleting
-`lucy` removes the RAM registration for this run, so requests using the default
-fail until it is re-registered; the configured reference is
-registered again at the next startup. Audio conversion uses FFmpeg pipes only,
-without temporary audio files.
-
-The gateway has no voice configuration, reference loading, name normalization or
-default injection: an absent speech `voice` remains absent, and explicit values
-are forwarded unchanged. Only the backend interprets voice names.
+Omitting `voice` is fine — the gateway injects `TTS_DEFAULT_VOICE` (`lucy`)
+into the upstream request. Voice registration (`POST /v1/audio/voices`) is a
+pass-through: the current audio.cpp backend has **no** registration endpoint
+(voices live in its `server.json` presets or a `voice_dir` library), so it
+answers 404/405 there. With the former pockettts.cpp backend, registration,
+listing and deletion were proxied including response body and status; names
+were case-insensitive in that backend. Audio conversion uses FFmpeg pipes
+only, without temporary audio files.
 
 Verified against the pinned [server CLI and adapter](https://github.com/ServeurpersoCom/pockettts.cpp/blob/fab7972/tools/tts-server.cpp):
 `--voice` takes a registry name, not a WAV path. `find_voice` resolves that name
@@ -125,14 +121,47 @@ lets supervision restart the stack rather than silently using another voice.
 * Verified: synthesis request from inside the `hermes` container
   (`host.docker.internal:8081`) returns real MP3.
 
-## gufo upstream mode (productive since 2026-11-23)
+## audio.cpp upstream mode (productive since 2026-11-23)
 
 `compose.yaml` runs the image with an entrypoint override — `gateway.py` alone
+as a pure proxy in front of the audio.cpp server (`../../audio-cpp-tts.sh`,
+host port 8083, Qwen3-TTS 12Hz 1.7B Base + lucy preset; setup:
+[`../audio-cpp/README.md`](../audio-cpp/README.md)). Chosen because two
+parallel gufo instances (LLM + TTS) did not run cleanly together. Two env
+vars adapt the upstream request (both unset = pockettts/gufo behavior):
+
+- `TTS_STREAM_FORMAT=audio` — audio.cpp only streams raw PCM when the speech
+  request carries `stream_format` (`audio` = binary chunks; `sse` would be
+  base64 events). The gateway always wants the binary stream, so it overwrites
+  any client-supplied value, like it does with `response_format`.
+- `TTS_DEFAULT_VOICE=lucy` — fills a missing/empty/null `voice` in the speech
+  request with a backend preset name. Explicit non-empty voices pass through.
+
+Measured through the proxy (2026-11-23, opus): first byte 0.25 s short
+sentence / 1.7 s long sentence, total ≈ synthesis time (~2× realtime at system
+idle, ~1× while the 125B LLM runs hot).
+
+**FFmpeg input pipeline (fixed 2026-11-23):** ffmpeg's file/pipe protocol
+pads buffered reads up to `PIPE_THRESHOLD` = 128 KiB of input before the first
+demuxed packet — rate- and chunk-size-independent. With the fast pockettts
+backend that padding hid under the generation time; with a ~1× backend the
+first output byte came only after ~3 s. The gateway therefore serves the
+backend PCM over a per-request loopback TCP socket that ffmpeg connects to
+(`-i tcp://127.0.0.1:<port>`, listener bound before `Popen`) instead of
+stdin — first output byte back to ~0.1 s. CLI knobs do not help
+(`-probesize`, `-analyzeduration`, `-fflags +nobuffer`, `-re`, `-blocksize`;
+feeding WAV instead of raw makes it worse), details in
+[Model Evaluation Details](../Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026).
+
+## gufo upstream mode (historical, 23.11.2026 — one day)
+
+`compose.yaml` ran the image with an entrypoint override — `gateway.py` alone
 as a pure proxy in front of `gufo serve tts` (`../../gufo-tts.sh`, host port
 8082, Qwen3-TTS 12Hz 1.7B Base + lucy). No gateway code change was needed —
 gufo streams s16le/24 kHz PCM just like `tts-server`, so
-`TTS_BACKEND=http://host.docker.internal:8082` keeps every transcoder
-(mp3/opus/aac/flac/wav, chunked) working unchanged.
+`TTS_BACKEND=http://host.docker.internal:8082` kept every transcoder
+(mp3/opus/aac/flac/wav, chunked) working unchanged. `gufo-tts.sh` remains
+available as a fallback backend.
 
 - No Vulkan devices, no `PKTTS_*` vars, no `PKTTS_REF_WAV` registration — lucy
   comes from gufo's `--voice`/`--voice-text` serve flags.
@@ -149,12 +178,15 @@ gufo streams s16le/24 kHz PCM just like `tts-server`, so
 
 | Variable | Default | Purpose |
 |---|---|---|
+| `TTS_BACKEND` | `http://127.0.0.1:8085` | upstream base URL (compose: `http://host.docker.internal:8083`, the audio.cpp server) |
+| `TTS_STREAM_FORMAT` | unset | added as `stream_format` to every speech request (compose: `audio`, required by audio.cpp; leave unset for gufo/pockettts) |
+| `TTS_DEFAULT_VOICE` | unset | fills a missing/empty/null `voice` upstream (compose: `lucy`; leave unset to forward voice handling entirely to the client) |
 | `PKTTS_MODEL` | german_24l_april Q8_0 | GGUF language pack (6l packs work too, see benchmark) |
 | `PKTTS_VOICES` | german_24l_april-voices.gguf | built-in voices (optional) |
 | `PKTTS_DEVICE` | `Vulkan0` | `CPU` as fallback without /dev/dri |
 | `PKTTS_SERVER_VOICE` | `lucy` | native backend `--voice` default registry name |
 | `PKTTS_REF_WAV` | `/references/sample.wav` | optional startup reference registered under `PKTTS_SERVER_VOICE` |
-| `TTS_MODEL_NAME` | `pocket-tts-german` | outward model id (drop-in) |
+| `TTS_MODEL_NAME` | `pocket-tts-german` | outward model id (drop-in; unused when the backend reports its own id — audio.cpp and gufo both report `qwen3-tts-12hz-1.7b-base`) |
 
 ## Operations & limits
 
@@ -187,8 +219,10 @@ gufo streams s16le/24 kHz PCM just like `tts-server`, so
   `k` suffix (`"24k"`, `"64kbps"`), clamped to 6k–512k, ignored for
   flac/wav/pcm, rejected with 400 if unparseable. Consumed by the gateway and
   never forwarded to the backend.
-- Streaming: responses are always chunked. Measured (24l, Vulkan): TTFB 0.02 s
-  (mp3/wav) or 0.28 s (opus), total time 0.4–0.9 s for the test sentence.
+- Streaming: responses are always chunked. Measured with the audio.cpp backend
+  (opus): TTFB 0.25 s (short sentence), total ≈ synthesis time. Historical
+  (pockettts 24l, Vulkan): TTFB 0.02 s (mp3/wav) or 0.28 s (opus), total
+  0.4–0.9 s for the test sentence.
 - WAV is encoded from streaming PCM, not passed through from the backend.
   Its RIFF and data sizes are deliberately `0xffffffff` (unknown length on a
   non-seekable output). HTTP chunk termination marks completion; these sizes
@@ -210,8 +244,10 @@ Run `python3 -m unittest -v` in this directory (FFmpeg required for codec tests)
 The tests include real FFmpeg and local HTTP streaming: MP3, Opus, WAV and PCM
 deliver audio before the mock backend finishes; truncated upstream streams and
 expired deadlines must not produce a successful HTTP terminal chunk. They also
-cover encoder errors, health, child exits, unchanged voice proxying, separate startup reference
-registration and capacity limits. Codec tests exercise all supported formats.
+cover encoder errors, health, child exits, capacity limits, unchanged voice
+proxying when `TTS_DEFAULT_VOICE`/`TTS_STREAM_FORMAT` are unset, their
+injection when set, separate startup reference registration and the TCP-fed
+encoder pipeline. Codec tests exercise all supported formats.
 
 ### Networking upgrade (optional, not done)
 
