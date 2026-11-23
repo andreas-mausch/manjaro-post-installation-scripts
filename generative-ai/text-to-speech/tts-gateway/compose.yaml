@@ -12,6 +12,7 @@ services:
     # Gateway-only proxy in front of gufo serve tts on the host (no reference
     # registration — lucy lives in gufo's serve flags). Clients address the
     # model id qwen3-tts-12hz-1.7b-base unchanged.
+    build: .
     image: local/tts-gateway:fab7972-onset1-opus1
     container_name: tts-gateway
     restart: unless-stopped

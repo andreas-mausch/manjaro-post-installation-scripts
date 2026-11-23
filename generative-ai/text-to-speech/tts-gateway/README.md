@@ -53,6 +53,11 @@ docker compose up -d            # gufo proxy (gufo serve tts must run: ../gufo-t
 docker compose logs -f tts-gateway   # wait for "[gateway] ready"
 ```
 
+After source changes (e.g. `gateway.py`): bump the image tag in
+`compose.yaml` (the tag pins the build, repo convention), then
+`docker compose build && docker compose up -d` — both work through the
+`build:` + `image:` pair.
+
 The service listens on host port `8081` (same port as LocalAI before; host
 port 8080 is taken by gufo). It is published on **all interfaces** — like
 gufo — because Docker port bindings only match the published address, so a
