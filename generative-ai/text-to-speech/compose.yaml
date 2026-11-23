@@ -7,7 +7,7 @@
 #
 # Abgelöste Backends (gufo serve tts, pockettts.cpp/Vulkan embedded) liegen in
 # der Git-Geschichte; gufo-Fallback: ../gufo-tts.sh + TTS_BACKEND-Umsetzung
-# beim Dienst tts-gateway (unten).
+# beim Dienst gateway (unten).
 name: tts
 
 services:
@@ -17,7 +17,6 @@ services:
     # plus folgende main-Commits — die CI veröffentlicht nur tägliche
     # full-<backend>-<date>-<sha>-Tags, kein Release-Image.
     image: ${IMAGE:-ghcr.io/0xshug0/audio.cpp:full-vulkan-20261123-f79c880}
-    container_name: audio-cpp-tts
     restart: unless-stopped
     user: "${RUN_AS:-1000:1000}"
     devices: ["/dev/dri"]
@@ -33,7 +32,7 @@ services:
       - ./audio-cpp/server.json:/app/server.json:ro
     command: ["server", "--config", "/app/server.json", "--backend", "vulkan"]
 
-  tts-gateway:
+  gateway:
     # Reiner Proxy (Image aus ./tts-gateway, Entrypoint-Override → gateway.py).
     # TTS_STREAM_FORMAT/TTS_DEFAULT_VOICE passen den Request an audio.cpp an
     # (Details: tts-gateway/README.md). Fallback gufo serve tts (:8082,
@@ -41,7 +40,6 @@ services:
     # extra_host ist deshalb schon gesetzt.
     build: ./tts-gateway
     image: local/tts-gateway:fab7972-onset1-opus1-acpp1
-    container_name: tts-gateway
     restart: unless-stopped
     entrypoint: ["python3", "/opt/tts/gateway.py"]
     depends_on:

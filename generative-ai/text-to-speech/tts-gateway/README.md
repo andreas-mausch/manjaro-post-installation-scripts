@@ -3,7 +3,8 @@
 Standalone TTS stack replacing the `localai` service from
 [`../../hermes/compose.yaml`](../../hermes/compose.yaml).
 [`../compose.yaml`](../compose.yaml) defines the proxy service
-**`tts-gateway`** (productive since 2026-11-23): `gateway.py` alone,
+**`gateway`** (container `tts-gateway-1`; productive since 2026-11-23):
+`gateway.py` alone,
 proxying to the **audio.cpp server** (`../compose.yaml` service `audio-cpp`,
 compose-internal `audio-cpp:8080`, debug-published on
 `127.0.0.1:8083`) — Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id `qwen3-tts-12hz-1.7b-base`
@@ -54,7 +55,7 @@ Start: see [`../README.md#startup`](../README.md#startup) (compose stack).
 
 After source changes (e.g. `gateway.py`): bump the image tag in
 `../compose.yaml` (the tag pins the build, repo convention), then
-`docker compose build tts-gateway && docker compose up -d` from
+`docker compose build gateway && docker compose up -d` from
 `text-to-speech/` — both work through the `build:` + `image:` pair.
 
 The service listens on host port `8081` (same port as LocalAI before; host
@@ -174,7 +175,7 @@ available as a fallback backend.
 - Measured through the proxy (2026-11-23): mp3 first byte 1.9–2.9 s, ogg 1.2 s
   (gufo's first audio ~0.2–0.35 s plus ffmpeg buffering), total ≈ synthesis time.
 
-## Configuration (`../compose.yaml`, `tts-gateway.environment`)
+## Configuration (`../compose.yaml`, `gateway.environment`)
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -260,5 +261,5 @@ docker network create tts
 ```
 
 declare `networks: tts: { external: true }` in both compose files (with the
-services joining `[default, tts]`), point Hermes at `http://tts-gateway:8080/v1`
+services joining `[default, tts]`), point Hermes at `http://gateway:8080/v1`
 — and the gateway can go back to a loopback-only bind (`127.0.0.1:8081:8080`).
