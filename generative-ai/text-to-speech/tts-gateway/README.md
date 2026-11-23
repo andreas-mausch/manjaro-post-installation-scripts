@@ -48,12 +48,9 @@ bind mounts are inputs, not persisted runtime state, and remain unchanged.
 Any old state volume is unused; existing host files and
 volumes are not deleted or migrated.
 
-## Startup
+## Startup & rebuild
 
-```bash
-cd .. && docker compose up -d          # both services: audio-cpp backend + gateway
-docker compose -f ../compose.yaml logs -f tts-gateway   # wait for "[gateway] ready"
-```
+Start: see [`../README.md#startup`](../README.md#startup) (compose stack).
 
 After source changes (e.g. `gateway.py`): bump the image tag in
 `../compose.yaml` (the tag pins the build, repo convention), then

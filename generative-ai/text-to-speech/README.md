@@ -11,6 +11,13 @@ Ausführliche Findings **und Setup**:
 [Model Evaluation Details](Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026).
 Dieses Dokument bündelt am 22.11.2026 vier Datums-Notizen (Originalfassung: Git-Log).
 
+# Startup
+
+```bash
+docker compose up -d                   # beide Dienste: audio-cpp-Backend + Gateway
+docker compose logs -f tts-gateway     # "[gateway] ready" abwarten
+```
+
 # Anforderungen
 
 - Sprache: Deutsch wird unterstützt (und optional Englisch)
