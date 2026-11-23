@@ -69,13 +69,14 @@ CONTENT_TYPES = {
     "pcm": "application/octet-stream",
 }
 
-# Content negotiation for clients that omit response_format. Wildcards
-# (*/*, audio/*) express no preference and keep DEFAULT_FORMAT; q=0 rejects.
-ACCEPT_MEDIA_TYPES = {
-    "audio/ogg": "opus", "audio/opus": "opus", "audio/mpeg": "mp3",
-    "audio/aac": "aac", "audio/flac": "flac",
-    "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav",
-}
+# Content negotiation for clients that omit response_format: the reverse of
+# CONTENT_TYPES plus common aliases, so the two cannot drift apart.
+# pcm/octet-stream is intentionally not Accept-selectable; wildcards (*/*,
+# audio/*) express no preference and keep DEFAULT_FORMAT; q=0 rejects.
+ACCEPT_MEDIA_TYPES = {ctype: fmt for fmt, ctype in CONTENT_TYPES.items() if fmt != "pcm"}
+ACCEPT_MEDIA_TYPES.update({
+    "audio/opus": "opus", "audio/x-wav": "wav", "audio/wave": "wav",
+})
 
 MIN_BITRATE = 6000    # Opus mono floor
 MAX_BITRATE = 512000  # libmp3lame ceiling
