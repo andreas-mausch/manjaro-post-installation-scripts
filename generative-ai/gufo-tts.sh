@@ -11,7 +11,9 @@ MODEL="${MODEL:-/models/Qwen3-TTS-12Hz-1.7B-Base}"
 VOICES_DIR="${VOICES_DIR:-/srv/llama/tts-voices}"
 VOICE_NAME="${VOICE_NAME:-lucy}"
 MODEL_ID="${MODEL_ID:-qwen3-tts-12hz-1.7b-base}"
-HOST="${HOST:-127.0.0.1}" # set HOST=0.0.0.0 to expose the server on your LAN
+HOST="${HOST:-0.0.0.0}" # 0.0.0.0: the tts-gateway container reaches this fallback
+                        # via host.docker.internal (TTS_BACKEND=:8082); a loopback
+                        # bind would be invisible to it
 PORT="${PORT:-8082}"
 RUN_AS="${RUN_AS:-1000:1000}"
 
