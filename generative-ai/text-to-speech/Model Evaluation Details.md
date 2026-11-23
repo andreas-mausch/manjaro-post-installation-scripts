@@ -267,7 +267,7 @@ F32-Referenz (pockettts.cpp PR#1) — Qualität spricht nicht für den Wechsel.
 
 ## Fehlerbilder im Produktivbetrieb (Analyse 22.11.2026)
 
-Symptom im Produktivbetrieb (`pockettts-gateway`, german_24l_april Q8_0, Vulkan,
+Symptom im Produktivbetrieb (Gateway-Stack, damals `pockettts-gateway`, german_24l_april Q8_0, Vulkan,
 Klon-Stimme `lucy`): **Silben am Wortanfang fehlen**, gelegentlich auch am Ende.
 
 ### Onset-Clipping: Upstream verwirft den ersten Frame jedes Chunks (behoben)
@@ -286,7 +286,7 @@ Frame selbst; Kyutai hält in der Python-Referenz den Frame und faden nur die er
 Fix für uns: [pockettts.cpp#1](https://github.com/ServeurpersoCom/pockettts.cpp/pull/1)
 (`wakamex`, 15.10.2026, Commit `11fc272`: ersten Frame behalten, 5 ms Fade-in) —
 seit über 5 Wochen offen, nicht gemerged (master bis 17.11. nur ggml-Rebases).
-Übernommen als `pockettts-gateway/onset-keep-first-frame.patch`, angewandt im
+Übernommen als `tts-gateway/onset-keep-first-frame.patch`, angewandt im
 Dockerfile; Image `local/pocket-tts-vulkan:fab7972-onset1`. Hinweis: Jeder Chunk
 wird 80 ms länger (Frame bleibt erhalten) — für den Gateway transparent.
 
@@ -542,15 +542,13 @@ Die zwei echten Knackpunkte:
 Einordnung:
 
 - **Vorgenommen am 23.11.2026:** Produktiv ist gufo-Qwen3 über den Gateway-Proxy
-  (`tts-gateway-gufo`, :8081 unverändert; Details im Gateway-README). Die
-  Temporeduktion auf ~1,7× wurde bewusst in Kauf genommen, weil die Ziffern- und
-  Gesamtqualität den Ausschlag gab. Der Vulkan-Dienst bleibt definierter
-  Rollback.
+  (`tts-gateway`, :8081 unverändert; Details im Gateway-README). Die
+  Temporeduktion auf ~1,7× wurde bewusst in Kauf genommen, weil die Ziffern-
+  und Gesamtqualität den Ausschlag gab. Der Vulkan-Dienst wurde noch am
+  selben Tag aus der compose-Datei entfernt (Service-Definition in der
+  Git-Geschichte).
 - **Sprachassistent mit Latenzbudget** wäre der Wechsel bei strengem 5–10×-
   Kriterium nicht; er steht jetzt unter „Qualität vor Tempo“.
-- **Mittelweg** (beide Backends pro Request) bleibt möglich, solange RAM es
-  zulässt: gateway-interner Vulkan-Dienst und gufo parallel, Hermes' `base_url`
-  entscheidet pro Konfiguration.
 
 # OmniVoice
 
@@ -604,7 +602,7 @@ LocalAI), registrierte Stimmen nach Neustart weg, ein Modell pro Prozess.
 `pcm` streamt s16le während der Generierung. Voice-Registration großer Dateien
 via `curl --data @datei` (sonst „Argument list too long“).
 
-Das eigene [`pockettts-gateway/`](pockettts-gateway/README.md) (stdlib-Python +
+Das eigene [`tts-gateway/`](tts-gateway/README.md) (stdlib-Python +
 ffmpeg) ergänzt mp3/opus/aac/flac (ogg-Alias = echtes Opus), codet aus dem
 PCM-Stream (echtes Streaming, TTFB 0,02–0,28 s) und bootstraps die
 Startup-Registrierung von `lucy`. Zwei bewusst getroffene Designentscheidungen

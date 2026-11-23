@@ -10,10 +10,7 @@ MODELS_DIR="${MODELS_DIR:-/srv/llama/models}"
 MODEL="${MODEL:-/models/Qwen3-TTS-12Hz-1.7B-Base}"
 VOICES_DIR="${VOICES_DIR:-/srv/llama/tts-voices}"
 VOICE_NAME="${VOICE_NAME:-lucy}"
-# Alias, damit bestehende Clients (Hermes: "pocket-tts-german") unveraendert
-# durch einen Gateway-Proxy durchreichen koennen.
 MODEL_ID="${MODEL_ID:-qwen3-tts-12hz-1.7b-base}"
-MODEL_ALIAS="${MODEL_ALIAS:-}"
 HOST="${HOST:-127.0.0.1}" # set HOST=0.0.0.0 to expose the server on your LAN
 PORT="${PORT:-8082}"
 RUN_AS="${RUN_AS:-1000:1000}"
@@ -34,7 +31,6 @@ docker run --rm \
   gufo serve tts \
   --model "$MODEL" \
   --served-model-name "$MODEL_ID" \
-  ${MODEL_ALIAS:+--served-model-name "$MODEL_ALIAS"} \
   --voice "$VOICE_NAME=/voices/$VOICE_NAME.wav" \
   --voice-text "$VOICE_NAME=/voices/$VOICE_NAME.txt" \
   --voice-lang "$VOICE_NAME=German" \

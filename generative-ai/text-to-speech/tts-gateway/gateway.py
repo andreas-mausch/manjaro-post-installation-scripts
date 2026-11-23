@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""OpenAI TTS gateway in front of pockettts.cpp's tts-server.
+"""OpenAI TTS gateway in front of a streaming PCM backend.
+
+Two backends speak the required shape (POST /v1/audio/speech streaming
+s16le/24 kHz/mono PCM): pockettts.cpp's tts-server (Vulkan stack) and
+gufo serve tts (Qwen3-TTS).
 
 The tts-server only speaks wav/pcm. This gateway exposes the same OpenAI API
 (POST /v1/audio/speech, GET /v1/models, GET/POST/DELETE /v1/audio/voices) and

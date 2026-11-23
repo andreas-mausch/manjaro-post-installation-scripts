@@ -12,7 +12,7 @@ converted from.**
 | `german_2026-09_24l/` | Current public 24l pack + Serveurperso GGUFs |
 
 Production consumes the April 24l GGUFs via
-[`../pockettts-gateway/`](../pockettts-gateway/); quality/speed comparison of
+[`../tts-gateway/`](../tts-gateway/); quality/speed comparison of
 all packs: [Model Evaluation Details](../Model%20Evaluation%20Details.md#geschwindigkeits-benchmarks).
 
 ## Why the April GGUFs are self-converted
@@ -36,7 +36,7 @@ except for the encoder (42/42 encoder tensors non-null there).
    cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
    ```
 
-   Arch build deps (same list as `../pockettts-gateway/Dockerfile`):
+   Arch build deps (same list as `../tts-gateway/Dockerfile`):
    `base-devel cmake git pkgconf python glslang spirv-headers spirv-tools
    vulkan-headers vulkan-icd-loader shaderc`. This also builds `build/quantize`.
 

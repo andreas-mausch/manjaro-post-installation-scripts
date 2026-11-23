@@ -1,11 +1,21 @@
-# TTS container: pockettts.cpp on Vulkan (OpenAI API)
+# TTS gateway (OpenAI API) — proxy in front of gufo serve tts
 
 Standalone TTS stack replacing the `localai` service from
-[`../../hermes/compose.yaml`](../../hermes/compose.yaml). Model: **Pocket-TTS
-german 24l, April checkpoint, Q8_0** (`/srv/llama/models/pocket-tts/german_24l/`),
-synthesis on the iGPU via Vulkan — ~5.5× realtime instead of ~0.9×
-(LocalAI/Python/CPU with 24l); see the
-[benchmarks](../Model%20Evaluation%20Details.md#geschwindigkeits-benchmarks).
+[`../../hermes/compose.yaml`](../../hermes/compose.yaml). The compose file
+defines **`tts-gateway`** (productive since 2026-11-23): `gateway.py` alone,
+proxying to `gufo serve tts` — Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id
+`qwen3-tts-12hz-1.7b-base` (see
+[gufo upstream mode](#gufo-upstream-mode-productive-since-2026-11-23)).
+
+The gateway speaks the OpenAI `/v1/audio/speech` API and streams every
+`response_format` (`mp3|opus|ogg|aac|flac|wav|pcm`) by transcoding the
+backend's s16le/24 kHz PCM stream while generation runs.
+
+The former production setup — the same image with the embedded
+`pockettts.cpp` Vulkan backend (Pocket-TTS german 24l, April checkpoint,
+Q8_0, ~5.5× realtime) — was removed from compose on 2026-11-23; its service
+definition lives in this file's Git history. The sections below
+(voice bootstrap, `PKTTS_*` configuration) document that backend.
 
 ```
 Hermes/WebUI/curl ──> gateway :8080 (in container) ──> tts-server 127.0.0.1:8085 ──> Vulkan
@@ -33,14 +43,14 @@ read-only reference `sample.wav` is read at startup and cloned into RAM as
 **`lucy`** by the separate `startup.py` bootstrap. The backend's native
 `--voice lucy` (`PKTTS_SERVER_VOICE`) sets the default. The reference and model
 bind mounts are inputs, not persisted runtime state, and remain unchanged.
-Any old `pockettts-gateway-state` volume is now unused; existing host files and
+Any old state volume is unused; existing host files and
 volumes are not deleted or migrated.
 
 ## Startup
 
 ```bash
-docker compose up -d --build    # first build needs internet + a few minutes
-docker compose logs -f pockettts-gateway   # wait for "[gateway] ready"
+docker compose up -d            # gufo proxy (gufo serve tts must run: ../gufo-tts.sh)
+docker compose logs -f tts-gateway   # wait for "[gateway] ready"
 ```
 
 The service listens on host port `8081` (same port as LocalAI before; host
@@ -112,21 +122,21 @@ lets supervision restart the stack rather than silently using another voice.
 
 ## gufo upstream mode (productive since 2026-11-23)
 
-`compose.yaml` defines a second service `tts-gateway-gufo`: same image, but the
-entrypoint override runs `gateway.py` alone as a pure proxy in front of
-`gufo serve tts` (`../../gufo-tts.sh`, host port 8082, Qwen3-TTS 12Hz 1.7B Base
-+ lucy). No gateway code change was needed — gufo streams s16le/24 kHz PCM just
-like `tts-server`, so `TTS_BACKEND=http://host.docker.internal:8082` keeps every
-transcoder (mp3/opus/aac/flac/wav, chunked) working unchanged.
+`compose.yaml` runs the image with an entrypoint override — `gateway.py` alone
+as a pure proxy in front of `gufo serve tts` (`../../gufo-tts.sh`, host port
+8082, Qwen3-TTS 12Hz 1.7B Base + lucy). No gateway code change was needed —
+gufo streams s16le/24 kHz PCM just like `tts-server`, so
+`TTS_BACKEND=http://host.docker.internal:8082` keeps every transcoder
+(mp3/opus/aac/flac/wav, chunked) working unchanged.
 
 - No Vulkan devices, no `PKTTS_*` vars, no `PKTTS_REF_WAV` registration — lucy
   comes from gufo's `--voice`/`--voice-text` serve flags.
-- Drop-in model id: gufo accepts `pocket-tts-german` thanks to
-  `MODEL_ALIAS=pocket-tts-german ./gufo-tts.sh`; `TTS_MODEL_NAME` keeps
-  `/v1/models` reporting the same id. gufo's mapping must be published on
-  `0.0.0.0` (script: `HOST=0.0.0.0`) or containers can't reach it.
-- Exactly one of the two services occupies :8081. Rollback:
-  `docker compose stop tts-gateway-gufo && docker compose up -d pockettts-gateway`.
+- Clients use the gufo model id `qwen3-tts-12hz-1.7b-base` directly (set in the
+  Hermes agent config). gufo's mapping must be published on `0.0.0.0`
+  (script: `HOST=0.0.0.0`) or containers can't reach it.
+- Exactly one thing occupies :8081. The old embedded-Vulkan service was removed
+  from compose (Git history); rebuilding that path means restoring its block
+  and pointing the Hermes `tts.openai.model` back at `pocket-tts-german`..
 - Measured through the proxy (2026-11-23): mp3 first byte 1.9–2.9 s, ogg 1.2 s
   (gufo's first audio ~0.2–0.35 s plus ffmpeg buffering), total ≈ synthesis time.
 
@@ -173,9 +183,6 @@ transcoder (mp3/opus/aac/flac/wav, chunked) working unchanged.
   timeout and returns 503 if unavailable. The container supervisor exits if
   either service dies so the compose restart policy can recover both. SIGTERM
   stops both services and their encoder children (five-second grace period).
-- The gateway is deliberately minimal (no auth — loopback-only, as before);
-  handle encryption/exposure the same way as LocalAI.
-- Model load takes < 1 s; health check at `/health`.
 - The gateway is deliberately minimal (no auth). Published on all interfaces
   (see "Startup"), the API is reachable from the LAN — same policy as gufo on
   this machine; only run on networks you trust.
@@ -199,5 +206,5 @@ docker network create tts
 ```
 
 declare `networks: tts: { external: true }` in both compose files (with the
-services joining `[default, tts]`), point Hermes at `http://pockettts-gateway:8080/v1`
+services joining `[default, tts]`), point Hermes at `http://tts-gateway:8080/v1`
 — and the gateway can go back to a loopback-only bind (`127.0.0.1:8081:8080`).
