@@ -13,6 +13,7 @@ PORT="${PORT:-8080}"
 RUN_AS="${RUN_AS:-1000:1000}"
 
 docker run --rm \
+  --name gufo \
   --user "$RUN_AS" \
   --group-add render \
   --device /dev/kfd \
