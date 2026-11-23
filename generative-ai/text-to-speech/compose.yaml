@@ -6,8 +6,7 @@
 # Model Evaluation Details.md (Setup & Messungen).
 #
 # Abgelöste Backends (gufo serve tts, pockettts.cpp/Vulkan embedded) liegen in
-# der Git-Geschichte; gufo-Fallback: ../gufo-tts.sh + TTS_BACKEND-Umsetzung
-# beim Dienst gateway (unten).
+# der Git-Geschichte.
 name: tts
 
 services:
@@ -35,9 +34,7 @@ services:
   gateway:
     # Reiner Proxy (Image aus ./tts-gateway, Entrypoint-Override → gateway.py).
     # TTS_STREAM_FORMAT/TTS_DEFAULT_VOICE passen den Request an audio.cpp an
-    # (Details: tts-gateway/README.md). Fallback gufo serve tts (:8082,
-    # ../gufo-tts.sh): TTS_BACKEND=http://host.docker.internal:8082 — der
-    # extra_host ist deshalb schon gesetzt.
+    # (Details: tts-gateway/README.md).
     build: ./tts-gateway
     image: local/tts-gateway:fab7972-onset1-opus1-acpp1
     restart: unless-stopped
@@ -49,8 +46,6 @@ services:
                                   # das via host.docker.internal; ein
                                   # 127.0.0.1-Bind wäre für sie unsichtbar.
                                   # Siehe tts-gateway/README.md "Networking upgrade".
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
       TTS_BACKEND: http://audio-cpp:8080
       TTS_STREAM_FORMAT: audio    # audio.cpp streamt PCM nur mit stream_format

@@ -484,7 +484,7 @@ mit ~1,7× ebenfalls nicht.
 
 ## Test 23.11.2026: gufo serve tts (GPU, Container 0.35.0)
 
-Aufbau mit [`gufo-tts.sh`](../gufo-tts.sh): Modellkopie aus dem HF-Cache
+Aufbau mit `gufo-tts.sh` (entfernt 23.11., in der Git-Geschichte): Modellkopie aus dem HF-Cache
 (`cp -rL` nach `/srv/llama/models/Qwen3-TTS-12Hz-1.7B-Base`), Voice-Registrierung
 über `--voice lucy=/voices/lucy.wav --voice-text … --voice-lang lucy=German`.
 Stolperstein: die Referenz-`.txt` darf nur das reine Transkript enthalten — die

@@ -161,8 +161,9 @@ as a pure proxy in front of `gufo serve tts` (`../../gufo-tts.sh`, host port
 8082, Qwen3-TTS 12Hz 1.7B Base + lucy). No gateway code change was needed —
 gufo streams s16le/24 kHz PCM just like `tts-server`, so
 `TTS_BACKEND=http://host.docker.internal:8082` kept every transcoder
-(mp3/opus/aac/flac/wav, chunked) working unchanged. `gufo-tts.sh` remains
-available as a fallback backend.
+(mp3/opus/aac/flac/wav, chunked) working unchanged. `gufo serve tts` and its
+`gufo-tts.sh` were retired as fallback on 2026-11-23; both live in the Git
+history.
 
 - No Vulkan devices, no `PKTTS_*` vars, no `PKTTS_REF_WAV` registration — lucy
   comes from gufo's `--voice`/`--voice-text` serve flags.

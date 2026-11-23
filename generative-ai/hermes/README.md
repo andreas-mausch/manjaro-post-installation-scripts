@@ -21,10 +21,10 @@ Three pinned containers (compose project name `hermes`, ports are loopback-only)
 | `hermes-webui` | `ghcr.io/nesquena/hermes-webui:0.52.492` | Community ChatGPT-like Web UI (gateway-backend mode) | `8787` browser chat |
 | `speaches` | `ghcr.io/speaches-ai/speaches:0.8.3-cpu` | OpenAI-compatible `/v1/audio/transcriptions` (faster-whisper) STT sidecar | `8000` STT API |
 
-TTS is **not** a service of this compose project: it is the gateway proxy
-[`../text-to-speech/tts-gateway/`](../text-to-speech/tts-gateway/README.md)
-(host `:8081`) in front of `gufo serve tts` (`:8082`, see `../gufo-tts.sh`) —
-Qwen3-TTS 1.7B Base with the cloned voice `lucy`.
+TTS is **not** a service of this compose project: it is the stack
+[`../text-to-speech/compose.yaml`](../text-to-speech/README.md) — the audio.cpp
+server (Qwen3-TTS 12Hz 1.7B Base, cloned voice `lucy`) behind the gateway proxy
+[`tts-gateway/`](../text-to-speech/tts-gateway/README.md) (host `:8081`).
 
 Data lives in a named volume **`hermes_hermes-data`** (mounted at `/opt/data` in the
 agent — holds `config.yaml`, `.env`, plugins, OMEMO store, sessions, logs). Whisper
@@ -87,11 +87,11 @@ Spoken reply ─► hermes-agent ──(tts.provider=openai)──► tts-gatewa
    and your own peer JID for the allow-list. Both go in `.env` (see below) — the JIDs
    aren't credentials, but they're personal, so nothing identity-related is tracked.
 4. Disk for the whisper model(s) under `/srv/llama/models/whisper`.
-5. For TTS (external to this compose project): `gufo serve tts` running via
-   `../gufo-tts.sh` (weights `/srv/llama/models/Qwen3-TTS-12Hz-1.7B-Base`, lucy
+5. For TTS (external to this compose project): the stack in `../text-to-speech/`
+   — `docker compose up -d` starts the audio.cpp server plus its gateway proxy
+   (model GGUF under `/srv/llama/models/Qwen3-TTS-12Hz-1.7B-Base-GGUF/`, lucy
    reference `/srv/llama/tts-voices/`, origin: `../text-to-speech/sample.wav`,
-   git-ignored) plus its proxy: `docker compose up -d` in
-   `../text-to-speech/tts-gateway/`. History of earlier backends (LocalAI,
+   git-ignored). History of earlier backends (gufo, LocalAI,
    pocket-tts):
    [`../text-to-speech/Model Evaluation Details.md`](../text-to-speech/Model%20Evaluation%20Details.md#localai-ehemaliges-produktiv-setup-bis-30102026).
 
@@ -381,8 +381,9 @@ See also [`TODO.md`](./TODO.md).
 - Agent: `nousresearch/hermes-agent:v0.22.5`
 - Web UI: `ghcr.io/nesquena/hermes-webui:0.52.492`
 - STT: `ghcr.io/speaches-ai/speaches:0.8.3-cpu`
-- TTS (external): TTS gateway image `local/tts-gateway:fab7972-onset1-opus1` + gufo runtime
-  image `ghcr.io/gufo-org/toolboxes/gufo-runtime:0.35.0` (see `../gufo-tts.sh`)
+- TTS (external): tts stack `local/tts-gateway:fab7972-onset1-opus1-acpp1` +
+  audio.cpp `ghcr.io/0xshug0/audio.cpp:full-vulkan-20261123-f79c880`
+  (see `../text-to-speech/compose.yaml`)
 - XMPP plugin: `fastfinge/hermes-xmpp-plugin` @ `d01087a7ab4f26d6624622582dc83b2124ba400d`
 
 **Files**
