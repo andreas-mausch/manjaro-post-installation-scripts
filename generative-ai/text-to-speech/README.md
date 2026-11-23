@@ -1,9 +1,9 @@
 # Text-to-Speech (Pocket-TTS / Qwen3-TTS)
 
-Seit **23.11.2026** produktiv: **Qwen3-TTS 12Hz 1.7B Base** (lucy-Klon) mit
-[`audio-cpp-tts.sh`](../audio-cpp-tts.sh) (audio.cpp `audiocpp_server`, Vulkan,
-Host-Port 8083) hinter dem [`tts-gateway/`](tts-gateway/README.md) im Proxy-Modus
-(`tts-gateway`, OpenAI-API + mp3/opus-Streaming-Transcode, Host-Port 8081).
+Seit **23.11.2026** produktiv: **Qwen3-TTS 12Hz 1.7B Base** (lucy-Klon) als
+Compose-Stack [`compose.yaml`](compose.yaml) — audio.cpp `audiocpp_server`
+(Vulkan) + [`tts-gateway/`](tts-gateway/README.md)-Proxy (OpenAI-API +
+mp3/opus-Streaming-Transcode, Host-Port 8081).
 Grund: bestes Deutsch aller Tests (Ziffern einwandfrei), ~2× Realtime im
 Systemsstillstand — der 5–10×-Punkt wurde bewusst gegen Qualität getauscht.
 Fallback: [`gufo-tts.sh`](../gufo-tts.sh) (gufo `serve tts`, ~1,7×).
@@ -38,7 +38,7 @@ Kombination: jeder Läufer bekommt genau eine Stimme pro Request
 
 | Modell | Runtime | Release-Date | Größe (MB) | Quantisierung | Realtime-Faktor | Streaming | Voice Cloning | Deutsch | Englisch | Emotion-Tags | Mehrere Speaker |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **Qwen3-TTS 1.7B Base (audio.cpp) ✅ in Produktion (23.11.)** | audio.cpp `full-vulkan-20261123-f79c880`, [`audio-cpp-tts.sh`](../audio-cpp-tts.sh) + Gateway-Proxy | — | 2695 | Q8_0_v2 (offizielles GGUF) | ~2–2,3× (Systemsstillstand) / ~1× (LLM-Volllast) | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
+| **Qwen3-TTS 1.7B Base (audio.cpp) ✅ in Produktion (23.11.)** | audio.cpp `full-vulkan-20261123-f79c880`, [`compose.yaml`](compose.yaml) (Dienste `audio-cpp` + `tts-gateway`) | — | 2695 | Q8_0_v2 (offizielles GGUF) | ~2–2,3× (Systemsstillstand) / ~1× (LLM-Volllast) | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
 | Qwen3-TTS 1.7B Base (gufo) — Fallback | gufo-runtime `0.35.0`, `serve tts`, GPU (HIP), [`gufo-tts.sh`](../gufo-tts.sh) + Gateway-Proxy | — | 3860 | bf16 | ~1,7× gemessen | ✓ | ✓ | ✓⁷ | — | ✗⁴ | ✗ |
 | **Pocket-TTS `german_24l` (April, `e041936c`) ✓ Fallback** | `pockettts.cpp fab7972` + `onset-keep-first-frame.patch`, Vulkan0, via Gateway (alter Dienst, Git-Geschichte) | 2026-04 | 379 | Q8_0 (eigenkonvertiert) | ~5,5–6,6× (CPU 4,5–4,7×) | ✓ (immer chunked; wav/pcm/mp3/opus/aac/flac; TTFB 0,02–0,28 s) | ✓ | ✓ | ✓ | — | ✗ |
 | Pocket-TTS `german_24l` (April, `e041936c`) | ONNX-Export der KevinAHM-Demo, onnxruntime (Ryzen 7 PRO 7840U) | 2026-04 | — | INT8 | — | — | — | ✓ | ✓ | — | ✗ |

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # pockettts.cpp (Vulkan) + an ffmpeg format gateway behind an OpenAI API.
-# Build: docker compose build  (from this directory)
+# Build: docker compose build tts-gateway  (from the parent directory)
 
 FROM archlinux:latest AS build
 RUN pacman -Syu --noconfirm --needed base-devel cmake git pkgconf python glslang spirv-headers spirv-tools vulkan-headers vulkan-icd-loader shaderc

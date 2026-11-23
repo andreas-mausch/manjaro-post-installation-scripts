@@ -684,9 +684,10 @@ zwei parallele gufo-Instanzen (LLM + TTS) Probleme machten.
   täglich von main). Offizielle Images nur für cpu/cuda12/cuda13/vulkan; **kein
   HIP/ROCm-Image**. Der HIP-Pfad (gfx1151, `--backend-impl gfx1151_v1`, hipBLASLt) wäre
   der schnellere Weg, bräuchte ein eigenes Image — bewusst zurückgestellt.
-- Server: `audiocpp_server --config server.json --backend vulkan` (gestartet via
-  [`../audio-cpp-tts.sh`](../audio-cpp-tts.sh), Container `audio-cpp-tts`, Host-Port
-  8083; Gateway dazu: `docker compose -f tts-gateway/compose.yaml up -d`). Config
+- Server: `audiocpp_server --config server.json --backend vulkan`, gestartet als
+  Compose-Dienst `audio-cpp` in [`compose.yaml`](compose.yaml) (zusammen mit dem
+  Gateway-Dienst, Container `audio-cpp-tts`; Debug-Blick auf 127.0.0.1:8083,
+  der Gateway erreicht ihn intern über `http://audio-cpp:8080`). Config
   [`audio-cpp/server.json`](audio-cpp/server.json) mit `mode: streaming` +
   `voice_presets.lucy` (voice_ref + reference_text aus dem read-only Mount
   `/srv/llama/tts-voices/`), identische Model-id `qwen3-tts-12hz-1.7b-base` →

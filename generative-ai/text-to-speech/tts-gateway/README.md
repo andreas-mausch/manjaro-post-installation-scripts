@@ -1,10 +1,12 @@
 # TTS gateway (OpenAI API) — proxy in front of the audio.cpp server
 
 Standalone TTS stack replacing the `localai` service from
-[`../../hermes/compose.yaml`](../../hermes/compose.yaml). The compose file
-defines **`tts-gateway`** (productive since 2026-11-23): `gateway.py` alone,
-proxying to the **audio.cpp server** (`../audio-cpp-tts.sh`, host port 8083) —
-Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id `qwen3-tts-12hz-1.7b-base`
+[`../../hermes/compose.yaml`](../../hermes/compose.yaml).
+[`../compose.yaml`](../compose.yaml) defines the proxy service
+**`tts-gateway`** (productive since 2026-11-23): `gateway.py` alone,
+proxying to the **audio.cpp server** (`../compose.yaml` service `audio-cpp`,
+compose-internal `audio-cpp:8080`, debug-published on
+`127.0.0.1:8083`) — Qwen3-TTS 12Hz 1.7B Base, voice lucy, model id `qwen3-tts-12hz-1.7b-base`
 (see [audio.cpp upstream mode](#audiocpp-upstream-mode-productive-since-2026-11-23)).
 
 The gateway speaks the OpenAI `/v1/audio/speech` API and streams every
@@ -49,15 +51,14 @@ volumes are not deleted or migrated.
 ## Startup
 
 ```bash
-../../audio-cpp-tts.sh &       # backend container audio-cpp-tts on :8083 (setup: ../Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026)
-docker compose up -d           # gateway proxy
-docker compose logs -f tts-gateway   # wait for "[gateway] ready"
+cd .. && docker compose up -d          # both services: audio-cpp backend + gateway
+docker compose -f ../compose.yaml logs -f tts-gateway   # wait for "[gateway] ready"
 ```
 
 After source changes (e.g. `gateway.py`): bump the image tag in
-`compose.yaml` (the tag pins the build, repo convention), then
-`docker compose build && docker compose up -d` — both work through the
-`build:` + `image:` pair.
+`../compose.yaml` (the tag pins the build, repo convention), then
+`docker compose build tts-gateway && docker compose up -d` from
+`text-to-speech/` — both work through the `build:` + `image:` pair.
 
 The service listens on host port `8081` (same port as LocalAI before; host
 port 8080 is taken by gufo). It is published on **all interfaces** — like
@@ -123,9 +124,10 @@ lets supervision restart the stack rather than silently using another voice.
 
 ## audio.cpp upstream mode (productive since 2026-11-23)
 
-`compose.yaml` runs the image with an entrypoint override — `gateway.py` alone
-as a pure proxy in front of the audio.cpp server (`../../audio-cpp-tts.sh`,
-host port 8083, Qwen3-TTS 12Hz 1.7B Base + lucy preset; setup:
+`../compose.yaml` runs the image with an entrypoint override — `gateway.py`
+alone as a pure proxy in front of the audio.cpp server (same file, service
+`audio-cpp`, compose-internal `audio-cpp:8080`; Qwen3-TTS 12Hz 1.7B Base +
+lucy preset; setup:
 [Model Evaluation Details](../Model%20Evaluation%20Details.md#audiocpp-als-qwen3-tts-server-produktiv-schicht-23112026)). Chosen because two
 parallel gufo instances (LLM + TTS) did not run cleanly together. Two env
 vars adapt the upstream request (both unset = pockettts/gufo behavior):
@@ -155,7 +157,8 @@ feeding WAV instead of raw makes it worse), details in
 
 ## gufo upstream mode (historical, 23.11.2026 — one day)
 
-`compose.yaml` ran the image with an entrypoint override — `gateway.py` alone
+`compose.yaml` (this directory, before the merge into `../compose.yaml`) ran
+the image with an entrypoint override — `gateway.py` alone
 as a pure proxy in front of `gufo serve tts` (`../../gufo-tts.sh`, host port
 8082, Qwen3-TTS 12Hz 1.7B Base + lucy). No gateway code change was needed —
 gufo streams s16le/24 kHz PCM just like `tts-server`, so
@@ -174,7 +177,7 @@ available as a fallback backend.
 - Measured through the proxy (2026-11-23): mp3 first byte 1.9–2.9 s, ogg 1.2 s
   (gufo's first audio ~0.2–0.35 s plus ffmpeg buffering), total ≈ synthesis time.
 
-## Configuration (compose.yaml `environment`)
+## Configuration (`../compose.yaml`, `tts-gateway.environment`)
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -204,8 +207,9 @@ available as a fallback backend.
   clients must treat incomplete HTTP chunk framing as an error, not usable
   complete audio. Upstream reads, downstream writes, and encoder lifetime are
   bounded. Disconnect cleanup interrupts upstream reads and reaps FFmpeg.
-- AMD/iGPU: the container needs `/dev/dri` + groups `render`/`video`
-  (GIDs via `getent group render video`, kept as defaults in compose.yaml).
+- AMD/iGPU: the **audio-cpp backend** service needs `/dev/dri` + groups
+  `render`/`video` (GIDs via `getent group render video`, defaults in its
+  `../compose.yaml` service definition).
 - `response_format`: `mp3|opus|ogg|aac|flac|wav|pcm`. Format resolution:
   explicit `response_format` > `Accept` header (`audio/ogg|audio/opus|
   audio/mpeg|audio/aac|audio/flac|audio/wav|audio/x-wav`, q-values honored,

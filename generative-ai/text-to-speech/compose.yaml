@@ -1,0 +1,65 @@
+# Standalone TTS stack: audio.cpp server (Qwen3-TTS 12Hz 1.7B Base Q8, Vulkan,
+# voice lucy) + OpenAI gateway (mp3/opus/aac/flac/wav/pcm, streaming) in front
+# of it. Clients (Hermes & friends) only ever talk to the gateway on :8081;
+# the backend joins the shared compose network under the service name
+# `audio-cpp`. Details: README.md (Überblick), tts-gateway/README.md (Gateway),
+# Model Evaluation Details.md (Setup & Messungen).
+#
+# Abgelöste Backends (gufo serve tts, pockettts.cpp/Vulkan embedded) liegen in
+# der Git-Geschichte; gufo-Fallback: ../gufo-tts.sh + TTS_BACKEND-Umsetzung
+# beim Dienst tts-gateway (unten).
+name: tts
+
+services:
+  audio-cpp:
+    # Gepinnt: Tages-Build vom 23.11.2026 (Commit f79c880, Deckblatt
+    # sha256:70443d55…), identisch mit full-vulkan beim Pull. Enthält v0.9.6
+    # plus folgende main-Commits — die CI veröffentlicht nur tägliche
+    # full-<backend>-<date>-<sha>-Tags, kein Release-Image.
+    image: ${IMAGE:-ghcr.io/0xshug0/audio.cpp:full-vulkan-20261123-f79c880}
+    container_name: audio-cpp-tts
+    restart: unless-stopped
+    user: "${RUN_AS:-1000:1000}"
+    devices: ["/dev/dri"]
+    # /dev/dri-Zugriff für den Nicht-Root-User (Host: getent group render video)
+    group_add: ["${RENDER_GID:-987}", "${VIDEO_GID:-983}"]
+    ports:
+      # Nur Debug-Sicht auf dem Host — der Gateway erreicht den Dienst über das
+      # Compose-Netz. LAN-Exposition falls gewünscht: BACKEND_BIND=0.0.0.0
+      - "${BACKEND_BIND:-127.0.0.1}:8083:8080"
+    volumes:
+      - "${MODELS_DIR:-/srv/llama/models}:/models:ro"
+      - "${VOICES_DIR:-/srv/llama/tts-voices}:/voices:ro"
+      - ./audio-cpp/server.json:/app/server.json:ro
+    command: ["server", "--config", "/app/server.json", "--backend", "vulkan"]
+
+  tts-gateway:
+    # Reiner Proxy (Image aus ./tts-gateway, Entrypoint-Override → gateway.py).
+    # TTS_STREAM_FORMAT/TTS_DEFAULT_VOICE passen den Request an audio.cpp an
+    # (Details: tts-gateway/README.md). Fallback gufo serve tts (:8082,
+    # ../gufo-tts.sh): TTS_BACKEND=http://host.docker.internal:8082 — der
+    # extra_host ist deshalb schon gesetzt.
+    build: ./tts-gateway
+    image: local/tts-gateway:fab7972-onset1-opus1-acpp1
+    container_name: tts-gateway
+    restart: unless-stopped
+    entrypoint: ["python3", "/opt/tts/gateway.py"]
+    depends_on:
+      - audio-cpp
+    ports:
+      - "8081:8080"               # alle Interfaces (wie gufo): Container erreichen
+                                  # das via host.docker.internal; ein
+                                  # 127.0.0.1-Bind wäre für sie unsichtbar.
+                                  # Siehe tts-gateway/README.md "Networking upgrade".
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      TTS_BACKEND: http://audio-cpp:8080
+      TTS_STREAM_FORMAT: audio    # audio.cpp streamt PCM nur mit stream_format
+      TTS_DEFAULT_VOICE: lucy     # füllt fehlende/leere "voice" (Server-Preset)
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
