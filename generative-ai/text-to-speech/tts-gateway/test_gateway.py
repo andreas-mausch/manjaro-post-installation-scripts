@@ -237,6 +237,69 @@ class GatewayTests(unittest.TestCase):
                 self.handler()._speech(json.dumps(payload).encode())
             self.assertEqual(json.loads(backend.call_args.args[2]), payload)
 
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_accept_header_negotiates_format(self):
+        for accept, expected in (
+                ("audio/mpeg", "audio/mpeg"),
+                ("audio/wav, audio/flac;q=0.9", "audio/wav"),
+                ("audio/mpeg;q=0.2, audio/flac;q=0.8", "audio/flac"),
+                ("audio/mpeg;q=0", "audio/ogg"),  # rejected → default
+                ("*/*", "audio/ogg"),             # no preference → default
+                ("text/plain", "audio/ogg")):     # nothing usable → default
+            with self.subTest(accept=accept):
+                handler = self.handler()
+                handler.headers["Accept"] = accept
+                types = []
+                handler._begin_chunked = lambda status, ctype: types.append(ctype)
+                with patch.object(gateway, "backend_request", return_value=Stream(b"\0" * 48000)):
+                    handler._speech(b'{"input":"test"}')
+                self.assertEqual(types, [expected])
+
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_response_format_beats_accept(self):
+        handler = self.handler()
+        handler.headers["Accept"] = "audio/flac"
+        types = []
+        handler._begin_chunked = lambda status, ctype: types.append(ctype)
+        payload = json.dumps({"input": "test", "response_format": "mp3"}).encode()
+        with patch.object(gateway, "backend_request", return_value=Stream(b"\0" * 48000)):
+            handler._speech(payload)
+        self.assertEqual(types, ["audio/mpeg"])
+
+    def test_parse_bitrate(self):
+        for value, expected in (("24k", "24000"), ("32K", "32000"), ("64kbps", "64000"),
+                                (48000, "48000"), ("1k", "6000"),  # clamped to the floor
+                                (10_000_000, "512000")):           # clamped to the ceiling
+            self.assertEqual(gateway.parse_bitrate(value), expected)
+        for value in ("fast", "", None, True, [1]):
+            with self.assertRaises(ValueError):
+                gateway.parse_bitrate(value)
+
+    def test_bitrate_consumed_not_forwarded_invalid_returns_400(self):
+        payload = {"input": "test", "response_format": "pcm", "bitrate": "24k"}
+        with patch.object(gateway, "backend_request", return_value=Stream(b"pcm")) as backend:
+            self.handler()._speech(json.dumps(payload).encode())
+        self.assertEqual(json.loads(backend.call_args.args[2]),
+                         {"input": "test", "response_format": "pcm"})
+        handler = self.handler()
+        handler._speech(b'{"input":"test","bitrate":"loud"}')
+        self.assertEqual(handler.error[0], 400)
+
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg required")
+    def test_bitrate_replaces_encoder_argument(self):
+        command = []
+        real_popen = subprocess.Popen
+
+        def capture(*args, **kwargs):
+            command.append(args[0])
+            return real_popen(*args, **kwargs)
+
+        with patch.object(gateway.subprocess, "Popen", side_effect=capture):
+            self.handler()._transcode(Stream(b"\0" * 48000), "opus", lambda chunk: None,
+                                      bitrate="32k")
+        ffmpeg_command = command[0]
+        self.assertEqual(ffmpeg_command[ffmpeg_command.index("-b:a") + 1], "32k")
+
     def test_supervisor_exits_on_either_child_failure(self):
         for commands in (("raise SystemExit(0)", "import time; time.sleep(60)"),
                          ("import time; time.sleep(60)", "raise SystemExit(2)")):
@@ -257,6 +320,7 @@ class GatewayTests(unittest.TestCase):
     def handler(self):
         handler = object.__new__(gateway.Handler)
         handler.close_connection = False
+        handler.headers = Message()
         handler.wfile = io.BytesIO()
         handler.response_headers = {}
         handler.send_response = lambda status: setattr(handler, "status", status)

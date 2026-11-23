@@ -10,6 +10,10 @@ The tts-server only speaks wav/pcm. This gateway exposes the same OpenAI API
 additionally serves mp3/opus/aac/flac via ffmpeg transcoding — streamed
 (chunked), i.e. the client receives bytes while generation is still running.
 
+Format choice: response_format > Accept header (audio/ogg, audio/mpeg, …) >
+DEFAULT_FORMAT. Extension: a "bitrate" field (bits/s or "24k") tunes lossy
+encoders; it is consumed here and never forwarded to the backend.
+
 Python stdlib only; ffmpeg must be on PATH.
 """
 import json
@@ -42,18 +46,72 @@ SYNTHESIS_SLOTS = threading.BoundedSemaphore(MAX_SYNTHESIS)
 # response_format -> ffmpeg encoder arguments (or raw pass-through for pcm)
 FFMPEG_FORMATS = {
     "mp3":  ["-c:a", "libmp3lame", "-b:a", "64k", "-f", "mp3"],
-    "opus": ["-c:a", "libopus", "-b:a", "48k", "-f", "ogg"],
-    "ogg":  ["-c:a", "libopus", "-b:a", "48k", "-f", "ogg"],
+    # Opus: speech-optimized tuning for voice messages — voip (SILK) mode and
+    # 60 ms frames beat plain 24k on quality/bitrate; 24k mono is in the
+    # WhatsApp/Signal/Telegram voice-note range and lossless for this source
+    # (s16le/24 kHz mono caps audio bandwidth at 12 kHz anyway).
+    "opus": ["-c:a", "libopus", "-b:a", "24k", "-application", "voip",
+             "-frame_duration", "60", "-f", "ogg"],
+    "ogg":  ["-c:a", "libopus", "-b:a", "24k", "-application", "voip",
+             "-frame_duration", "60", "-f", "ogg"],
     "aac":  ["-c:a", "aac", "-b:a", "64k", "-f", "adts"],
     "flac": ["-c:a", "flac", "-f", "flac"],
     # Non-seekable RIFF uses 0xffffffff lengths, deliberately not a final WAV.
     "wav":  ["-c:a", "pcm_s16le", "-rf64", "never", "-f", "wav"],
 }
+# Deviation from OpenAI (which defaults to mp3): opus is smaller and better
+# for speech, and the productive clients (Hermes voice messages) want it.
+DEFAULT_FORMAT = "opus"
+
 CONTENT_TYPES = {
     "mp3": "audio/mpeg", "opus": "audio/ogg", "ogg": "audio/ogg",
     "aac": "audio/aac", "flac": "audio/flac", "wav": "audio/wav",
     "pcm": "application/octet-stream",
 }
+
+# Content negotiation for clients that omit response_format. Wildcards
+# (*/*, audio/*) express no preference and keep DEFAULT_FORMAT; q=0 rejects.
+ACCEPT_MEDIA_TYPES = {
+    "audio/ogg": "opus", "audio/opus": "opus", "audio/mpeg": "mp3",
+    "audio/aac": "aac", "audio/flac": "flac",
+    "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav",
+}
+
+MIN_BITRATE = 6000    # Opus mono floor
+MAX_BITRATE = 512000  # libmp3lame ceiling
+
+
+def format_from_accept(header):
+    best, best_quality = None, 0.0
+    for token in (header or "").split(","):
+        parts = iter(token.split(";"))
+        media = next(parts, "").strip().lower()
+        quality = 1.0
+        for param in parts:
+            key, _, value = param.partition("=")
+            if key.strip().lower() == "q":
+                try:
+                    quality = float(value)
+                except ValueError:
+                    quality = 0.0
+        if ACCEPT_MEDIA_TYPES.get(media) and quality > best_quality:
+            best, best_quality = ACCEPT_MEDIA_TYPES[media], quality
+    return best
+
+
+def parse_bitrate(value):
+    """Client bitrate wish (int bits/s or string like "24k"/"64kbps"), clamped."""
+    if isinstance(value, bool):
+        raise ValueError("invalid bitrate")
+    if isinstance(value, int):
+        bps = value
+    elif isinstance(value, str):
+        text = value.strip().lower().removesuffix("bps").strip()
+        scaled = text.endswith("k")
+        bps = int(text[:-1] if scaled else text) * (1000 if scaled else 1)
+    else:
+        raise ValueError("invalid bitrate")
+    return str(min(max(bps, MIN_BITRATE), MAX_BITRATE))
 
 
 def log(*a):
@@ -258,13 +316,23 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(text, str) or not text.strip() or len(text) > MAX_INPUT_CHARS:
                 self._send_json(400, {"error": {"message": f"input must contain 1 to {MAX_INPUT_CHARS} characters"}})
                 return
-            fmt = (payload.get("response_format") or "mp3").lower()
+            fmt = (payload.get("response_format")
+                   or format_from_accept(self.headers.get("Accept"))
+                   or DEFAULT_FORMAT).lower()
         except Exception:
             self._send_json(400, {"error": {"message": "invalid JSON"}})
             return
         if fmt not in FFMPEG_FORMATS and fmt != "pcm":
             self._send_json(400, {"error": {"message": f"response_format '{fmt}' not supported"}})
             return
+        bitrate = payload.pop("bitrate", None)  # gateway-only extension
+        if bitrate is not None:
+            try:
+                bitrate = parse_bitrate(bitrate)
+            except ValueError:
+                self._send_json(400, {"error": {"message":
+                    "bitrate must be bits/s (e.g. 24000 or '24k')"}})
+                return
         payload["response_format"] = "pcm"  # backend streams s16le/24 kHz/mono
 
         try:
@@ -304,7 +372,7 @@ class Handler(BaseHTTPRequestHandler):
                         break
                     emit(chunk)
             else:
-                self._transcode(up, fmt, emit)
+                self._transcode(up, fmt, emit, bitrate)
             if expired.is_set():
                 raise TimeoutError("synthesis deadline exceeded")
             if not started:
@@ -323,11 +391,14 @@ class Handler(BaseHTTPRequestHandler):
             interrupt_upstream(up)
             up.close()
 
-    def _transcode(self, up, fmt, emit):
+    def _transcode(self, up, fmt, emit, bitrate=None):
+        args = list(FFMPEG_FORMATS[fmt])
+        if bitrate is not None and "-b:a" in args:  # lossy formats only
+            args[args.index("-b:a") + 1] = bitrate
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-loglevel", "error",
              "-f", "s16le", "-ar", str(SAMPLE_RATE), "-ac", "1", "-i", "pipe:0",
-             *FFMPEG_FORMATS[fmt], "pipe:1"],
+             *args, "pipe:1"],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         errors = []
         stderr = bytearray()

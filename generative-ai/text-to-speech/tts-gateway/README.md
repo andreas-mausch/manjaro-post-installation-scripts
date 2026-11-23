@@ -169,7 +169,19 @@ gufo streams s16le/24 kHz PCM just like `tts-server`, so
   bounded. Disconnect cleanup interrupts upstream reads and reaps FFmpeg.
 - AMD/iGPU: the container needs `/dev/dri` + groups `render`/`video`
   (GIDs via `getent group render video`, kept as defaults in compose.yaml).
-- `response_format`: `mp3|opus|ogg|aac|flac|wav|pcm` (default `mp3`, like OpenAI).
+- `response_format`: `mp3|opus|ogg|aac|flac|wav|pcm`. Format resolution:
+  explicit `response_format` > `Accept` header (`audio/ogg|audio/opus|
+  audio/mpeg|audio/aac|audio/flac|audio/wav|audio/x-wav`, q-values honored,
+  q=0 rejected, wildcards count as "no preference") > default `opus`
+  (deviation from OpenAI's `mp3`): 24 kbps mono, `libopus` speech tuning
+  (`-application voip`, 60 ms frames) — voice-note grade at ~2.7× less data
+  than the old 48k/20 ms setting, and the 24 kHz source caps bandwidth at
+  12 kHz anyway.
+- Non-standard extension `bitrate` in the request body (OpenAI has none):
+  desired average bitrate for the lossy encoders as bits/s (`24000`) or with
+  `k` suffix (`"24k"`, `"64kbps"`), clamped to 6k–512k, ignored for
+  flac/wav/pcm, rejected with 400 if unparseable. Consumed by the gateway and
+  never forwarded to the backend.
 - Streaming: responses are always chunked. Measured (24l, Vulkan): TTFB 0.02 s
   (mp3/wav) or 0.28 s (opus), total time 0.4–0.9 s for the test sentence.
 - WAV is encoded from streaming PCM, not passed through from the backend.
