@@ -1,48 +1,48 @@
-# Vorbereitung
+# Preparation
 
-Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abgeschlossen: Installation ohne manuelle Flags, anschließender Systemstart, KDE und Gufo sowie Online-Update, Rebuild und Neustart erfolgreich. Benutzerbestätigter Nachweis für diese VM-Variante; Generalisierung, Live-Logging und getrennte Jobs sind noch nicht in einer neuen ISO geprüft.
+Status: The earlier offline Calamares test in the existing UEFI VM is complete: installation without manual flags, subsequent boot, KDE and Gufo, online update, rebuild and reboot succeeded. The user also confirmed the new Full ISO's GUI startup, model selection, live logging, model-copy progress, new model directory and separate-job behavior. A complete new offline installation/update cycle and the remaining variants are not yet confirmed.
 
-## Als Nächstes: modulare ISO-Varianten
+## Next: modular ISO variants
 
-- [ ] Neue Base-/Desktop-/AI-/Gaming-/Full-Varianten im Offline-Installationslauf bestätigen; lokale Modul-/Installer-/Archivtests ersetzen keinen Installationsnachweis.
+- [ ] Confirm the new Base/Desktop/AI/Gaming/Full variants in offline installation runs; local module, installer and archive tests do not replace installation evidence.
 
-- [ ] Danach neue ISO bauen und generalisierte Konfiguration, modulare Auswahl, Live-Logging und getrennte Installations-/Modelljobs direkt in der vorhandenen VM offline prüfen; Boot ohne ISO und Online-Update samt Neustart erneut testen.
+- [ ] Complete offline validation of the generalized configuration in the existing VM using the new ISO; repeat boot without the ISO and online update followed by reboot. The new Full ISO's GUI, live logging and separate installation/model jobs are already user-confirmed.
 
-## Weitere Vorbereitung
+## Further preparation
 
-- [ ] NixOS-Varianten direkt als wiederverwendbare libvirt-Basisimages bereitstellen können: zusätzliche QCOW2-Flake-Outputs aus denselben Zielmodulen erzeugen, beispielsweise mit `nixos-generators`. Umsetzung unter `modules/virtualization/` einordnen; Bootmodus, virtuelle Hardware und Erstzugang konfigurieren. Individuelle Identität und Geheimnisse nicht ins Basisimage einbauen; cloud-init für die Erstkonfiguration prüfen. Image-/Zielsystemtests ersetzen keinen ISO-/Calamares-Installationsnachweis.
+- [ ] Provide NixOS variants directly as reusable libvirt base images: generate additional QCOW2 Flake outputs from the same target modules, for example with `nixos-generators`. Place the implementation under `modules/virtualization/`; configure boot mode, virtual hardware and initial access. Keep individual identity and secrets out of base images; evaluate cloud-init for first-boot configuration. Image/target-system tests do not replace ISO/Calamares installation evidence.
 
-- [ ] Die enthaltenen Softwarekomponenten jeder Variante nachvollziehen und extern prüfen können: SBOMs für Zielsystem und Live-ISO als separate Build-Ausgaben bereitstellen. `sbomnix` mit CycloneDX-/SPDX-Ausgabe prüfen; Live-Installer-Werkzeuge vom Zielsystem unterscheiden. Optionale Modellgewichte mit Herkunft, Lizenz und Prüfsummen erfassen und dafür `modules/generative-ai/models.lock.json` nutzen. Vollständigkeit und Grenzen der erfassten Komponenten und Lizenzdaten dokumentieren; eine SBOM ist kein Sicherheitsnachweis.
+- [ ] Make each variant's software inventory understandable and externally inspectable: provide separate SBOM build outputs for the target system and live ISO. Evaluate `sbomnix` with CycloneDX/SPDX output; distinguish live installer tools from target software. Record provenance, licenses and checksums of optional model weights using `modules/generative-ai/models.lock.json`. Document inventory and license-data completeness and limitations; an SBOM is not proof of security.
 
-- [ ] Eine Arbeitsstation passend zu ihren Aufgaben zusammenstellen können, ohne für jede Kombination eine eigene ISO pflegen zu müssen. Weitere kombinierbare Module aus dem bisherigen Manjaro-Setup ableiten:
-  - Development: Git mit lazygit/tig/delta, Editoren, Sprachserver, Meld, Zeal sowie HTTP-/Datenwerkzeuge; projektspezifische Compiler und SDKs bevorzugt über `nix develop` bereitstellen.
-  - Virtualization: QEMU, libvirt und virt-manager samt benötigten Diensten und Berechtigungen.
-  - Media: mpv, Audacity, HandBrake, Videoschnitt, yt-dlp und Metadatenwerkzeuge.
-  - Documents: E-Book-/PDF-/Comic-Reader sowie OCR mit deutschen und englischen Sprachdaten.
-  - Security tools: GnuPG, pass, OpenPGP-Karten- und Zertifikatswerkzeuge; keine persönlichen Schlüssel oder Geheimnisse ins Repository aufnehmen.
-  - Desktop utilities: Dateisuche, Rechner, GPXSee und praktische Dateiverwaltungswerkzeuge.
-  - Tool-Installation und zugehörige Lieblingskonfiguration thematisch zusammenhalten, beispielsweise unter `modules/git/`: `system.nix` installiert Git/tig/lazygit/delta systemweit, `home.nix` verwaltet die Benutzerkonfiguration und Aliase mit Home Manager. Zuständigkeiten und Paketversionen bei automatisch durch Home Manager installierten Programmen abstimmen. XFCE-/X11-spezifische Lösungen nicht blind nach KDE/Wayland übernehmen, Hardware-Workarounds beim jeweiligen PC belassen.
-  - Bestehende Varianten als Voreinstellungen erhalten; später eine Modulauswahl im Installer prüfen. Desktop + Development + Virtualization als mögliche Arbeitsstation mit optionalem Gaming und AI berücksichtigen.
+- [ ] Assemble a workstation for its tasks without maintaining a separate ISO for every combination. Derive further composable modules from the previous Manjaro setup:
+  - Development: Git with lazygit/tig/delta, editors, language servers, Meld, Zeal and HTTP/data tools; prefer `nix develop` for project-specific compilers and SDKs.
+  - Virtualization: QEMU, libvirt and virt-manager with their required services and permissions.
+  - Media: mpv, Audacity, HandBrake, video editing, yt-dlp and metadata tools.
+  - Documents: e-book/PDF/comic readers and OCR with German and English language data.
+  - Security tools: GnuPG, pass, OpenPGP smart-card and certificate tools; do not include personal keys or secrets in the repository.
+  - Desktop utilities: file search, calculator, GPXSee and practical file-management tools.
+  - Keep tool installation and preferred configuration together by topic, for example under `modules/git/`: `system.nix` installs Git/tig/lazygit/delta system-wide, while `home.nix` manages user configuration and aliases with Home Manager. Coordinate responsibilities and package versions for programs automatically installed by Home Manager. Do not blindly carry XFCE/X11-specific solutions over to KDE/Wayland; keep hardware workarounds with the respective PC.
+  - Retain existing variants as presets; evaluate installer module selection later. Consider Desktop + Development + Virtualization as a workstation with optional Gaming and AI.
 
-- [ ] Einen installierten PC auf den neuen Stand dieses Repositories bringen können, ohne Neuinstallation und ohne seine Hardware- oder Benutzerdaten ins Entwicklungsrepo kopieren zu müssen. Dafür bleibt die PC-Konfiguration unter `/etc/nixos` und bindet die wiederverwendbaren Setup-Module als gepinnten Flake-Input ein. Die bisherigen relativen Hardware-/Identitätsimporte anpassen; auch Updates aus einem lokalen Checkout ohne `--impure` unterstützen. Ablauf dokumentieren und testen.
+- [ ] Update an installed PC from this repository without reinstalling or copying its hardware/user data into the development repository. Keep PC configuration under `/etc/nixos` and consume reusable setup modules as a pinned Flake input. Adjust the current relative hardware/identity imports; also support updates from a local checkout without `--impure`. Document and test the workflow.
 
-- [ ] Gemeinsame Releases der Flake und ihrer Base-/Desktop-/Gaming-/AI-Module über Git-Tags (z. B. `v0.1.0`) einführen; optional dieselbe explizite Releaseversion im ISO-Dateinamen verwenden. Kein automatisch ermitteltes Builddatum und keine Änderung von `system.stateVersion` zur Projektversionierung.
+- [ ] Introduce joint releases of the Flake and its Base/Desktop/Gaming/AI modules using Git tags (for example `v0.1.0`); optionally use the same explicit release version in ISO filenames. Do not derive a build date automatically or change `system.stateVersion` for project versioning.
 
-- [ ] Variantenabhängige Calamares-Konfigurationspfade auch für Base/Desktop/Gaming ohne Modellauswahl und AI mit Modellauswahl direkt in der Live-GUI prüfen; Full ist bestätigt.
+- [ ] Test variant-specific Calamares configuration paths in the live GUI for Base/Desktop/Gaming without model selection and AI with model selection; Full is confirmed.
 
-- [ ] Später einen geeigneten TUI-Installer als Alternative zur grafischen Live-Umgebung prüfen; Zielmodule unabhängig von der Installationsoberfläche halten.
+- [ ] Evaluate a suitable TUI installer as an alternative to the graphical live environment later; keep target modules independent of the installation UI.
 
-- [ ] UKI-Direktboot für das installierte System vorbereiten: UEFI startet das Unified Kernel Image ohne systemd-boot/GRUB. UKI-Erzeugung, Installation auf der EFI-Partition, UEFI-Booteinträge und sichere Updates mit Rückfall-/Recovery-Möglichkeit für vorherige Generationen umsetzen und testen. Grafische LUKS-Passwortabfrage über Plymouth in der Initrd integrieren; Theme, frühe GPU-Treiber und Passwort-/Textfallback auf Zielhardware prüfen. Plymouth ist unabhängig vom UKI-Direktboot nutzbar. Keine automatische LUKS-Entsperrung; Secure-Boot-Signierung ist ein separates Vorhaben.
+- [ ] Prepare direct UKI boot for the installed system: UEFI starts the Unified Kernel Image without systemd-boot/GRUB. Implement and test UKI generation, installation on the EFI partition, UEFI boot entries and safe updates with fallback/recovery for previous generations. Integrate graphical LUKS password entry through Plymouth in the initrd; test the theme, early GPU drivers and password/text fallback on target hardware. Plymouth can be used independently of direct UKI boot. No automatic LUKS unlocking; Secure Boot signing is a separate task.
 
-- [ ] Isolierten Offline-Systembuild-/Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen: getrennte Live-/Ziel-Stores, nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration. Kein Root-Test auf dem Host und keine zusätzliche Test-VM; echter Installations-/Bootnachweis direkt mit der ISO in der vorhandenen VM. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
+- [ ] Add a reproducible isolated offline system-build/assembly test to the repository and require it before every ISO release: separate live/target stores, ISO contents only, no network and a fresh target store per variant; with/without LUKS and differing user/hardware configuration. No root tests on the host or additional test VM; obtain actual installation/boot evidence using the ISO in the existing VM. Improve automatic tool derivation rather than maintaining only a manual list long-term.
 
-- [ ] Neue Diagnosephasen, Journal-Zeitfilter und Warnung zum bereits partitionierten Ziel bei einem realen VM-Installationsfehler prüfen; Originalausgabe muss die erste Nix-Fehlermeldung enthalten.
+- [ ] Test the new diagnostic phases, journal time filter and warning about an already partitioned target during a real VM installation failure; original output must include the first Nix error.
 
-- [ ] Swap-Unterstützung vor Freigabe ergänzen: `nixos-generate-config` erfasst nur aktive Swap-Partitionen und keine Swapdateien; Calamares erstellt Swapdateien im hier nicht ausgeführten fstab-Modul. Zielgerätezuordnung und verschlüsselten Swap beim Neustart prüfen. Bis dahin bleibt „kein Swap“ erhalten.
+- [ ] Add swap support before release: `nixos-generate-config` detects only active swap partitions, not swap files; Calamares creates swap files in the fstab module, which is not executed here. Test target-device mapping and encrypted swap after reboot. Retain “no swap” until then.
 
-- [ ] Weitere Installationsvarianten prüfen: unverschlüsseltes Ziel sowie leere oder unterschiedliche LUKS-Passphrasen; Calamares muss ungültige Passphrasen vor der Installation abfangen. Verschlüsselter Basislauf ist bestanden.
+- [ ] Test further installation cases: unencrypted targets and empty or mismatched LUKS passphrases; Calamares must reject invalid passphrases before installation. The encrypted baseline run passed.
 
-- [ ] UEFI-Voraussetzung auf der Calamares-Willkommensseite in BIOS- und UEFI-VM testen; BIOS muss „Weiter“ vor der Partitionierung sperren.
+- [ ] Test the Calamares welcome-page UEFI requirement in BIOS and UEFI VMs; BIOS boot must block “Next” before partitioning.
 
-- [ ] Weitere Offline-Varianten mit abweichender Sprache und beiden Modellkopieroptionen vollständig prüfen; alle sechs kopierten Modell-Dateien mit dem Manifest vergleichen. Der erfolgreiche Basislauf deckt diese Varianten und den Datei-Abgleich nicht vollständig ab.
-- [ ] Gufo-GPU und Modell auf geeigneter echter Hardware prüfen (nicht in einer VM ohne GPU-Durchreichung möglich).
+- [ ] Fully test further offline variants with a different language and both model-copy options; compare all six copied model files with the manifest. The successful baseline does not fully cover these variants or file verification.
+- [ ] Test Gufo GPU inference and the model on suitable real hardware (not possible in a VM without GPU passthrough).
