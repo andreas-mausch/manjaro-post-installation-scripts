@@ -10,6 +10,8 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Weitere Vorbereitung
 
+- [ ] NixOS-Varianten direkt als wiederverwendbare libvirt-Basisimages bereitstellen können: zusätzliche QCOW2-Flake-Outputs aus denselben Zielmodulen erzeugen, beispielsweise mit `nixos-generators`. Umsetzung unter `modules/virtualization/` einordnen; Bootmodus, virtuelle Hardware und Erstzugang konfigurieren. Individuelle Identität und Geheimnisse nicht ins Basisimage einbauen; cloud-init für die Erstkonfiguration prüfen. Image-/Zielsystemtests ersetzen keinen ISO-/Calamares-Installationsnachweis.
+
 - [ ] Die enthaltenen Softwarekomponenten jeder Variante nachvollziehen und extern prüfen können: SBOMs für Zielsystem und Live-ISO als separate Build-Ausgaben bereitstellen. `sbomnix` mit CycloneDX-/SPDX-Ausgabe prüfen; Live-Installer-Werkzeuge vom Zielsystem unterscheiden. Optionale Modellgewichte mit Herkunft, Lizenz und Prüfsummen erfassen und dafür `modules/generative-ai/models.lock.json` nutzen. Vollständigkeit und Grenzen der erfassten Komponenten und Lizenzdaten dokumentieren; eine SBOM ist kein Sicherheitsnachweis.
 
 - [ ] Eine Arbeitsstation passend zu ihren Aufgaben zusammenstellen können, ohne für jede Kombination eine eigene ISO pflegen zu müssen. Weitere kombinierbare Module aus dem bisherigen Manjaro-Setup ableiten:
