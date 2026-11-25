@@ -34,9 +34,21 @@ class InstallerTests(unittest.TestCase):
         child = {"mountpoints": [None], "children": [{"mountpoints": ["/iso"]}]}
         self.assertFalse(installer.eligible_disk(disk | {"children": [child]}))
 
+    def test_sata_and_virtio_are_allowed(self):
+        for transport in ["sata", "ata", "virtio"]:
+            self.assertTrue(installer.eligible_disk(self.disk() | {"tran": transport}))
+        for transport in [None, ""]:
+            self.assertTrue(installer.eligible_disk(
+                self.disk() | {"tran": transport, "path": "/dev/vda"}))
+            self.assertFalse(installer.eligible_disk(
+                self.disk() | {"tran": transport, "path": "/dev/sda"}))
+        self.assertFalse(installer.eligible_disk(
+            self.disk() | {"tran": "usb", "path": "/dev/vda"}))
+
     def test_partition_names(self):
         self.assertEqual(installer.partition("/dev/nvme0n1", 2), "/dev/nvme0n1p2")
         self.assertEqual(installer.partition("/dev/sda", 1), "/dev/sda1")
+        self.assertEqual(installer.partition("/dev/vda", 2), "/dev/vda2")
 
     def test_configuration_copy_excludes_local_state(self):
         with tempfile.TemporaryDirectory() as temporary:

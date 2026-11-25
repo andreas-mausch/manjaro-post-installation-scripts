@@ -20,7 +20,7 @@ def valid_username(name):
 
 
 def eligible_disk(disk):
-    """Only unmounted, internal NVMe disks; never USB or the live medium."""
+    """Allow NVMe, SATA and VirtIO disks; never USB or mounted media."""
     def mounted(node):
         return any(node.get("mountpoints") or []) or any(
             mounted(child) for child in node.get("children", [])
@@ -28,7 +28,11 @@ def eligible_disk(disk):
 
     return (
         disk.get("type") == "disk"
-        and disk.get("tran") == "nvme"
+        and (
+            disk.get("tran") in {"nvme", "sata", "ata", "virtio"}
+            or (disk.get("tran") in {None, ""}
+                and re.fullmatch(r"/dev/vd[a-z]+", disk.get("path", "")))
+        )
         and not disk.get("rm")
         and not disk.get("ro")
         and int(disk.get("size", 0)) >= 256 * 1024**3
@@ -186,7 +190,7 @@ def main():
     run("nm-online", "--timeout=60")
     disks = [disk for disk in list_disks() if eligible_disk(disk)]
     if not disks:
-        raise RuntimeError("Keine ungemountete interne NVMe-SSD ab 256 GiB gefunden.")
+        raise RuntimeError("Kein geeignetes ungemountetes NVMe-, SATA- oder VirtIO-Laufwerk ab 256 GiB gefunden.")
     for index, disk in enumerate(disks, 1):
         print(f"{index}: {disk['path']} | {disk.get('model')} | "
               f"Seriennummer {disk.get('serial')} | {int(disk['size']) / 1024**3:.1f} GiB")

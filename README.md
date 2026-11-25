@@ -1,7 +1,7 @@
 # BOSGAME M5: NixOS, KDE, Steam und Gufo
 
 Interaktiver Online-Installer für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
-Die gesamte gewählte interne NVMe-SSD wird nach ausdrücklicher Bestätigung
+Das gesamte gewählte NVMe-, SATA- oder VirtIO-Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
 Dieser Installer ist noch nicht auf dem M5 oder in einer VM erprobt.
 
@@ -53,8 +53,9 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 3. Der Installer auf der ersten Konsole fragt SSD, Benutzername, Benutzerpasswort
    und LUKS-Passphrase ab. Passwörter werden verdeckt eingegeben und wiederholt.
 4. Den Löschtext mit dem exakten SSD-Gerätenamen bestätigen. Davor werden keine
-   Datenträger verändert. Nur ungemountete interne NVMe-SSDs ab 256 GiB sind
-   wählbar; andere Datenträger werden nicht automatisch verwendet.
+   Datenträger verändert. Nur ungemountete NVMe-, SATA- und VirtIO-Laufwerke ab
+   256 GiB sind wählbar. USB-, entfernbare und schreibgeschützte Laufwerke sind
+   ausgeschlossen; andere Datenträger werden nicht automatisch verwendet.
 5. Warten, bis Systeminstallation **und Modelldownload** abgeschlossen sind.
 6. `reboot`, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
