@@ -4,11 +4,13 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Als Nächstes: modulare ISO-Varianten
 
-- [ ] AI- und Gaming-Funktionen in kombinierbare NixOS-Module (`generative-ai.nix`, `gaming.nix`) auslagern. AI-Modul bündelt Gufo, LLM-/NPU-Unterstützung und die sechs Qwen-Modelle. Benannte Desktop-, AI-, Gaming- und Full-ISO-Ausgaben in derselben Flake anbieten; Modulzusammenstellung für Updates im Zielsystem erhalten. Calamares-Option „Copy weights“ nur bei enthaltenem AI-Modul in die ISO aufnehmen; Kopieren auf das Ziel bleibt optional. Ohne AI-Modul keine AI-spezifischen Pakete oder Modellgewichte auf der ISO. Keine Calamares-Patches.
+- [ ] Neue Base-/Desktop-/AI-/Gaming-/Full-Varianten im Offline-Installationslauf bestätigen; lokale Modul-/Installer-/Archivtests ersetzen keinen Installationsnachweis.
 
 - [ ] Danach neue ISO bauen und generalisierte Konfiguration, modulare Auswahl, Live-Logging und getrennte Installations-/Modelljobs direkt in der vorhandenen VM offline prüfen; Boot ohne ISO und Online-Update samt Neustart erneut testen.
 
 ## Weitere Vorbereitung
+
+- [ ] Später einen geeigneten TUI-Installer als Alternative zur grafischen Live-Umgebung prüfen; Zielmodule unabhängig von der Installationsoberfläche halten.
 
 - [ ] UKI-Direktboot für das installierte System vorbereiten: UEFI startet das Unified Kernel Image ohne systemd-boot/GRUB. UKI-Erzeugung, Installation auf der EFI-Partition, UEFI-Booteinträge und sichere Updates mit Rückfall-/Recovery-Möglichkeit für vorherige Generationen umsetzen und testen. Grafische LUKS-Passwortabfrage über Plymouth in der Initrd integrieren; Theme, frühe GPU-Treiber und Passwort-/Textfallback auf Zielhardware prüfen. Plymouth ist unabhängig vom UKI-Direktboot nutzbar. Keine automatische LUKS-Entsperrung; Secure-Boot-Signierung ist ein separates Vorhaben.
 
@@ -30,6 +32,9 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 - [ ] Gufo-GPU und Modell auf geeigneter echter Hardware prüfen (nicht in einer VM ohne GPU-Durchreichung möglich).
 
 ## Erledigt
+
+- [x] 2026-11-25: Module `base.nix`, `desktop.nix`, `gaming.nix` und `generative-ai.nix` mit Imports strukturieren; fünf ISO-Ausgaben anbieten. KDE/Calamares bleiben bei Base nur in der Live-Umgebung. Gufo-Inputs, Gewichte, Modell-Auswahl und Kopierjob nur bei AI/Full archivieren. Zielvariante für Rebuilds erhalten und in `installation.json` dokumentieren. Lokale Tests ergänzen; neue ISO-/VM-Prüfung bleibt offen.
+
 
 - [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung. Fix committed und ISO neu gebaut.
 

@@ -1,4 +1,4 @@
-# NixOS-Desktop: KDE, Steam und Gufo
+# Modularer NixOS-Installer
 
 Grafischer Calamares-Installer für x86_64-Rechner mit UEFI.
 Das gesamte gewählte Laufwerk wird nach ausdrücklicher Bestätigung
@@ -20,10 +20,31 @@ Build nötig. KDE und der Installer sind nicht an dieses GPU-Modell gebunden.
 
 ## Voraussetzungen und reproduzierbarer Bau
 
-Die Flake stellt `nixosConfigurations.desktop` für das Zielsystem und
-`nixosConfigurations.installer` für die Live-ISO bereit. Der Zielname `desktop`
-ist unabhängig vom bei der Installation gewählten Hostnamen. AI-/Gaming-Module
-und getrennte ISO-Varianten sind geplant, aber noch nicht umgesetzt.
+Die Flake bietet fünf feste Zielzusammenstellungen:
+
+| Variante | Zielmodule                           | ISO-Ausgabe    |
+| -------- | ------------------------------------ | -------------- |
+| Base     | `base.nix`                           | `iso-base`     |
+| Desktop  | `desktop.nix`                        | `iso-desktop`  |
+| Gaming   | `gaming.nix`                         | `iso-gaming`   |
+| AI       | `desktop.nix` + `generative-ai.nix`   | `iso-ai`       |
+| Full     | `gaming.nix` + `generative-ai.nix`    | `iso-full`     |
+
+`desktop.nix` importiert `base.nix`, `gaming.nix` importiert `desktop.nix`.
+`generative-ai.nix` importiert nur `base.nix` und ist auch ohne Desktop nutzbar.
+Alle Live-ISOs enthalten KDE und Calamares; das Base-Zielsystem enthält weder
+KDE noch Firefox. Gaming ergänzt Steam, AI ergänzt Gufo und dessen Unterstützung.
+Nur AI-/Full-ISOs enthalten alle sechs Qwen-Dateien und die optionale Modellkopie.
+Unfreie Pakete werden nicht pauschal freigegeben: Nur das Gaming-Modul erlaubt
+`steam` und `steam-unwrapped` über `allowUnfreePredicate`. Redistributable Firmware
+bleibt über die gesonderte NixOS-Hardwareoption aktiviert; das Setup ist daher
+nicht als ausschließlich freie Software zu verstehen.
+Ohne AI werden auch Gufo-/Toolchain-Inputs aus der Installations-Flake entfernt.
+
+Ziele heißen `nixosConfigurations.<variante>`, Live-Konfigurationen
+`nixosConfigurations.installer-<variante>`. `iso`, `default` und `installer`
+bleiben Aliase für Full. Die Namen sind unabhängig vom gewählten Hostnamen.
+Die neuen Varianten sind lokal ausgewertet, aber noch nicht per ISO installiert.
 
 Ein Linux-x86_64-Rechner mit funktionierender Nix-Installation und Nix Store.
 Die Flake aktiviert `nix-command` und `flakes` nicht für das aufrufende Nix;
@@ -35,7 +56,8 @@ nix flake lock
 nix fmt
 nix flake check --no-build
 nix build .#checks.x86_64-linux.installer-tests
-nix build .#iso
+nix build .#checks.x86_64-linux.variant-tests
+nix build .#iso-full
 ```
 
 `flake.lock` zusammen mit allen Konfigurationsdateien versionieren und archivieren.
@@ -48,7 +70,7 @@ man auch dessen signierten Builds. Ohne akzeptierten Cache können große lokale
 ROCm-/Gufo-Builds erforderlich werden.
 
 Das Image liegt unter `result/iso/` und enthält den
-Installer, die gesperrte Flake sowie alle sechs Modell-Dateien. Diese werden
+Installer und die gesperrte Flake; bei AI/Full zusätzlich alle sechs Modell-Dateien. Diese werden
 beim ISO-Bau heruntergeladen und anhand der gepinnten SHA-256-Prüfsummen geprüft.
 Der Installer kopiert sie auf Wunsch vom Stick auf das Ziel, ohne Modelldownload.
 Die Modelle allein umfassen rund 115 GB; ein 256-GB-Stick ist ein sinnvoller
@@ -72,26 +94,26 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
    anmelden. Für die vorgesehene Offline-Installation ist kein Ethernet oder WLAN
    erforderlich. Das Image bietet keinen SSH-Zugang.
 3. Calamares öffnen (Autostart oder Desktop-Verknüpfung). Sprache, Zeitzone,
-   Tastatur und Benutzer samt Passwort wählen. KDE, Steam und Gufo sind durch
-   unsere Flake fest vorgegeben; es gibt keine Desktop-Auswahl.
+   Tastatur und Benutzer samt Passwort wählen. Die Zielzusammenstellung ist durch
+   die ISO-Variante fest vorgegeben; es gibt keine Desktop-Auswahl.
 4. Die **richtige SSD** auswählen, „gesamten Datenträger löschen“ wählen und
    die gewünschte Verschlüsselung wählen. LUKS ist vorausgewählt, aber optional.
    Bei aktivierter Verschlüsselung prüft Calamares bereits hier, dass die
    Passphrase nicht leer ist und beide Eingaben übereinstimmen.
-   Kein Swap. Der Datenträger benötigt mindestens 256 GiB.
+   Kein Swap. Mindestgröße: 256 GiB bei AI/Full, sonst 32 GiB.
    Anders als der frühere Wrapper verwendet dieser Stand Calamares' Geräteauswahl,
    ohne unseren zusätzlichen USB-/Transportfilter und ohne abgetippten Löschtext.
    Modell, Größe und Zielgerät deshalb in der Zusammenfassung genau prüfen.
 5. Die abschließende Installationsbestätigung akzeptieren. Vor der Partitionierung
    prüft das Installer-Modul UEFI, Löschmodus, keinen Swap
    sowie Benutzereingaben. Calamares partitioniert, formatiert und mountet.
-   Der Job „Install NixOS“ installiert anschließend `path:/…/etc/nixos#desktop`
-   mit `nixos-install`. Danach kopiert der separate Job „Copy model weights“ bei
+   Der Job „Install NixOS“ installiert anschließend `path:/…/etc/nixos#<variante>`
+   mit `nixos-install`. Bei AI/Full kopiert danach der separate Job „Copy model weights“ bei
    Auswahl die Modelle vom Medium; ohne Gewichte überspringt er die Kopie.
    Warten, bis die Finish-Seite
    erscheint; 100 % allein bedeutet noch nicht, dass alle Abschlussjobs fertig sind.
 6. Neustarten, Stick entfernen. Bei Verschlüsselung beim Boot LUKS-Passphrase eingeben, anschließend
-   mit dem gewählten Benutzerpasswort in KDE anmelden.
+   mit dem gewählten Benutzerpasswort anmelden (bei Base an der Konsole, sonst KDE).
 
 Layout: 1 GiB unverschlüsselte EFI-Systempartition und Btrfs für den
 gesamten Rest, wahlweise innerhalb von LUKS2. Kein Swap, kein Hibernation-Setup. Die EFI-
@@ -133,20 +155,26 @@ Adapter; ein Modellkopierfehler fordert keine erneute Systeminstallation.
 
 ### Offline mit dynamischen Einstellungen
 
-Calamares bietet vor der Zusammenfassung die Auswahl **mit Qwen-Modellgewichten**
+Bei AI/Full bietet Calamares vor der Zusammenfassung die Auswahl **mit Qwen-Modellgewichten**
 (vorausgewählt) oder **ohne Modellgewichte**. Ohne Gewichte entfällt das Kopieren
 der sechs Dateien nach `/var/lib/gufo/models`; dies spart etwa 107 GiB auf dem
-Zielsystem. KDE, Steam und Gufo werden unverändert installiert. Gufo bleibt
+Zielsystem. Die gewählte Modulzusammenstellung bleibt unverändert. Gufo bleibt
 manuell gestartet und benötigt für den Modellbetrieb später bereitgestellte
 Gewichte. Die Gewichte sind nur Bestandteil der Live-ISO, nicht der
 Zielsystem-Paket-Closure. ISO-Größe und Platzbedarf beim Bau ändern sich nicht.
 Beide Varianten müssen noch in der Offline-VM erprobt werden.
 
 `packages.x86_64-linux.offline-system` ist ein vorgebautes Referenzsystem mit
-dem festen KDE-/Steam-/Gufo-Paketsatz und LUKS-Initrd-Komponenten. Die ISO nimmt
+dem Full-Paketsatz und LUKS-Initrd-Komponenten. Jede ISO nimmt stattdessen den
+zu ihrer Variante passenden Paketsatz und
 dessen Laufzeit-Closure sowie die direkten Build-Werkzeuge der System-,
 Dateisystem- und Initrd-Assemblierung mit. Das ist **nicht** die vollständige
 Source-/Compiler-Closure für Kernel, ROCm oder den gesamten Desktop.
+
+Die Variante steht in `/etc/nixos/installation.json` unter `variant`.
+Bei späteren Rebuilds dasselbe Flake-Ziel verwenden, beispielsweise
+`sudo nixos-rebuild switch --flake /etc/nixos#full`. In den folgenden
+Desktop-Beispielen `#desktop` durch die tatsächlich installierte Variante ersetzen.
 
 `packages.x86_64-linux.offline-source` archiviert alle gesperrten Flake-Inputs,
 einschließlich Gufo-Toolchains, und schreibt ihre Lock-Einträge auf lokale

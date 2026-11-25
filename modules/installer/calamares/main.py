@@ -44,8 +44,8 @@ def write_file(path, contents, mode="0644"):
     host("tee", path, input=contents)
 
 
-def validate_selection(gs):
-    if gs.value("packagechooser_models") not in {"qwen", "without-models"}:
+def validate_selection(gs, with_models=True):
+    if with_models and gs.value("packagechooser_models") not in {"qwen", "without-models"}:
         raise ValueError(_("Choose whether to copy model weights."))
     if gs.value("firmwareType") != "efi":
         raise ValueError(_("Boot the USB drive in UEFI mode; disable Secure Boot."))
@@ -108,7 +108,8 @@ def deploy(gs, config, context=None):
     host("mkdir", "-p", destination)
     host("cp", "-r", str(source) + "/.", destination)
     host("chmod", "-R", "u+rwX,go+rX,go-w", destination)
-    write_file(destination / "installation.json", json.dumps(identity(gs), indent=2) + "\n")
+    installation = identity(gs) | {"variant": config.get("target", "desktop")}
+    write_file(destination / "installation.json", json.dumps(installation, indent=2) + "\n")
     context["phase"] = _("Generating hardware configuration")
     hardware = host("nixos-generate-config", "--root", root, "--show-hardware-config", capture=True).stdout
     write_file(destination / "hardware-configuration.nix", hardware)
@@ -126,7 +127,7 @@ def deploy(gs, config, context=None):
     libcalamares.job.setprogress(0.1)
     install_command = [
         "nixos-install", "--root", root, "--no-root-passwd",
-        "--flake", f"path:{destination}#desktop", "--no-write-lock-file",
+        "--flake", f"path:{destination}#{config.get('target', 'desktop')}", "--no-write-lock-file",
         "--no-update-lock-file", "--no-channel-copy",
         "--option", "build-dir", "/nix/var/nix/builds",
         # Nixpkgs' perl-5.42.3-env for activation sets allowSubstitutes = false.
@@ -178,7 +179,7 @@ def run():
     installation_started = stage in {"install", "models"}
     try:
         gs = libcalamares.globalstorage
-        validate_selection(gs)
+        validate_selection(gs, libcalamares.job.configuration.get("withModels", True))
         if stage == "install":
             context["phase"] = _("Preparing system installation")
             deploy(gs, libcalamares.job.configuration, context)

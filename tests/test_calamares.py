@@ -38,6 +38,31 @@ class AdapterTests(unittest.TestCase):
     def test_valid_selection(self):
         adapter.validate_selection(self.storage())
 
+    def test_non_ai_preflight_needs_no_model_selection(self):
+        calamares.globalstorage = self.storage(packagechooser_models=None)
+        calamares.job.configuration = {"stage": "validate", "withModels": False}
+        with patch.object(adapter, "host") as host:
+            self.assertIsNone(adapter.run())
+        host.assert_not_called()
+        with self.assertRaises(ValueError):
+            adapter.validate_selection(self.storage(firmwareType="bios"), with_models=False)
+
+    def test_each_variant_deploys_its_own_update_target(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            (source / "flake.lock").write_text("{}")
+            for variant in ["base", "desktop", "gaming", "ai", "full"]:
+                with self.subTest(variant=variant), \
+                        patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host, \
+                        patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")):
+                    adapter.deploy(self.storage(packagechooser_models=None),
+                                   {"source": str(source), "target": variant, "withModels": False})
+                    command = next(call.args for call in host.call_args_list if call.args[0] == "nixos-install")
+                    self.assertIn(f"path:/tmp/calamares-root-test/etc/nixos#{variant}", command)
+                    identity_call = next(call for call in host.call_args_list
+                                         if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))
+                    self.assertEqual(json.loads(identity_call.kwargs["input"])["variant"], variant)
+
     def test_selection_accepts_optional_encryption_and_native_passphrase_policy(self):
         for passphrase in [None, "", "short", "luks-test-secret"]:
             with self.subTest(passphrase=passphrase):
