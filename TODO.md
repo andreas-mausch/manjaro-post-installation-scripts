@@ -3,12 +3,16 @@
 ## Als Nächstes: verifizierten Offline-Fix in den Installer übernehmen
 
 1. [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung.
-2. [ ] Signaturbehandlung lösen: unsignierte ISO-Pakete sicher übernehmen, ohne die Signaturprüfung für Online-Caches global abzuschalten.
-3. [ ] Reproduzierbaren Offline-Regressionstest mit getrenntem Live-/Ziel-Store ergänzen: nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration.
+2. [ ] Signaturbehandlung im ISO-Test bestätigen: `nixos-install` vertraut bereits nur dem lokalen Live-Substituter; keine globale Signaturabschaltung. Lokaler Systembuild mit aktiver Signaturprüfung bestand, vollständiger Installationspfad noch offen.
+3. [ ] Reproduzierbaren lokalen Offline-Systembuild-Test mit getrenntem Live-/Ziel-Store ergänzen: nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration. Kein Root-Test auf dem Host und keine zusätzliche Test-VM; echte Installation und Boot direkt mit der ISO in der vorhandenen VM prüfen.
 4. [ ] Nach bestandenen Tests committen; erst danach die ISO neu bauen.
 5. [ ] Vollständigen Calamares-Durchlauf ohne manuelle Terminalbefehle, Boot ohne ISO und anschließendes Online-Update prüfen.
 
 Stand: Manueller Offline-VM-Installationslauf, LUKS-Entsperrung und KDE-Start ohne ISO erfolgreich; sichere Signaturstrategie und vollständiger grafischer Durchlauf noch offen.
+
+## Danach: modulare ISO-Varianten
+
+- [ ] Erst den laufenden ISO-/Calamares-Installationstest abschließen; anschließend AI- und Gaming-Funktionen in kombinierbare NixOS-Module (`generative-ai.nix`, `gaming.nix`) auslagern. AI-Modul bündelt Gufo, LLM-/NPU-Unterstützung und die sechs Qwen-Modelle. Benannte Desktop-, AI-, Gaming- und Full-ISO-Ausgaben in derselben Flake anbieten; Modulzusammenstellung für Updates im Zielsystem erhalten. Calamares-Option „Copy weights“ nur bei enthaltenem AI-Modul in die ISO aufnehmen; Kopieren auf das Ziel bleibt optional. Ohne AI-Modul keine AI-spezifischen Pakete oder Modellgewichte auf der ISO. Keine Calamares-Patches.
 
 ## Weitere Vorbereitung
 
