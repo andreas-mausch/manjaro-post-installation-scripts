@@ -219,12 +219,13 @@
         mode = "required";
         method = "legacy";
         default = "qwen";
-        labels.step = "Qwen3.8-Flash-Next (UD-Q4_K_XL)";
+        labels.step = "Model Weights";
+        labels."step[de]" = "Modellgewichte";
         items = [
           {
             id = "qwen";
-            name = "Install Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL)";
-            "name[de]" = "Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL) installieren";
+            name = "Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL)";
+            "name[de]" = "Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL)";
             description = "Unsloth weights including MTP (Q8_0) and the multimodal projector (BF16): copy all six files to the target system offline. Requires about 107 GiB of additional storage.";
             "description[de]" =
               "Unsloth-Gewichte inklusive MTP (Q8_0) und multimodalem Projektor (BF16): alle sechs Dateien offline auf das Zielsystem kopieren. Benötigt etwa 107 GiB zusätzlichen Speicherplatz.";
