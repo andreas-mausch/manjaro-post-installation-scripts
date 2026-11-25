@@ -10,7 +10,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 calamares = SimpleNamespace(
-    utils=SimpleNamespace(obscure=lambda text: text, gettext_languages=lambda: ["en"]),
+    utils=SimpleNamespace(obscure=lambda text: text, gettext_languages=lambda: ["en"],
+                          host_env_process_output=Mock()),
     job=SimpleNamespace(setprogress=Mock(), configuration={"stage": "validate"}),
 )
 sys.modules["libcalamares"] = calamares
@@ -114,6 +115,7 @@ class AdapterTests(unittest.TestCase):
             self.assertEqual(options["always-allow-substitutes"], "true")
             self.assertNotIn("require-sigs", options)
             for call in host.call_args_list:
+                self.assertEqual(call.kwargs.get("stream", False), call.args[0] == "nixos-install")
                 if call.args[0] == "tee":
                     self.assertNotIn("always-allow-substitutes", call.kwargs.get("input", ""))
                     self.assertNotIn("alwaysAllowSubstitutes", call.kwargs.get("input", ""))
@@ -201,6 +203,30 @@ class AdapterTests(unittest.TestCase):
         self.assertIsNone(run.call_args.kwargs["stdout"])
         self.assertNotIn("stderr", run.call_args.kwargs)
         self.assertNotIn("secret-argument", str(logs.output))
+
+    def test_host_streams_through_calamares_without_timeout(self):
+        with patch.object(calamares.utils, "host_env_process_output") as process, \
+                patch.object(adapter.subprocess, "run") as run:
+            adapter.host("nixos-install", "--root", Path("/mnt"), stream=True)
+        process.assert_called_once_with(
+            ["pkexec", "nixos-install", "--root", "/mnt"], None, "", 0,
+        )
+        run.assert_not_called()
+
+    def test_streaming_failure_preserves_exit_code(self):
+        error = subprocess.CalledProcessError(17, ["pkexec", "nixos-install"])
+        with patch.object(calamares.utils, "host_env_process_output", side_effect=error):
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                adapter.host("nixos-install", stream=True)
+        self.assertEqual(raised.exception.returncode, 17)
+
+    def test_streaming_rejects_input_and_capture(self):
+        for options in ({"input": "secret"}, {"capture": True}):
+            with self.subTest(options=options), \
+                    patch.object(calamares.utils, "host_env_process_output") as process:
+                with self.assertRaises(ValueError):
+                    adapter.host("tee", stream=True, **options)
+                process.assert_not_called()
 
     def test_command_failure_reports_program_and_exit_code_without_secrets(self):
         calamares.globalstorage = self.storage()

@@ -21,12 +21,20 @@ def _(message):
     ).gettext(message)
 
 
-def host(*args, input=None, capture=False):
+def host(*args, input=None, capture=False, stream=False):
     # Use Calamares' existing Polkit environment; never put secrets in arguments.
     logger.warning("M5 installer: running %s", Path(str(args[0])).name)
+    if stream:
+        if input is not None or capture:
+            raise ValueError("Streaming commands must not receive input or capture output")
+        # Calamares forwards process output live to its logger (including the UI).
+        # Only opt in for commands without secret input or echoed configuration.
+        return libcalamares.utils.host_env_process_output(
+            ["pkexec", *map(str, args)], None, "", 0,
+        )
     return subprocess.run(
         ["pkexec", *map(str, args)], input=input, text=True, check=True,
-        # Preserve original diagnostics in Calamares' inherited log streams.
+        # Inherited streams retain diagnostics, but do not feed the UI log.
         stdout=subprocess.PIPE if capture else None,
     )
 
@@ -131,7 +139,7 @@ def deploy(gs, config, context=None):
     # Offline completeness is verified by network-isolated tests, not by
     # disabling package sources during ordinary installation.
     context["phase"] = _("System installation")
-    host(*install_command)
+    host(*install_command, stream=True)
     libcalamares.job.setprogress(0.7)
     if gs.value("packagechooser_models") == "qwen":
         context["phase"] = _("Copying model weights")
