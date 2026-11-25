@@ -10,6 +10,16 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Weitere Vorbereitung
 
+- [ ] Eine Arbeitsstation passend zu ihren Aufgaben zusammenstellen können, ohne für jede Kombination eine eigene ISO pflegen zu müssen. Weitere kombinierbare Module aus dem bisherigen Manjaro-Setup ableiten:
+  - Development: Git mit lazygit/tig/delta, Editoren, Sprachserver, Meld, Zeal sowie HTTP-/Datenwerkzeuge; projektspezifische Compiler und SDKs bevorzugt über `nix develop` bereitstellen.
+  - Virtualization: QEMU, libvirt und virt-manager samt benötigten Diensten und Berechtigungen.
+  - Media: mpv, Audacity, HandBrake, Videoschnitt, yt-dlp und Metadatenwerkzeuge.
+  - Documents: E-Book-/PDF-/Comic-Reader sowie OCR mit deutschen und englischen Sprachdaten.
+  - Security tools: GnuPG, pass, OpenPGP-Karten- und Zertifikatswerkzeuge; keine persönlichen Schlüssel oder Geheimnisse ins Repository aufnehmen.
+  - Desktop utilities: Dateisuche, Rechner, GPXSee und praktische Dateiverwaltungswerkzeuge.
+  - Tool-Installation und zugehörige Lieblingskonfiguration thematisch zusammenhalten, beispielsweise unter `modules/git/`: `system.nix` installiert Git/tig/lazygit/delta systemweit, `home.nix` verwaltet die Benutzerkonfiguration und Aliase mit Home Manager. Zuständigkeiten und Paketversionen bei automatisch durch Home Manager installierten Programmen abstimmen. XFCE-/X11-spezifische Lösungen nicht blind nach KDE/Wayland übernehmen, Hardware-Workarounds beim jeweiligen PC belassen.
+  - Bestehende Varianten als Voreinstellungen erhalten; später eine Modulauswahl im Installer prüfen. Desktop + Development + Virtualization als mögliche Arbeitsstation mit optionalem Gaming und AI berücksichtigen.
+
 - [ ] Einen installierten PC auf den neuen Stand dieses Repositories bringen können, ohne Neuinstallation und ohne seine Hardware- oder Benutzerdaten ins Entwicklungsrepo kopieren zu müssen. Dafür bleibt die PC-Konfiguration unter `/etc/nixos` und bindet die wiederverwendbaren Setup-Module als gepinnten Flake-Input ein. Die bisherigen relativen Hardware-/Identitätsimporte anpassen; auch Updates aus einem lokalen Checkout ohne `--impure` unterstützen. Ablauf dokumentieren und testen.
 
 - [ ] Gemeinsame Releases der Flake und ihrer Base-/Desktop-/Gaming-/AI-Module über Git-Tags (z. B. `v0.1.0`) einführen; optional dieselbe explizite Releaseversion im ISO-Dateinamen verwenden. Kein automatisch ermitteltes Builddatum und keine Änderung von `system.stateVersion` zur Projektversionierung.
