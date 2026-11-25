@@ -108,3 +108,11 @@ msgstr "Originaldiagnostik: Calamares-Ausgabe oder im Live-Terminal:"
 
 msgid "Check the first error before subsequent errors. Review logs for sensitive data before sharing; no automatic upload."
 msgstr "Die erste Fehlermeldung vor den Folgefehlern prüfen. Protokolle vor Weitergabe auf sensible Daten prüfen; kein automatischer Upload."
+msgid "Copying {count} model files: {bytes} bytes ({gib:.2f} GiB) to {target}"
+msgstr "Kopiere {count} Modelldateien: {bytes} Bytes ({gib:.2f} GiB) nach {target}"
+
+msgid "Copying {name}: {bytes} bytes ({gib:.2f} GiB) to {target}"
+msgstr "Kopiere {name}: {bytes} Bytes ({gib:.2f} GiB) nach {target}"
+
+msgid "Model copying completed: {bytes} bytes in {count} files."
+msgstr "Modellkopie abgeschlossen: {bytes} Bytes in {count} Dateien."

@@ -195,16 +195,48 @@ class AdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             models = Path(temporary) / "models"
             (models / "flash-next-q4").mkdir(parents=True)
+            (models / "flash-next-q4/weights.gguf").write_bytes(b"weights")
             calamares.globalstorage = self.storage()
             calamares.job.configuration = {"stage": "models", "models": str(models)}
-            with patch.object(adapter, "host") as host, patch.object(adapter, "deploy") as deploy:
+            with patch.object(adapter, "host") as host, patch.object(adapter, "deploy") as deploy, \
+                    patch.object(adapter, "copy_model_file") as copy, \
+                    patch.object(calamares.utils, "debug") as debug, \
+                    patch.object(calamares.job, "setprogress") as progress:
                 self.assertIsNone(adapter.run())
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
-            self.assertIn(("cp", "-rL", str(models) + "/.",
-                           "/tmp/calamares-root-test/var/lib/gufo/models"), commands)
+            copy.assert_called_once_with(models / "flash-next-q4/weights.gguf",
+                                         Path("/tmp/calamares-root-test/var/lib/gufo/models/flash-next-q4/weights.gguf"),
+                                         0, 7)
+            messages = [call.args[0] for call in debug.call_args_list]
+            self.assertIn("1 model files: 7 bytes", messages[0])
+            self.assertIn("flash-next-q4/weights.gguf", messages[1])
+            self.assertIn("/var/lib/gufo/models/flash-next-q4/weights.gguf", messages[1])
+            self.assertNotIn("/tmp/calamares", str(messages))
+            self.assertIn("Model copying completed", messages[2])
+            self.assertEqual([call.args[0] for call in progress.call_args_list], [0.0, 0.99, 1.0])
             self.assertTrue(any(command[0] == "nixos-enter" for command in commands))
             self.assertFalse(any(command[0] == "nixos-install" for command in commands))
             deploy.assert_not_called()
+
+    def test_model_copy_progress_tracks_bytes_and_propagates_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            target = Path(temporary) / "target"
+            source.write_bytes(b"12345678")
+            target.write_bytes(b"1234")
+            for exit_code in [0, 17]:
+                with self.subTest(exit_code=exit_code), patch.object(adapter, "host"), \
+                        patch.object(adapter.subprocess, "Popen") as popen, \
+                        patch.object(calamares.job, "setprogress") as progress:
+                    popen.return_value.__enter__.return_value.wait.side_effect = [
+                        subprocess.TimeoutExpired("cp", 0.25), exit_code]
+                    if exit_code:
+                        with self.assertRaises(subprocess.CalledProcessError) as raised:
+                            adapter.copy_model_file(source, target, 8, 16)
+                        self.assertEqual(raised.exception.returncode, exit_code)
+                    else:
+                        adapter.copy_model_file(source, target, 8, 16)
+                    progress.assert_called_once_with(0.75)
 
     def test_model_job_without_weights_does_nothing(self):
         calamares.globalstorage = self.storage(packagechooser_models="without-models")

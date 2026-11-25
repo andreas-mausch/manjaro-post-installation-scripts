@@ -3,6 +3,7 @@ import json
 import gettext
 from datetime import datetime
 import logging
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -143,6 +144,23 @@ def deploy(gs, config, context=None):
     libcalamares.job.setprogress(1.0)
 
 
+def copy_model_file(source, target, completed, total):
+    # Reset an existing file so its old size cannot inflate retry progress.
+    host("install", "-m", "0644", "/dev/null", target)
+    command = ["pkexec", "cp", "--reflink=never", "-L", str(source), str(target)]
+    with subprocess.Popen(command) as process:
+        while True:
+            try:
+                code = process.wait(timeout=0.25)
+            except subprocess.TimeoutExpired:
+                copied = min(target.stat().st_size, source.stat().st_size)
+                libcalamares.job.setprogress(min(0.99, (completed + copied) / total))
+                continue
+            if code:
+                raise subprocess.CalledProcessError(code, command)
+            break
+
+
 def copy_models(gs, config, context):
     if gs.value("packagechooser_models") == "without-models":
         libcalamares.job.setprogress(1.0)
@@ -154,11 +172,33 @@ def copy_models(gs, config, context):
         raise ValueError(_("Model weights are missing from the image."))
     context["phase"] = _("Copying model weights")
     target_models = root / "var/lib/gufo/models"
+    # The image uses symlinked Store files/directories; enumerate their contents.
+    files = sorted(Path(folder) / name for folder, dirs, names in os.walk(models, followlinks=True)
+                   for name in names)
+    total = sum(path.stat().st_size for path in files)
+    if not files or total == 0:
+        raise ValueError(_("Model weights are missing from the image."))
+    libcalamares.utils.debug(_("Copying {count} model files: {bytes} bytes ({gib:.2f} GiB) to {target}").format(
+        count=len(files), bytes=total, gib=total / 1024**3, target="/var/lib/gufo/models"))
+    libcalamares.job.setprogress(0.0)
     host("mkdir", "-p", target_models)
-    host("cp", "-rL", str(models) + "/.", target_models)
+    completed = 0
+    for source in files:
+        relative = source.relative_to(models)
+        target = target_models / relative
+        size = source.stat().st_size
+        libcalamares.utils.debug(_("Copying {name}: {bytes} bytes ({gib:.2f} GiB) to {target}").format(
+            name=str(relative), bytes=size, gib=size / 1024**3,
+            target=str(Path("/var/lib/gufo/models") / relative)))
+        host("mkdir", "-p", target.parent)
+        copy_model_file(source, target, completed, total)
+        completed += size
+        libcalamares.job.setprogress(min(0.99, completed / total))
     host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
     host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
     libcalamares.job.setprogress(1.0)
+    libcalamares.utils.debug(_("Model copying completed: {bytes} bytes in {count} files.").format(
+        bytes=total, count=len(files)))
 
 
 def pretty_name():
