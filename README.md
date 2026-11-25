@@ -34,7 +34,7 @@ ROCm-/Gufo-Builds erforderlich werden.
 Das Image liegt unter `result/iso/bosgame-m5-installer.iso` und enthält den
 Installer, die gesperrte Flake sowie alle sechs Modell-Dateien. Diese werden
 beim ISO-Bau heruntergeladen und anhand der gepinnten SHA-256-Prüfsummen geprüft.
-Der Installer kopiert sie vom Stick auf die verschlüsselte SSD, ohne Modelldownload.
+Der Installer kopiert sie vom Stick auf die SSD, ohne Modelldownload.
 Die Modelle allein umfassen rund 115 GB; ein 256-GB-Stick ist ein sinnvoller
 Ausgangspunkt. Vor dem Schreiben die tatsächliche ISO-Größe prüfen.
 Bauen benötigt deutlich mehr
@@ -59,21 +59,23 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
    Tastatur und Benutzer samt Passwort wählen. KDE, Steam und Gufo sind durch
    unsere Flake fest vorgegeben; es gibt keine Desktop-Auswahl.
 4. Die **richtige SSD** auswählen, „gesamten Datenträger löschen“ wählen und
-   LUKS-Verschlüsselung mit mindestens zwölf Zeichen langer Passphrase aktivieren.
+   die gewünschte Verschlüsselung wählen. LUKS ist vorausgewählt, aber optional.
+   Bei aktivierter Verschlüsselung prüft Calamares bereits hier, dass die
+   Passphrase nicht leer ist und beide Eingaben übereinstimmen.
    Kein Swap. Der Datenträger benötigt mindestens 256 GiB.
    Anders als der frühere Wrapper verwendet dieser Stand Calamares' Geräteauswahl,
    ohne unseren zusätzlichen USB-/Transportfilter und ohne abgetippten Löschtext.
    Modell, Größe und Zielgerät deshalb in der Zusammenfassung genau prüfen.
 5. Die abschließende Installationsbestätigung akzeptieren. Vor der Partitionierung
-   prüft das M5-Modul UEFI, Löschmodus, aktivierte Verschlüsselung, keinen Swap
+   prüft das M5-Modul UEFI, Löschmodus, keinen Swap
    sowie Benutzereingaben. Calamares partitioniert, formatiert und mountet.
    Unser Job installiert anschließend `path:/…/etc/nixos#m5` mit `nixos-install`
    und kopiert die Modelle vom Medium. Warten, bis **beides** abgeschlossen ist.
-6. Neustarten, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
+6. Neustarten, Stick entfernen. Bei Verschlüsselung beim Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
 
-Layout: 1 GiB unverschlüsselte EFI-Systempartition und LUKS2 mit Btrfs für den
-gesamten Rest. Kein unverschlüsselter Swap, kein Hibernation-Setup. Die EFI-
+Layout: 1 GiB unverschlüsselte EFI-Systempartition und Btrfs für den
+gesamten Rest, wahlweise innerhalb von LUKS2. Kein Swap, kein Hibernation-Setup. Die EFI-
 Partition mit Kernel und Initrd bleibt unverschlüsselt; das schützt nicht vor
 Manipulation durch jemanden mit physischem Zugriff. Es gibt keinen gespeicherten
 LUKS-Schlüssel und keine automatische TPM-Entsperrung.
@@ -81,7 +83,7 @@ Btrfs verwendet `compress=zstd` und `noatime`. Dieser erste Stand verwendet
 keine zusätzlichen Subvolumes und keine automatische Snapshot-Verwaltung.
 
 Die LUKS-Passphrase wird von Calamares verdeckt abgefragt; unser Modul legt
-keine Schlüsseldatei an. Nur der Benutzerpassworthash wird auf der verschlüsselten SSD
+keine Schlüsseldatei an. Nur der Benutzerpassworthash wird auf der Ziel-SSD
 unter `/var/lib/nixos-secrets/user-password.hash` gespeichert, nie im Nix Store.
 Root-Anmeldung ist gesperrt; der Benutzer kann mit Passwort `sudo` verwenden.
 

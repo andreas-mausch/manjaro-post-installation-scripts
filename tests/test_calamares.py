@@ -37,11 +37,24 @@ class AdapterTests(unittest.TestCase):
     def test_valid_selection(self):
         adapter.validate_selection(self.storage())
 
+    def test_selection_accepts_optional_encryption_and_native_passphrase_policy(self):
+        for passphrase in [None, "", "short", "luks-test-secret"]:
+            with self.subTest(passphrase=passphrase):
+                adapter.validate_selection(self.storage(luksPassphrase=passphrase))
+
+    def test_mount_validation_accepts_different_root_filesystems(self):
+        for fs_name, fs in [("btrfs", "btrfs"), ("luks2", "btrfs"), ("ext4", "ext4")]:
+            partitions = [
+                {"mountPoint": "/", "fsName": fs_name, "fs": fs},
+                {"mountPoint": "/boot", "fsName": "fat32", "fs": "fat32"},
+            ]
+            with self.subTest(fs_name=fs_name), patch.object(adapter, "host"):
+                adapter.validate_mounts(self.storage(partitions=partitions))
+
     def test_preflight_rejects_unsafe_or_unsupported_choices(self):
         for changes in [
             {"packagechooser_models": None}, {"packagechooser_models": "unexpected"},
-            {"firmwareType": "bios"}, {"luksPassphrase": ""},
-            {"luksPassphrase": "short"}, {"password": "short"},
+            {"firmwareType": "bios"},
             {"username": "gufo"}, {"username": "x\ny"},
             {"username": "root"}, {"autoLoginUser": "neonew"},
             {"partitionChoices": {"install": "manual", "swap": "none"}},
@@ -57,10 +70,14 @@ class AdapterTests(unittest.TestCase):
             self.assertIsNone(adapter.run())
             host.assert_not_called()
 
-    def test_mount_validation_blocks_unencrypted_root_and_swap(self):
+    def test_selection_does_not_duplicate_native_user_password_validation(self):
+        adapter.validate_selection(self.storage(password="short"))
+
+    def test_mount_validation_blocks_invalid_layouts_and_swap(self):
         for partitions in [
+            self.storage().value("partitions")[1:],
+            self.storage().value("partitions") + [{"mountPoint": "/", "fs": "ext4"}],
             [{"mountPoint": "/", "fsName": "ext4", "fs": "ext4"}],
-            [{"mountPoint": "/", "fsName": "luks", "fs": "ext4"}],
             self.storage().value("partitions") + [{"fs": "linuxswap"}],
         ]:
             with self.assertRaises(ValueError), patch.object(adapter, "host") as host:

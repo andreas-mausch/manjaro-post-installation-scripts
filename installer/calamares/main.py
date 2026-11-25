@@ -33,17 +33,14 @@ def validate_selection(gs):
     choices = gs.value("partitionChoices") or {}
     if choices.get("install") != "erase" or choices.get("swap") != "none":
         raise ValueError("Für dieses Image: gesamte SSD löschen, kein Swap.")
-    passphrase = gs.value("luksPassphrase")
-    if not passphrase or len(libcalamares.utils.obscure(passphrase)) < 12:
-        raise ValueError("Verschlüsselung aktivieren; LUKS-Passphrase mindestens 12 Zeichen.")
+    # Encryption is optional; Calamares validates matching, nonempty passphrases
+    # in the partition UI. Do not impose a different policy during installation.
     username = gs.value("username") or ""
     if not re.fullmatch(r"[a-z][a-z0-9_-]{0,30}", username) or username in {
         "root", "gufo", "nixos", "nobody", "daemon",
     }:
         raise ValueError("Ungültiger oder reservierter Benutzername.")
-    password = gs.value("password")
-    if not password or len(libcalamares.utils.obscure(password)) < 8:
-        raise ValueError("Benutzerpasswort mindestens 8 Zeichen.")
+    # The native users module enforces the configured password requirements.
     if gs.value("autoLoginUser"):
         raise ValueError("Automatische Anmeldung ist für dieses Image deaktiviert.")
 
@@ -52,8 +49,8 @@ def validate_mounts(gs):
     partitions = gs.value("partitions") or []
     roots = [p for p in partitions if p.get("mountPoint") == "/"]
     boots = [p for p in partitions if p.get("mountPoint") == "/boot"]
-    if len(roots) != 1 or roots[0].get("fsName") != "luks2" or roots[0].get("fs") != "btrfs":
-        raise ValueError("Die Root-Partition muss Btrfs innerhalb von LUKS2 sein.")
+    if len(roots) != 1:
+        raise ValueError("Genau eine Root-Partition muss vorhanden sein.")
     if len(boots) != 1 or boots[0].get("fs") != "fat32" or boots[0].get("fsName") in {"luks", "luks2"}:
         raise ValueError("/boot muss eine unverschlüsselte EFI-/FAT32-Partition sein.")
     if any(p.get("fs") == "linuxswap" for p in partitions):
