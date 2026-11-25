@@ -10,6 +10,8 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Weitere Vorbereitung
 
+- [ ] Die enthaltenen Softwarekomponenten jeder Variante nachvollziehen und extern prüfen können: SBOMs für Zielsystem und Live-ISO als separate Build-Ausgaben bereitstellen. `sbomnix` mit CycloneDX-/SPDX-Ausgabe prüfen; Live-Installer-Werkzeuge vom Zielsystem unterscheiden. Optionale Modellgewichte mit Herkunft, Lizenz und Prüfsummen erfassen und dafür `models.lock.json` nutzen. Vollständigkeit und Grenzen der erfassten Komponenten und Lizenzdaten dokumentieren; eine SBOM ist kein Sicherheitsnachweis.
+
 - [ ] Eine Arbeitsstation passend zu ihren Aufgaben zusammenstellen können, ohne für jede Kombination eine eigene ISO pflegen zu müssen. Weitere kombinierbare Module aus dem bisherigen Manjaro-Setup ableiten:
   - Development: Git mit lazygit/tig/delta, Editoren, Sprachserver, Meld, Zeal sowie HTTP-/Datenwerkzeuge; projektspezifische Compiler und SDKs bevorzugt über `nix develop` bereitstellen.
   - Virtualization: QEMU, libvirt und virt-manager samt benötigten Diensten und Berechtigungen.
