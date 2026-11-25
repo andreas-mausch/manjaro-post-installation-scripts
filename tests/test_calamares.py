@@ -43,6 +43,12 @@ class AdapterTests(unittest.TestCase):
             with self.subTest(hostname=hostname), self.assertRaisesRegex(ValueError, "did not provide a hostname"):
                 adapter.identity(self.storage(hostname=hostname))
 
+    def test_spice_guest_integration_is_optional_local_configuration(self):
+        installation = adapter.identity(self.storage())
+        self.assertNotIn("spice-vdagentd", adapter.local_configuration(installation))
+        self.assertIn("services.spice-vdagentd.enable = true;",
+                      adapter.local_configuration(installation, spice=True))
+
     def test_non_ai_preflight_needs_no_model_selection(self):
         calamares.globalstorage = self.storage(packagechooser_models=None)
         calamares.job.configuration = {"stage": "validate", "withModels": False}

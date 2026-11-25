@@ -106,8 +106,9 @@ def nix_string(value):
     return json.dumps(value, ensure_ascii=False).replace("${", "\\${")
 
 
-def local_configuration(installation):
+def local_configuration(installation, spice=False):
     quoted = {key: nix_string(value) for key, value in installation.items()}
+    guest_integration = "  services.spice-vdagentd.enable = true;\n\n" if spice else ""
     return f'''# Local settings for this PC. Rebuild with: sudo nixos-rebuild switch
 {{ ... }}:
 {{
@@ -129,7 +130,7 @@ def local_configuration(installation):
     hashedPasswordFile = "/var/lib/nixos-secrets/user-password.hash";
   }};
 
-  # Compatibility baseline, not the current release version.
+{guest_integration}  # Compatibility baseline, not the current release version.
   system.stateVersion = "26.05";
 }}
 '''
@@ -152,7 +153,10 @@ def deploy(gs, config, context=None):
     context["phase"] = _("Generating hardware configuration")
     hardware = host("nixos-generate-config", "--root", root, "--show-hardware-config", capture=True).stdout
     write_file(destination / "hardware-configuration.nix", hardware)
-    write_file(destination / "configuration.nix", local_configuration(installation))
+    spice = gs.value("packagechooser_spice") == "spice"
+    if spice and not Path("/dev/virtio-ports/com.redhat.spice.0").exists():
+        raise ValueError(_("The SPICE guest channel is missing."))
+    write_file(destination / "configuration.nix", local_configuration(installation, spice=spice))
     context["phase"] = _("Preparing user access")
     secrets = root / "var/lib/nixos-secrets"
     host("install", "-d", "-m", "0700", secrets)

@@ -7,6 +7,9 @@ msgstr ""
 msgid "Calamares did not provide a hostname."
 msgstr "Calamares hat keinen Hostnamen bereitgestellt."
 
+msgid "The SPICE guest channel is missing."
+msgstr "Der SPICE-Gastkanal fehlt."
+
 msgid "Choose whether to copy model weights."
 msgstr "Modellgewichte mit oder ohne Kopieren auswählen."
 

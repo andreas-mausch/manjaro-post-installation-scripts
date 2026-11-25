@@ -14,6 +14,7 @@ symlinkJoin {
     makeWrapper ${calamares}/bin/calamares "$out/bin/calamares" \
       --prefix XDG_DATA_DIRS : ${calamaresExtensions}/share \
       --prefix XDG_CONFIG_DIRS : ${calamaresExtensions}/etc \
+      --run 'if [ -e /dev/virtio-ports/com.redhat.spice.0 ]; then export XDG_CONFIG_DIRS="${calamaresExtensions}/etc-spice:$XDG_CONFIG_DIRS"; fi' \
       --add-flags --xdg-config
 
     policy=share/polkit-1/actions/io.calamares.calamares.policy

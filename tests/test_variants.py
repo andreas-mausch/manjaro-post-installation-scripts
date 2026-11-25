@@ -16,11 +16,20 @@ for index in range(1, len(sys.argv), 4):
     assert f'{extensions}/share' in script, name
     assert f'{extensions}/etc' in script, name
     assert '--xdg-config' in script, name
+    assert '/dev/virtio-ports/com.redhat.spice.0' in script, name
+    assert f'{extensions}/etc-spice' in script, name
     ai = name in {"ai", "full"}
     configs = Path(extensions) / "etc/calamares"
     settings = json.loads((configs / "settings.conf").read_text())
     modules = configs / "modules"
     shown = settings["sequence"][0]["show"]
+    spice_settings = json.loads((Path(extensions) / "etc-spice/calamares/settings.conf").read_text())
+    assert "packagechooser@spice" not in shown, name
+    assert spice_settings["sequence"][0]["show"] == shown[:-1] + ["packagechooser@spice", "summary"], name
+    assert spice_settings["sequence"][1:] == settings["sequence"][1:], name
+    spice = json.loads((modules / "desktop-spice.conf").read_text())
+    assert spice["mode"] == "optional" and spice["method"] == "legacy", name
+    assert not spice.get("default"), name
     jobs = settings["sequence"][1]["exec"]
     assert ("packagechooser@models" in shown) == ai, name
     assert ("desktop@models" in jobs) == ai, name
