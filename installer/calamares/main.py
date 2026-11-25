@@ -21,6 +21,8 @@ def write_file(path, contents, mode="0644"):
 
 
 def validate_selection(gs):
+    if gs.value("packagechooser_models") not in {"qwen", "without-models"}:
+        raise ValueError("Modellgewichte mit oder ohne Kopieren auswählen.")
     if gs.value("firmwareType") != "efi":
         raise ValueError("Den Stick im UEFI-Modus booten; Secure Boot deaktivieren.")
     choices = gs.value("partitionChoices") or {}
@@ -115,16 +117,17 @@ def deploy(gs, config):
         install_command = ["unshare", "--net", "--", *install_command]
     host(*install_command)
     libcalamares.job.setprogress(0.7)
-    target_models = root / "var/lib/gufo/models"
-    host("mkdir", "-p", target_models)
-    host("cp", "-rL", str(models) + "/.", target_models)
-    host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
-    host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
+    if gs.value("packagechooser_models") == "qwen":
+        target_models = root / "var/lib/gufo/models"
+        host("mkdir", "-p", target_models)
+        host("cp", "-rL", str(models) + "/.", target_models)
+        host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
+        host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
     libcalamares.job.setprogress(1.0)
 
 
 def pretty_name():
-    return "BOSGAME M5: Konfiguration prüfen und NixOS samt Modellen installieren"
+    return "BOSGAME M5: NixOS und optional Modellgewichte installieren"
 
 
 def run():

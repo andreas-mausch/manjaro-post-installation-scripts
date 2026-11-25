@@ -167,6 +167,11 @@
         ];
         instances = [
           {
+            module = "packagechooser";
+            id = "models";
+            config = "m5-models.conf";
+          }
+          {
             module = "m5";
             id = "validate";
             config = "m5-validate.conf";
@@ -186,6 +191,7 @@
               "keyboard"
               "users"
               "partition"
+              "packagechooser@models"
               "summary"
             ];
           }
@@ -208,6 +214,32 @@
         disable-cancel-during-exec = true;
         hide-back-and-next-during-exec = true;
         quit-at-end = false;
+      };
+      modelSettings = yaml "m5-models.conf" {
+        mode = "required";
+        method = "legacy";
+        default = "qwen";
+        labels.step = "Qwen3.8-Flash-Next (UD-Q4_K_XL)";
+        items = [
+          {
+            id = "qwen";
+            name = "Install Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL)";
+            "name[de]" = "Qwen3.8-Flash-Next (GGUF, UD-Q4_K_XL) installieren";
+            description = "Unsloth weights including MTP (Q8_0) and the multimodal projector (BF16): copy all six files to the target system offline. Requires about 107 GiB of additional storage.";
+            "description[de]" =
+              "Unsloth-Gewichte inklusive MTP (Q8_0) und multimodalem Projektor (BF16): alle sechs Dateien offline auf das Zielsystem kopieren. Benötigt etwa 107 GiB zusätzlichen Speicherplatz.";
+            screenshot = "";
+          }
+          {
+            id = "without-models";
+            name = "Without model weights";
+            "name[de]" = "Ohne Modellgewichte";
+            description = "Install KDE, Steam and Gufo without copying weights. To use the model, provide its weights later.";
+            "description[de]" =
+              "KDE, Steam und Gufo installieren, ohne Gewichte zu kopieren. Für die Modellnutzung müssen die Gewichte später bereitgestellt werden.";
+            screenshot = "";
+          }
+        ];
       };
       partitionSettings = yaml "partition.conf" {
         efi = {
@@ -347,6 +379,7 @@
           cp ${partitionSettings} $out/etc/calamares/modules/partition.conf
           cp ${userSettings} $out/etc/calamares/modules/users.conf
           cp ${mountSettings} $out/etc/calamares/modules/mount.conf
+          cp ${modelSettings} $out/etc/calamares/modules/m5-models.conf
           cp ${installSettings} $out/etc/calamares/modules/m5-install.conf
           cp ${validateSettings} $out/etc/calamares/modules/m5-validate.conf
         '';

@@ -109,6 +109,15 @@ Die Fortschrittsanzeige zeigt grobe Phasen, keine exakte Download-/Kopierprozent
 
 ### Offline mit dynamischen Einstellungen
 
+Calamares bietet vor der Zusammenfassung die Auswahl **mit Qwen-Modellgewichten**
+(vorausgewählt) oder **ohne Modellgewichte**. Ohne Gewichte entfällt das Kopieren
+der sechs Dateien nach `/var/lib/gufo/models`; dies spart etwa 107 GiB auf dem
+Zielsystem. KDE, Steam und Gufo werden unverändert installiert. Gufo bleibt
+manuell gestartet und benötigt für den Modellbetrieb später bereitgestellte
+Gewichte. Die Gewichte sind nur Bestandteil der Live-ISO, nicht der
+Zielsystem-Paket-Closure. ISO-Größe und Platzbedarf beim Bau ändern sich nicht.
+Beide Varianten müssen noch in der Offline-VM erprobt werden.
+
 `packages.x86_64-linux.offline-system` ist ein vorgebautes Referenzsystem mit
 dem festen KDE-/Steam-/Gufo-Paketsatz und LUKS-Initrd-Komponenten. Die ISO nimmt
 dessen Laufzeit-Closure sowie die direkten Build-Werkzeuge der System-,

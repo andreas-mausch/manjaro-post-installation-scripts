@@ -30,6 +30,7 @@ class AdapterTests(unittest.TestCase):
                 {"mountPoint": "/boot", "fsName": "fat32", "fs": "fat32"},
             ],
             "rootMountPoint": "/tmp/calamares-root-test",
+            "packagechooser_models": "qwen",
         } | changes
         return SimpleNamespace(value=values.get)
 
@@ -38,6 +39,7 @@ class AdapterTests(unittest.TestCase):
 
     def test_preflight_rejects_unsafe_or_unsupported_choices(self):
         for changes in [
+            {"packagechooser_models": None}, {"packagechooser_models": "unexpected"},
             {"firmwareType": "bios"}, {"luksPassphrase": ""},
             {"luksPassphrase": "short"}, {"password": "short"},
             {"username": "gufo"}, {"username": "x\ny"},
@@ -103,6 +105,24 @@ class AdapterTests(unittest.TestCase):
             hash_call = next(call for call in host.call_args_list
                              if call.args[0] == "tee" and str(call.args[1]).endswith("user-password.hash"))
             self.assertEqual(hash_call.kwargs["input"], "$y$hash\n")
+
+    def test_deployment_without_models_still_installs_system(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source"
+            models = Path(temporary) / "models"
+            source.mkdir()
+            (source / "flake.lock").write_text("{}")
+            (models / "flash-next-q4").mkdir(parents=True)
+            with (
+                patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
+                patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")),
+            ):
+                adapter.deploy(self.storage(packagechooser_models="without-models"),
+                               {"source": str(source), "models": str(models), "offline": True})
+            commands = [tuple(map(str, call.args)) for call in host.call_args_list]
+            self.assertTrue(any("nixos-install" in command for command in commands))
+            self.assertFalse(any(command[:2] == ("cp", "-rL") for command in commands))
+            self.assertFalse(any("/var/lib/gufo/models" in " ".join(command) for command in commands))
 
     def test_failures_do_not_expose_subprocess_input(self):
         calamares.globalstorage = self.storage()
