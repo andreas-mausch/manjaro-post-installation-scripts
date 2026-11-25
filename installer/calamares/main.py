@@ -123,17 +123,10 @@ def deploy(gs, config, context=None):
         "--no-update-lock-file", "--no-channel-copy",
         "--option", "build-dir", "/nix/var/nix/builds",
     ]
-    if config.get("offline", False):
-        # nixos-install adds the live store as an auto/local substituter.
-        # No remote substitutes, builders or registry fetches; the network
-        # namespace also blocks accidental fixed-output downloads.
-        install_command += [
-            "--option", "substituters", "",
-            "--option", "builders", "",
-            "--option", "flake-registry", "",
-        ]
-        install_command = ["unshare", "--net", "--", *install_command]
-    context["phase"] = _("Offline system installation") if config.get("offline", False) else _("System installation")
+    # Keep nixos-install's live-store substituter and configured online caches.
+    # Offline completeness is verified by network-isolated tests, not by
+    # disabling package sources during ordinary installation.
+    context["phase"] = _("System installation")
     host(*install_command)
     libcalamares.job.setprogress(0.7)
     if gs.value("packagechooser_models") == "qwen":

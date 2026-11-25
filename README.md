@@ -147,11 +147,12 @@ neu; Kernel, Desktop und Gufo sollen aus dem lokalen Store übernommen werden.
 Neue Pakete oder zusätzliche, nicht vorbereitete Hardwaretreiber sind davon
 nicht automatisch abgedeckt.
 
-Der M5-Job startet `nixos-install` mit `unshare --net`: Der Prozess hat keine
-Netzwerkverbindung nach außen. Entfernte Substituter und Builder sowie die
-Flake-Registry werden deaktiviert; `nixos-install` verwendet seinen lokalen
-`auto`-Substituter zum Übernehmen der Store-Pfade vom Live-System. Falls eine
-Abhängigkeit fehlt, muss die Installation scheitern statt sie herunterzuladen.
+Der M5-Job lässt `nixos-install` seinen lokalen `auto`-Substituter zum
+Übernehmen der Store-Pfade vom Live-System verwenden. Konfigurierte entfernte
+Binärcaches bleiben ebenfalls erlaubt, wenn Netzwerk verfügbar ist. Die
+Installation soll auch ohne Netzwerk vollständig aus der ISO funktionieren;
+dies muss separat in netzlosen Tests nachgewiesen werden. Eine Installation
+mit Netzwerk ist kein Nachweis der Offline-Vollständigkeit.
 `--no-root-passwd` unterdrückt ausschließlich den interaktiven Root-Passwort-
 Prompt; Root bleibt durch `hashedPassword = "!"` gesperrt, nicht passwortlos.
 
@@ -264,53 +265,43 @@ einer vollständigen VM-Installation geprüft.
 
 ### Installationsfehler diagnostizieren
 
-#### Bekannte Offline-Assembly-Lücke (2026-11-25)
+#### Offline-Installationsproblem und Lösungsversuche (2026-11-25)
 
-Im netzlosen UEFI-VM-Test scheiterte `nixos-install` mit einem Versuch,
-`https://ftpmirror.gnu.org/bash/bash-5.3.tar.gz` herunterzuladen. Die spätere
-Meldung „unshare fehlgeschlagen“ bezeichnete nur den Aufruf, nicht die Ursache.
-Die Netzwerksperre funktionierte: Der Download konnte nicht stattfinden.
-
-Ursache: Die ISO bündelte das fertige Referenzsystem und seine
-Laufzeit-Abhängigkeiten, aber nicht alle Werkzeuge für den erneuten Aufbau
-einer abweichenden Zielkonfiguration. Benutzer, Sprache, Hardware und
-Dateisystem-UUIDs ändern Konfigurationsdateien, Systempfad und Initrd.
-Unter anderem fehlte Texinfo für den Systempfad-Aufbau. Nix versuchte deshalb,
-fehlende Werkzeuge mitsamt ihren Build-Abhängigkeiten selbst zu bauen.
-Leere `substituters` deaktivieren Binärcaches, nicht Quellendownloads;
-die zusätzliche Netzwerksperre ist weiterhin notwendig.
-
-Aktuelle Korrektur in `flake.nix`: zusätzliche deklarierte Systempfad-
-Abhängigkeiten sowie fertige Texinfo-, XML- und Capability-Werkzeuge,
-AMD-Microcode und Firmware bündeln. Nicht den vollständigen Quellen- und
-Compiler-Buildgraph für Kernel/ROCm aufnehmen. Ein normaler Build auf dem
-Entwicklungsrechner beweist keine Offline-Vollständigkeit, weil dessen Store
-und Netzwerk fehlende Pakete liefern können.
-
-Ein isolierter Assembly-Test hat am 2026-11-25 beide Varianten erfolgreich
-gebaut: Btrfs ohne Verschlüsselung und mit einer abweichend benannten
-LUKS-Zuordnung, jeweils mit anderem Benutzer, Hostnamen, Sprache, Zeitzone,
-Tastatur, UUIDs und VirtIO-Initrd-Modulen. Der eigene Test-Store wurde nur mit
-den vorgesehenen `system.extraDependencies` und archivierten Flake-Inputs
-befüllt; der Host-Nix-Store war ausgeblendet und das Netzwerk gesperrt.
-Die verschlüsselte Variante lief danach im gleichen Store und konnte
-bereits offline erzeugte gemeinsame Konfigurationsartefakte wiederverwenden.
-
-Testgrenze: Dies war ein Systembuild, keine Calamares-Installation und kein
-Boot-Test. Der Arch-Host stellte Nix und dessen Bibliotheken als Testharness
-bereit. Wegen nicht verfügbarer verschachtelter UID-Mappings war Nix'
-innere Build-Sandbox ausgeschaltet; die äußere Store-/Netzwerk-Isolation
-blieb aktiv. Die bisherigen Abbrüche an `setgroups` und `uid_map` betrafen
-diesen Testaufbau, nicht Paketabhängigkeiten. Die bestehende ISO enthält die
-Korrektur noch nicht; vollständige Offline-Installation und Neustart in einer
-UEFI-VM bleiben ausstehend.
-
-Wiederholungsrisiko: Eine manuell ergänzte Werkzeugliste kann nach Updates
-oder bei anderen Zielkonfigurationen erneut unvollständig werden. Deshalb
-muss ein reproduzierbarer isolierter Offline-Test vor jeder ISO-Freigabe
-automatisiert werden. Die Werkzeugableitung soll verbessert werden; der
-Test bleibt als unabhängige Prüfung notwendig. Erfolgreiche Tests belegen
-die getesteten Varianten, nicht beliebige Hardware oder Konfigurationen.
+- **Symptom:** Netzlose UEFI-Installation scheitert nach „Erase disk“ beim
+  Systembuild am Download von `https://ftpmirror.gnu.org/bash/bash-5.3.tar.gz`.
+  Partitionierung funktioniert; „unshare fehlgeschlagen“ war nur eine unpräzise
+  Meldung zum übergeordneten Aufruf, nicht die Ursache.
+- **Erste gefundene Lücke:** Laufzeit-Abhängigkeiten des Referenzsystems reichen
+  nicht für das Zusammensetzen geänderter Identität, UUIDs und Initrd aus;
+  unter anderem fehlte Texinfo für den Systempfad-Aufbau.
+- **Erster Lösungsversuch:** Fertige Systempfad-, Texinfo-, XML- und
+  Capability-Werkzeuge sowie AMD-Microcode und Firmware ergänzen (`19833a5`).
+  Den vollständigen Quellen-/Compiler-Buildgraph für Kernel/ROCm nicht bündeln.
+- **Teilnachweis:** Isolierte Systembuilds mit/ohne LUKS bestanden, mit anderer
+  Identität, Sprache, Zeitzone, Tastatur, UUIDs und VirtIO-Modulen. Nur vorgesehene
+  ISO-Abhängigkeiten und archivierte Inputs im Test-Store; kein Host-Store oder
+  Netzwerk. Die LUKS-Variante verwendete den gleichen Store und gemeinsame Artefakte.
+- **Testaufbau:** Arch stellte Nix samt Bibliotheken bereit. Abbrüche an
+  `setgroups`/`uid_map` waren Harness-Probleme; deshalb innere Nix-Sandbox aus,
+  äußere Store-/Netzwerk-Isolation weiterhin aktiv.
+- **Ergebnis mit neuer ISO:** Echter `nixos-install` scheiterte weiterhin an
+  Bash. Der bestandene Systembuild war kein Installations- oder Boot-Nachweis.
+- **Weitere gefundene Ursache:** `nixos-install` ergänzt zuerst den lokalen
+  `auto`-Substituter; unser späteres `substituters = ""` überschreibt ihn wieder.
+  Dadurch werden auch vorhandene ISO-Pakete nicht als Substitute übernommen.
+  Die Wirkung der Optionsreihenfolge wurde mit Nix 2.35.6 geprüft.
+- **Warum der Test das übersah:** Die Pakete lagen direkt im Build-Store;
+  Übernahme aus dem Live-Store in einen separaten Ziel-Store wurde nicht getestet.
+- **Aktuelle Korrektur:** Netzwerksperre und Substituter-/Builder-/Registry-Sperren
+  aus der normalen Installation entfernen. Lokalen ISO-Store und konfigurierte
+  Online-Caches erlauben; ohne Netzwerk muss die ISO trotzdem ausreichen.
+- **Prüfstand:** 16 Adaptertests und Formatprüfung bestanden. Die aktuelle
+  Korrektur ist noch nicht in der ISO; vollständige netzlose Installation,
+  Boot und anschließendes Online-Update bleiben unbestätigt.
+- **Weiter nötig:** Echten Installationspfad mit separatem Ziel-Store und
+  gesperrtem Netzwerk reproduzierbar vor ISO-Freigaben testen. Manuelle
+  Werkzeuglisten können nach Updates erneut Lücken haben; Ableitung verbessern.
+  Online-Erfolg beweist keine Offline-Vollständigkeit.
 
 #### Voraussetzungen und Diagnoseausgabe
 

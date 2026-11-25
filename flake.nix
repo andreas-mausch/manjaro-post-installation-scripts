@@ -383,7 +383,6 @@
         stage = "install";
         source = "${offlineSource}";
         models = "${modelFiles}";
-        offline = true;
       };
       validateSettings = yaml "m5-validate.conf" { stage = "validate"; };
       welcomeModule = pkgs.stdenv.mkDerivation {

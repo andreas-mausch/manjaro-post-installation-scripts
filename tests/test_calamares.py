@@ -93,7 +93,7 @@ class AdapterTests(unittest.TestCase):
             source.mkdir()
             (source / "flake.lock").write_text("{}")
             (models / "flash-next-q4").mkdir(parents=True)
-            config = {"source": str(source), "models": str(models), "offline": True}
+            config = {"source": str(source), "models": str(models)}
             with (
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")) as run,
@@ -101,10 +101,11 @@ class AdapterTests(unittest.TestCase):
                 adapter.deploy(self.storage(), config)
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             install = next(command for command in commands if "nixos-install" in command)
-            self.assertEqual(install[:4], ("unshare", "--net", "--", "nixos-install"))
-            self.assertIn("substituters", install)
-            self.assertIn("builders", install)
-            self.assertIn("flake-registry", install)
+            self.assertEqual(install[0], "nixos-install")
+            self.assertNotIn("unshare", install)
+            self.assertNotIn("substituters", install)
+            self.assertNotIn("builders", install)
+            self.assertNotIn("flake-registry", install)
             self.assertIn("path:/tmp/calamares-root-test/etc/nixos#m5", install)
             self.assertIn("--no-update-lock-file", install)
             # This suppresses a terminal prompt; NixOS separately locks root.
@@ -135,7 +136,7 @@ class AdapterTests(unittest.TestCase):
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")),
             ):
                 adapter.deploy(self.storage(packagechooser_models="without-models"),
-                               {"source": str(source), "models": str(models), "offline": True})
+                               {"source": str(source), "models": str(models)})
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             self.assertTrue(any("nixos-install" in command for command in commands))
             self.assertFalse(any(command[:2] == ("cp", "-rL") for command in commands))
