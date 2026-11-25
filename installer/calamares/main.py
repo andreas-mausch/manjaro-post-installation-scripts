@@ -1,5 +1,6 @@
 """Small Calamares job adapter: native UI/storage, pinned M5 flake deployment."""
 import json
+import logging
 from pathlib import Path
 import re
 import subprocess
@@ -7,8 +8,12 @@ import subprocess
 import libcalamares
 
 
+logger = logging.getLogger("m5-installer")
+
+
 def host(*args, input=None, capture=False):
     # Use Calamares' existing Polkit environment; never put secrets in arguments.
+    logger.warning("M5 installer: running %s", Path(str(args[0])).name)
     return subprocess.run(
         ["pkexec", *map(str, args)], input=input, text=True, check=True,
         stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
@@ -131,16 +136,33 @@ def pretty_name():
 
 
 def run():
+    phase = "Vorprüfung"
     try:
         gs = libcalamares.globalstorage
         validate_selection(gs)
         if libcalamares.job.configuration["stage"] == "install":
+            phase = "Systeminstallation und optionale Modellkopie"
             deploy(gs, libcalamares.job.configuration)
         return None
-    except (ValueError, OSError, subprocess.CalledProcessError):
-        # Do not stringify subprocess exceptions: stdin/Calamares storage can
-        # contain secrets. Command stderr remains available in the installer log.
+    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+        # Never log exception repr, command arguments, stdin or traceback:
+        # subprocess exceptions and paths may contain sensitive information.
+        if isinstance(error, ValueError):
+            detail = str(error)
+        elif isinstance(error, subprocess.CalledProcessError):
+            command = error.cmd
+            program = Path(str(command[0])).name if isinstance(command, (list, tuple)) and command else "Unterprozess"
+            if program == "pkexec" and len(command) > 1:
+                program = Path(str(command[1])).name
+            # Only expose names of commands used by this adapter.
+            if program not in {"mountpoint", "mkdir", "cp", "chmod", "install", "tee",
+                               "nixos-generate-config", "mkpasswd", "unshare", "nixos-install", "nixos-enter"}:
+                program = "Unterprozess"
+            detail = f"{program} fehlgeschlagen (Exit-Code {error.returncode})."
+        else:
+            detail = f"Betriebssystemfehler (errno {error.errno})."
+        logger.error("M5 installer: %s: %s", phase, detail)
         return ("M5-Installation fehlgeschlagen",
-                "UEFI, gesamte SSD löschen, LUKS2 mit Btrfs und kein Swap sind erforderlich. "
-                "Benutzername und Passwörter prüfen; Details im Installer-Log. "
+                f"Phase: {phase}. {detail} "
+                "Details in der Calamares-Ausgabe bzw. im Journal (M5 installer). "
                 "Nach einem Fehler nicht ohne erneute Prüfung formatieren.")

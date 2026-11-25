@@ -8,6 +8,8 @@
 
 ## Erledigt
 
+- [x] 2026-11-25: M5-Fehlerdiagnose mit Phase, Validierungsgrund bzw. Programm/Exit-Code und geheimnisfreien Logmeldungen ergänzen; Adapter-Tests erweitern. Journal-Ausgabe im VM-Test noch prüfen.
+
 - [x] 2026-11-25: Im Offline-VM-Test entdeckte Internet-Pflichtprüfung der Calamares-Willkommensseite entfernen; RAM-/Speicherprüfungen beibehalten. Neue ISO und erneuter VM-Test erforderlich.
 
 - [x] 2026-11-25: Native Calamares-Auswahl für optionales Kopieren der Qwen-Gewichte ergänzen (standardmäßig mit Gewichten); Adapter-Tests für beide Varianten. VM-Prüfung steht aus.

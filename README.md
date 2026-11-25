@@ -260,6 +260,18 @@ entsprechenden Sicherungen bzw. Git-Versionen verwenden.
 Der Online-Update-Ablauf der installierten Offline-Flake ist noch nicht in
 einer vollständigen VM-Installation geprüft.
 
+### Installationsfehler diagnostizieren
+
+Der M5-Job nennt bei Fehlern die Phase und entweder den konkreten
+Validierungsgrund oder den Programmnamen mit Exit-Code. Betriebssystemfehler
+werden mit errno gemeldet. Befehlsargumente, Passwörter und Hashes werden nicht
+in diese Diagnose übernommen. Jeder gestartete Adapter-Befehl wird nur mit
+seinem Programmnamen in der Calamares-Ausgabe protokolliert.
+Beim automatisch gestarteten Installer kann diese Ausgabe im Journal der
+Live-VM mit `sudo journalctl -b --no-pager` gelesen werden; nach
+`M5 installer` suchen. Die VM vor dem Sichern der Diagnose nicht neu starten.
+Für einen manuell gestarteten Installer dessen Terminalausgabe sichern.
+
 ### Konfiguration ändern ohne Paketupdate
 
 Die vollständige Konfiguration wird nach `/etc/nixos` kopiert, ergänzt um

@@ -132,6 +132,33 @@ class AdapterTests(unittest.TestCase):
         self.assertIsInstance(result, tuple)
         self.assertNotIn("secret", str(result))
 
+    def test_validation_failure_reports_specific_reason(self):
+        calamares.globalstorage = self.storage(firmwareType="bios")
+        calamares.job.configuration = {"stage": "validate"}
+        with self.assertLogs("m5-installer", level="ERROR") as logs:
+            result = adapter.run()
+        self.assertIn("UEFI", result[1])
+        self.assertIn("Vorprüfung", result[1])
+        self.assertIn("UEFI", " ".join(logs.output))
+
+    def test_command_failure_reports_program_and_exit_code_without_secrets(self):
+        calamares.globalstorage = self.storage()
+        calamares.job.configuration = {"stage": "install"}
+        error = subprocess.CalledProcessError(17, ["pkexec", "cp", "secret-argument"],
+                                             output="secret-output", stderr="secret-stderr")
+        with patch.object(adapter, "deploy", side_effect=error), self.assertLogs("m5-installer") as logs:
+            result = adapter.run()
+        self.assertIn("cp fehlgeschlagen (Exit-Code 17)", result[1])
+        self.assertNotIn("secret", str(result) + str(logs.output))
+
+    def test_os_failure_does_not_expose_filename(self):
+        calamares.globalstorage = self.storage()
+        calamares.job.configuration = {"stage": "install"}
+        with patch.object(adapter, "deploy", side_effect=OSError(2, "secret", "secret-path")), self.assertLogs("m5-installer") as logs:
+            result = adapter.run()
+        self.assertIn("errno 2", result[1])
+        self.assertNotIn("secret", str(result) + str(logs.output))
+
 
 if __name__ == "__main__":
     unittest.main()
