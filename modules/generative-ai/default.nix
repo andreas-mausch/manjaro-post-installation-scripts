@@ -1,6 +1,6 @@
 { lib, gufoPackage, ... }:
 {
-  imports = [ ./base.nix ];
+  imports = [ ../base.nix ];
   hardware.graphics.enable = true;
   nix.settings = {
     extra-substituters = [ "https://gufo.cachix.org" ];

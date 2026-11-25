@@ -52,14 +52,14 @@
         ai = {
           modules = [
             ./modules/desktop.nix
-            ./modules/generative-ai.nix
+            ./modules/generative-ai
           ];
           ai = true;
         };
         full = {
           modules = [
             ./modules/gaming.nix
-            ./modules/generative-ai.nix
+            ./modules/generative-ai
           ];
           ai = true;
         };
@@ -233,7 +233,7 @@
               microcode-intel
               linux-firmware
             ]);
-          modelManifest = builtins.fromJSON (builtins.readFile ./models.lock.json);
+          modelManifest = builtins.fromJSON (builtins.readFile ./modules/generative-ai/models.lock.json);
           upstreamManifest = builtins.fromJSON (
             builtins.readFile (gufo + "/src/models/qwen38_flash_next/models.lock.json")
           );
@@ -554,7 +554,7 @@
         base = import ./modules/base.nix;
         desktop = import ./modules/desktop.nix;
         gaming = import ./modules/gaming.nix;
-        generative-ai = import ./modules/generative-ai.nix;
+        generative-ai = import ./modules/generative-ai;
         installer = import ./modules/installer;
       };
       nixosConfigurations =

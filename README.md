@@ -27,11 +27,11 @@ Die Flake bietet fünf feste Zielzusammenstellungen:
 | Base     | `base.nix`                           | `iso-base`     |
 | Desktop  | `desktop.nix`                        | `iso-desktop`  |
 | Gaming   | `gaming.nix`                         | `iso-gaming`   |
-| AI       | `desktop.nix` + `generative-ai.nix`   | `iso-ai`       |
-| Full     | `gaming.nix` + `generative-ai.nix`    | `iso-full`     |
+| AI       | `desktop.nix` + `generative-ai/`      | `iso-ai`       |
+| Full     | `gaming.nix` + `generative-ai/`       | `iso-full`     |
 
 `desktop.nix` importiert `base.nix`, `gaming.nix` importiert `desktop.nix`.
-`generative-ai.nix` importiert nur `base.nix` und ist auch ohne Desktop nutzbar.
+`generative-ai/default.nix` importiert nur `base.nix` und ist auch ohne Desktop nutzbar.
 Alle Live-ISOs enthalten KDE und Calamares; das Base-Zielsystem enthält weder
 KDE noch Firefox. Gaming ergänzt Steam, AI ergänzt Gufo und dessen Unterstützung.
 Nur AI-/Full-ISOs enthalten alle sechs Qwen-Dateien und die optionale Modellkopie.
@@ -237,7 +237,7 @@ Der ISO-Bau lädt die Dateien, deren Revisionen, Größen und SHA-256-Prüfsumme
 in diesem gepinnten Release festgelegt sind, einschließlich MTP und Bildprojektor.
 Es gibt keinen automatischen Modell-Update-Timer. Die installierten Dateien
 liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
-`models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
+`modules/generative-ai/models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
 die Flake prüft, dass es exakt dem Manifest des gepinnten Gufo-Releases entspricht.
 Zusammen sind dies rund 115 GB (107 GiB) Download beim ISO-Bau, ohne Spiele und
 Systempakete. Alle Modelldownloads erfolgen beim ISO-Bau; die Modellkopie selbst
@@ -348,7 +348,7 @@ Gufo ist in `flake.nix` explizit auf `github:gufo-org/gufo/v0.36.0` festgelegt.
 Für eine neuere Gufo-Version dort zuerst den gewünschten Release-Tag eintragen,
 dann die obigen Update-/Rebuild-Befehle ausführen. Neue Releases können andere
 Konfigurationsoptionen oder Modellanforderungen haben. Modellgewichte in
-`models.lock.json` werden durch `nix flake update` nicht aktualisiert; ebenso
+`modules/generative-ai/models.lock.json` werden durch `nix flake update` nicht aktualisiert; ebenso
 wenig die bereits nach `/var/lib/gufo/models` kopierten Dateien.
 
 Für einen fehlgeschlagenen Update-Build kann der bisherige Lock wiederhergestellt
