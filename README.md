@@ -51,15 +51,17 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 2. Stick im **UEFI-Modus** booten. Ethernet anschließen; alternativ fragt der
    Installer nach Einrichtung per `nmtui`. Das Image startet lokal als root und
    bietet keinen SSH-Zugang.
-3. Der Shell-Installer auf der ersten Konsole fragt SSD, Benutzername und
-   Benutzerpasswort ab. Python ist nicht nötig; verwendet werden die üblichen
-   NixOS-Werkzeuge und Disko. Das Benutzerpasswort wird verdeckt wiederholt.
+3. Der kleine Shell-Wrapper auf der ersten Konsole fragt SSD, Benutzername und
+   Benutzerpasswort ab. Der eigentliche Installer ist `disko-install`; wir
+   pflegen keinen eigenen Python-Installer. Das Benutzerpasswort wird verdeckt wiederholt.
 4. Den Löschtext mit dem exakten SSD-Gerätenamen bestätigen. Davor werden keine
    Datenträger verändert. Nur ungemountete NVMe-, SATA- und VirtIO-Laufwerke ab
    256 GiB sind wählbar. USB-, entfernbare und schreibgeschützte Laufwerke sind
    ausgeschlossen; andere Datenträger werden nicht automatisch verwendet.
-5. Disko partitioniert, formatiert und mountet anhand von `modules/disk-layout.nix`.
-   Es fragt nach der LUKS-Passphrase samt Wiederholung. Warten, bis Systeminstallation **und
+5. `disko-install` baut zunächst das System, partitioniert, formatiert und mountet
+   anhand von `modules/disk-layout.nix` und installiert NixOS. Disko fragt nach der
+   LUKS-Passphrase samt Wiederholung. Konfiguration, rootgeschützter Passworthash
+   und Modelle werden über `--extra-files` mitkopiert. Warten, bis Systeminstallation **und
    Modellkopie vom Stick** abgeschlossen sind.
 6. `reboot`, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.

@@ -118,6 +118,8 @@ in
   systemd.tmpfiles.rules = [
     "d /var/lib/gufo 0755 gufo gufo -"
     "d /var/lib/gufo/models 0755 gufo gufo -"
+    # disko-install copies models as root; make them owned by the service user.
+    "Z /var/lib/gufo/models - gufo gufo -"
     "d /var/lib/nixos-secrets 0700 root root -"
   ];
   systemd.services.gufo = {

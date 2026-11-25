@@ -28,6 +28,15 @@ copy_models() {
   nixos-enter --root /mnt -c 'chown -R gufo:gufo /var/lib/gufo'
 }
 
+add_model_files() {
+  local -n arguments=$1
+  local model
+  # cp -a in disko-install must not preserve link-farm symlinks.
+  while IFS= read -r -d '' model; do
+    arguments+=(--extra-files "$(readlink -f "$model")" "/var/lib/gufo/models/${model#"$M5_MODELS/"}")
+  done < <(find -L "$M5_MODELS" -type f -print0)
+}
+
 main() {
   [[ $EUID == 0 ]] || die 'Als root ausführen.'
   if [[ ${1:-} == --models-only && $# == 1 ]]; then
@@ -81,28 +90,32 @@ main() {
   eligible_disks | jq -e --arg disk "$disk" 'select(.path == $disk)' >/dev/null ||
     die 'Die Ziel-SSD ist nicht mehr sicher verfügbar.'
 
-  # Also handles partially completed Disko operations. Never formats on cleanup.
-  trap 'trap - EXIT; set +e; mountpoint -q /mnt/boot && umount /mnt/boot; mountpoint -q /mnt && umount /mnt; [[ ! -e /dev/mapper/cryptroot ]] || cryptsetup close cryptroot' EXIT
-  echo 'Disko richtet die SSD ein und fragt die LUKS-Passphrase ab …'
-  disko --mode destroy,format,mount --yes-wipe-all-disks \
-    --argstr device "$disk" --arg pkgs "import $M5_NIXPKGS {}" \
-    "$M5_SOURCE/modules/disk-layout.nix"
-  mkdir -p /mnt/etc/nixos
-  cp -r -- "$M5_SOURCE/." /mnt/etc/nixos/
-  chmod -R u+rwX,go+rX,go-w /mnt/etc/nixos
+  local staging configuration
+  staging=$(mktemp -d /run/m5-install.XXXXXXXX)
+  # Disko-install unmounts its target; also clean up partial failures and keys.
+  trap 'trap - EXIT; set +e; mountpoint -q /mnt && umount -R /mnt; [[ ! -e /dev/mapper/cryptroot ]] || cryptsetup close cryptroot; rm -rf -- "$staging"' EXIT
+  configuration=$staging/configuration
+  mkdir "$configuration"
+  cp -r -- "$M5_SOURCE/." "$configuration/"
+  chmod -R u+rwX,go+rX,go-w "$configuration"
   jq -n --arg username "$username" --arg disk "$disk" \
-    '{username: $username, disk: $disk}' > /mnt/etc/nixos/installation.json
-  nixos-generate-config --root /mnt --no-filesystems --show-hardware-config > /mnt/etc/nixos/hardware-configuration.nix
-  install -d -m 0700 /mnt/var/lib/nixos-secrets
-  (umask 077; printf '%s\n' "$hashed" > /mnt/var/lib/nixos-secrets/user-password.hash)
+    '{username: $username, disk: $disk}' > "$configuration/installation.json"
+  # Scan the machine before installation; Disko supplies all storage settings.
+  nixos-generate-config --no-filesystems --show-hardware-config > "$configuration/hardware-configuration.nix"
+  install -d -m 0700 "$staging/secrets"
+  (umask 077; printf '%s\n' "$hashed" > "$staging/secrets/user-password.hash")
   unset hashed
-  nixos-install --root /mnt --no-root-passwd --flake path:/mnt/etc/nixos#m5 \
-    --no-write-lock-file --no-update-lock-file --no-channel-copy
-  echo 'Kopiere Modell-Dateien vom Installationsmedium …'
-  copy_models
-  umount /mnt/boot
-  umount /mnt
+  local -a extra_files=(
+    --extra-files "$configuration" /etc/nixos
+    --extra-files "$staging/secrets" /var/lib/nixos-secrets
+  )
+  add_model_files extra_files
+  echo 'Disko-install baut und installiert das System samt Modellen vom Stick …'
+  disko-install --mode format --flake "path:$configuration#m5" \
+    --disk main "$disk" --mount-point /mnt --write-efi-boot-entries \
+    "${extra_files[@]}"
   cryptsetup close cryptroot
+  rm -rf -- "$staging"
   trap - EXIT
   echo 'Installation abgeschlossen. Mit reboot neu starten und Stick entfernen.'
 }

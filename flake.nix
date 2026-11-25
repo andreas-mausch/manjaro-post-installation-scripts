@@ -56,6 +56,7 @@
             mkpasswd
             nixos-install-tools
             coreutils
+            findutils
             networkmanager
             systemd
           ]
@@ -63,7 +64,6 @@
         text = ''
           export M5_SOURCE=${self}
           export M5_MODELS=${modelFiles}
-          export M5_NIXPKGS=${nixpkgs}
           ${builtins.readFile ./installer/install.sh}
         '';
       };
