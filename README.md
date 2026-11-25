@@ -5,8 +5,9 @@ Das gesamte gewählte Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
 Die bisherige ISO wurde offline mit Calamares in einer UEFI-VM installiert;
 anschließend starteten KDE und Gufo. Die generalisierte Konfiguration muss
-erneut mit einer ISO geprüft werden. Reale Hardware und der vollständige
-Online-Update-/Rebuild-Ablauf sind noch nicht verifiziert.
+erneut mit einer ISO geprüft werden. Online-Update und Rebuild der bisherigen
+installierten Konfiguration wurden vom Benutzer als erfolgreich bestätigt;
+auch der anschließende Neustart war erfolgreich. Reale Hardware bleibt ungeprüft.
 
 Ausgangspunkt des Projekts war ein Bosgame M5. Das Setup enthält keine
 dafür festgelegten GPU-Speicherlimits oder
@@ -285,8 +286,12 @@ Nach erfolgreicher Aktivierung lässt sich bei Problemen mit
 Das setzt die Konfigurationsdateien und den Lock nicht zurück; dafür die
 entsprechenden Sicherungen bzw. Git-Versionen verwenden.
 
-Der Online-Update-Ablauf der installierten Offline-Flake ist noch nicht in
-einer vollständigen VM-Installation geprüft.
+Der Online-Update-Ablauf der bisherigen installierten Offline-Flake wurde am
+2026-11-25 in der vorhandenen VM geprüft: GitHub-Inputs wurden geladen und
+`nixos-rebuild switch` erfolgreich ausgeführt (Benutzerbestätigung). Dieser
+Nachweis gilt noch nicht für die danach generalisierte Repo-Konfiguration.
+Der Befehl wurde aus `/etc/nixos` mit `--flake .#m5` ausgeführt; auch der
+anschließende Neustart war erfolgreich (Benutzerbestätigung).
 
 ### Installationsfehler diagnostizieren
 
@@ -415,6 +420,14 @@ einer vollständigen VM-Installation geprüft.
   Kopieraufrufe. Der Test verwendet die lokale Store-Variante statt `auto`
   und ist noch kein vollständiger Installationstest. Die Quellenübernahme
   im tatsächlichen `nixos-install`-Pfad bleibt separat zu validieren.
+
+- **Abschließender VM-Test:** Neu gebaute ISO vollständig offline über Calamares
+  installiert, ohne manuelle Flags oder globale Signaturabschaltung. Danach
+  Systemstart, KDE und `gufo --version` erfolgreich. Online-Update der Inputs,
+  Rebuild und anschließender Neustart ebenfalls erfolgreich (Benutzerbestätigung).
+  Generalisierung, Live-Logging und getrennte Jobs wurden erst danach geändert
+  und brauchen einen neuen ISO-Test. Weitere Hardware-/Sprach-/Modellvarianten
+  und vollständiger Abgleich der sechs Gewichte bleiben offen.
 
 #### Voraussetzungen und Diagnoseausgabe
 

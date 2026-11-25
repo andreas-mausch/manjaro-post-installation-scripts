@@ -1,42 +1,41 @@
 # Vorbereitung
 
-## Als Nächstes: verifizierten Offline-Fix in den Installer übernehmen
+Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abgeschlossen: Installation ohne manuelle Flags, anschließender Systemstart, KDE und Gufo sowie Online-Update, Rebuild und Neustart erfolgreich. Benutzerbestätigter Nachweis für diese VM-Variante; Generalisierung, Live-Logging und getrennte Jobs sind noch nicht in einer neuen ISO geprüft.
 
-1. [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung.
-2. [ ] Signaturbehandlung im ISO-Test bestätigen: `nixos-install` vertraut bereits nur dem lokalen Live-Substituter; keine globale Signaturabschaltung. Lokaler Systembuild mit aktiver Signaturprüfung bestand, vollständiger Installationspfad noch offen.
-3. [ ] Reproduzierbaren lokalen Offline-Systembuild-Test mit getrenntem Live-/Ziel-Store ergänzen: nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration. Kein Root-Test auf dem Host und keine zusätzliche Test-VM; echte Installation und Boot direkt mit der ISO in der vorhandenen VM prüfen.
-4. [ ] Nach bestandenen Tests committen; erst danach die ISO neu bauen.
-5. [ ] Vollständigen Calamares-Durchlauf ohne manuelle Terminalbefehle, Boot ohne ISO und anschließendes Online-Update prüfen.
+## Als Nächstes: modulare ISO-Varianten
 
-Stand: Manueller Offline-VM-Installationslauf, LUKS-Entsperrung und KDE-Start ohne ISO erfolgreich; sichere Signaturstrategie und vollständiger grafischer Durchlauf noch offen.
+- [ ] AI- und Gaming-Funktionen in kombinierbare NixOS-Module (`generative-ai.nix`, `gaming.nix`) auslagern. AI-Modul bündelt Gufo, LLM-/NPU-Unterstützung und die sechs Qwen-Modelle. Benannte Desktop-, AI-, Gaming- und Full-ISO-Ausgaben in derselben Flake anbieten; Modulzusammenstellung für Updates im Zielsystem erhalten. Calamares-Option „Copy weights“ nur bei enthaltenem AI-Modul in die ISO aufnehmen; Kopieren auf das Ziel bleibt optional. Ohne AI-Modul keine AI-spezifischen Pakete oder Modellgewichte auf der ISO. Keine Calamares-Patches.
 
-## Danach: modulare ISO-Varianten
-
-- [ ] Erst den laufenden ISO-/Calamares-Installationstest abschließen; anschließend AI- und Gaming-Funktionen in kombinierbare NixOS-Module (`generative-ai.nix`, `gaming.nix`) auslagern. AI-Modul bündelt Gufo, LLM-/NPU-Unterstützung und die sechs Qwen-Modelle. Benannte Desktop-, AI-, Gaming- und Full-ISO-Ausgaben in derselben Flake anbieten; Modulzusammenstellung für Updates im Zielsystem erhalten. Calamares-Option „Copy weights“ nur bei enthaltenem AI-Modul in die ISO aufnehmen; Kopieren auf das Ziel bleibt optional. Ohne AI-Modul keine AI-spezifischen Pakete oder Modellgewichte auf der ISO. Keine Calamares-Patches.
+- [ ] Danach neue ISO bauen und generalisierte Konfiguration, modulare Auswahl, Live-Logging und getrennte Installations-/Modelljobs direkt in der vorhandenen VM offline prüfen; Boot ohne ISO und Online-Update samt Neustart erneut testen.
 
 ## Weitere Vorbereitung
 
+- [ ] UKI-Direktboot für das installierte System vorbereiten: UEFI startet das Unified Kernel Image ohne systemd-boot/GRUB. UKI-Erzeugung, Installation auf der EFI-Partition, UEFI-Booteinträge und sichere Updates mit Rückfall-/Recovery-Möglichkeit für vorherige Generationen umsetzen und testen. Grafische LUKS-Passwortabfrage über Plymouth in der Initrd integrieren; Theme, frühe GPU-Treiber und Passwort-/Textfallback auf Zielhardware prüfen. Plymouth ist unabhängig vom UKI-Direktboot nutzbar. Keine automatische LUKS-Entsperrung; Secure-Boot-Signierung ist ein separates Vorhaben.
+
 - [ ] Getrennte Calamares-Jobs „Install NixOS“ und „Copy model weights“ mit der nächsten ISO prüfen: eigene Titel/Fortschrittsgewichte, Modelljob ohne gewählte Gewichte ohne Kopie, Modellfehler ohne Aufforderung zur erneuten Systeminstallation.
 
-- [ ] Live-Ausgabe von `nixos-install` im Calamares-Fenster „Toggle log“ mit der nächsten ISO prüfen: öffentliche Prozess-Schnittstelle statt nur geerbter stdout/stderr-Streams. Keine Passwort-/Konfigurationsbefehle ins UI-Log weiterreichen; aktueller Installationslauf bleibt unverändert.
+- [ ] Live-Ausgabe von `nixos-install` im Calamares-Fenster „Toggle log“ mit der nächsten ISO prüfen: öffentliche Prozess-Schnittstelle statt nur geerbter stdout/stderr-Streams. Keine Passwort-/Konfigurationsbefehle ins UI-Log weiterreichen.
 
-- [ ] Isolierten Offline-Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen; pro Variante frischen Store verwenden. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
+- [ ] Isolierten Offline-Systembuild-/Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen: getrennte Live-/Ziel-Stores, nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration. Kein Root-Test auf dem Host und keine zusätzliche Test-VM; echter Installations-/Bootnachweis direkt mit der ISO in der vorhandenen VM. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
 
 - [ ] Neue Diagnosephasen, Journal-Zeitfilter und Warnung zum bereits partitionierten Ziel bei einem realen VM-Installationsfehler prüfen; Originalausgabe muss die erste Nix-Fehlermeldung enthalten.
 
 - [ ] Swap-Unterstützung vor Freigabe ergänzen: `nixos-generate-config` erfasst nur aktive Swap-Partitionen und keine Swapdateien; Calamares erstellt Swapdateien im hier nicht ausgeführten fstab-Modul. Zielgerätezuordnung und verschlüsselten Swap beim Neustart prüfen. Bis dahin bleibt „kein Swap“ erhalten.
 
-- [ ] Installation mit und ohne LUKS2 in einer UEFI-VM testen; Calamares muss bei aktivierter Verschlüsselung leere oder unterschiedliche Passphrasen vor der Installation abfangen.
+- [ ] Weitere Installationsvarianten prüfen: unverschlüsseltes Ziel sowie leere oder unterschiedliche LUKS-Passphrasen; Calamares muss ungültige Passphrasen vor der Installation abfangen. Verschlüsselter Basislauf ist bestanden.
 
 - [ ] UEFI-Voraussetzung auf der Calamares-Willkommensseite in BIOS- und UEFI-VM testen; BIOS muss „Weiter“ vor der Partitionierung sperren.
 
-- [ ] Nach Offline-Installation in der VM Online-Update mit `nix flake update` und Rebuild prüfen; lokale Locks müssen wieder über die ursprünglichen GitHub-Inputs aktualisierbar sein.
-
-- [ ] ISO bauen und Boot/Installation in einer VM prüfen.
-- [ ] Offline-Installation in UEFI-VM ohne Netzwerkkarte mit abweichendem Benutzer, Sprache und generierten UUIDs vollständig prüfen; fehlende lokale Assemblierungsabhängigkeiten ergänzen.
+- [ ] Weitere Offline-Varianten mit abweichender Sprache und beiden Modellkopieroptionen vollständig prüfen; alle sechs kopierten Modell-Dateien mit dem Manifest vergleichen. Der erfolgreiche Basislauf deckt diese Varianten und den Datei-Abgleich nicht vollständig ab.
 - [ ] Gufo-GPU und Modell auf geeigneter echter Hardware prüfen (nicht in einer VM ohne GPU-Durchreichung möglich).
 
 ## Erledigt
+
+- [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung. Fix committed und ISO neu gebaut.
+
+- [x] 2026-11-25: Vollständigen Offline-Calamares-Lauf ohne manuelle Terminalbefehle oder Signaturabschaltung in der vorhandenen UEFI-VM abschließen; lokaler Live-Substituter bleibt quellenbezogen vertrauenswürdig. Anschließender Systemstart, KDE und Gufo erfolgreich. Nachweis für die bisherige ISO, nicht für spätere Repo-Änderungen oder beliebige Hardware.
+
+- [x] 2026-11-25: Nach Offline-Installation in der vorhandenen VM Online-Update mit `nix flake update` und anschließendem `nixos-rebuild switch` mit dem bisherigen Flake-Ziel aus `/etc/nixos` erfolgreich ausgeführt; GitHub-Quellen wurden wieder erreicht. Neustart der aktualisierten Generation erfolgreich (Benutzerbestätigung). Nachweis gilt für die installierte bisherige Konfiguration, nicht für die anschließend generalisierte Repo-Version.
 
 - [x] 2026-11-25: Offline-Assembly-Lücke dokumentieren und nach gezielter Ergänzung fertiger Werkzeuge beide Varianten im isolierten Store erfolgreich bauen (abweichende Identität/UUIDs/VirtIO, mit/ohne LUKS). Äußere Store-/Netzwerk-Isolation aktiv, innere Nix-Sandbox wegen UID-Mapping-Beschränkung deaktiviert; kein Installations-/Boot-Nachweis.
 
