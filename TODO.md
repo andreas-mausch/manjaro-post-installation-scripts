@@ -5,6 +5,8 @@
 
 ## Erledigt
 
+- [x] 2026-11-25: Calamares-Root-Dateisystem auf Btrfs in LUKS2 mit zstd-Kompression umstellen, zunächst ohne zusätzliche Subvolumes oder Snapshot-Automatik.
+- [x] 2026-11-25: Disko und disko-install entfernen; vorhandene grafische NixOS-Calamares-ISO mit M5-Flake-/Modell-Anbindung verwenden. Laufenden alten ISO-Bau für Downloads unangetastet lassen.
 - [x] 2026-11-25: disko-install für Provisionierung, Systeminstallation und Zusatzdateien verwenden statt disko und nixos-install selbst zu orchestrieren.
 - [x] 2026-11-25: Partitionierung, LUKS2 und Dateisysteme an gepinntes Disko delegieren; Wrapper auf Bedienung und Installation reduzieren.
 - [x] 2026-11-25: Python-Installer durch Shell mit NixOS-/Linux-Bordmitteln ersetzen; LUKS-Passphrase direkt mit cryptsetup abfragen.

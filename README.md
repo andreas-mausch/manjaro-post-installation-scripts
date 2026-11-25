@@ -1,7 +1,7 @@
 # BOSGAME M5: NixOS, KDE, Steam und Gufo
 
-Interaktiver Installer mit Disko für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
-Das gesamte gewählte NVMe-, SATA- oder VirtIO-Laufwerk wird nach ausdrücklicher Bestätigung
+Grafischer Calamares-Installer für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
+Das gesamte gewählte Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
 Dieser Installer ist noch nicht auf dem M5 oder in einer VM erprobt.
 
@@ -48,34 +48,60 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 
 1. Im BIOS Secure Boot deaktivieren und den UMA-Framebuffer möglichst klein
    einstellen (Gufo empfiehlt 512 MiB, sofern das BIOS dies anbietet).
-2. Stick im **UEFI-Modus** booten. Ethernet anschließen; alternativ fragt der
-   Installer nach Einrichtung per `nmtui`. Das Image startet lokal als root und
-   bietet keinen SSH-Zugang.
-3. Der kleine Shell-Wrapper auf der ersten Konsole fragt SSD, Benutzername und
-   Benutzerpasswort ab. Der eigentliche Installer ist `disko-install`; wir
-   pflegen keinen eigenen Python-Installer. Das Benutzerpasswort wird verdeckt wiederholt.
-4. Den Löschtext mit dem exakten SSD-Gerätenamen bestätigen. Davor werden keine
-   Datenträger verändert. Nur ungemountete NVMe-, SATA- und VirtIO-Laufwerke ab
-   256 GiB sind wählbar. USB-, entfernbare und schreibgeschützte Laufwerke sind
-   ausgeschlossen; andere Datenträger werden nicht automatisch verwendet.
-5. `disko-install` baut zunächst das System, partitioniert, formatiert und mountet
-   anhand von `modules/disk-layout.nix` und installiert NixOS. Disko fragt nach der
-   LUKS-Passphrase samt Wiederholung. Konfiguration, rootgeschützter Passworthash
-   und Modelle werden über `--extra-files` mitkopiert. Warten, bis Systeminstallation **und
-   Modellkopie vom Stick** abgeschlossen sind.
-6. `reboot`, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
+2. Stick im **UEFI-Modus** booten. Im KDE-Live-Desktop automatisch als `nixos`
+   anmelden. Ethernet anschließen oder WLAN über NetworkManager einrichten.
+   Das Image bietet keinen SSH-Zugang.
+3. Calamares öffnen (Autostart oder Desktop-Verknüpfung). Sprache, Zeitzone,
+   Tastatur und Benutzer samt Passwort wählen. KDE, Steam und Gufo sind durch
+   unsere Flake fest vorgegeben; es gibt keine Desktop-Auswahl.
+4. Die **richtige SSD** auswählen, „gesamten Datenträger löschen“ wählen und
+   LUKS-Verschlüsselung mit mindestens zwölf Zeichen langer Passphrase aktivieren.
+   Kein Swap. Der Datenträger benötigt mindestens 256 GiB.
+   Anders als der frühere Wrapper verwendet dieser Stand Calamares' Geräteauswahl,
+   ohne unseren zusätzlichen USB-/Transportfilter und ohne abgetippten Löschtext.
+   Modell, Größe und Zielgerät deshalb in der Zusammenfassung genau prüfen.
+5. Die abschließende Installationsbestätigung akzeptieren. Vor der Partitionierung
+   prüft das M5-Modul UEFI, Löschmodus, aktivierte Verschlüsselung, keinen Swap
+   sowie Benutzereingaben. Calamares partitioniert, formatiert und mountet.
+   Unser Job installiert anschließend `path:/…/etc/nixos#m5` mit `nixos-install`
+   und kopiert die Modelle vom Medium. Warten, bis **beides** abgeschlossen ist.
+6. Neustarten, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
 
-Layout: 1 GiB unverschlüsselte EFI-Systempartition und LUKS2 mit ext4 für den
+Layout: 1 GiB unverschlüsselte EFI-Systempartition und LUKS2 mit Btrfs für den
 gesamten Rest. Kein unverschlüsselter Swap, kein Hibernation-Setup. Die EFI-
 Partition mit Kernel und Initrd bleibt unverschlüsselt; das schützt nicht vor
 Manipulation durch jemanden mit physischem Zugriff. Es gibt keinen gespeicherten
 LUKS-Schlüssel und keine automatische TPM-Entsperrung.
+Btrfs verwendet `compress=zstd` und `noatime`. Dieser erste Stand verwendet
+keine zusätzlichen Subvolumes und keine automatische Snapshot-Verwaltung.
 
-Die LUKS-Passphrase wird von Disko verdeckt abgefragt; der Installer legt
+Die LUKS-Passphrase wird von Calamares verdeckt abgefragt; unser Modul legt
 keine Schlüsseldatei an. Nur der Benutzerpassworthash wird auf der verschlüsselten SSD
 unter `/var/lib/nixos-secrets/user-password.hash` gespeichert, nie im Nix Store.
 Root-Anmeldung ist gesperrt; der Benutzer kann mit Passwort `sudo` verwenden.
+
+### Calamares-Anbindung und Einschränkungen
+
+Die ISO verwendet das vorhandene NixOS-Modul
+`installation-cd-graphical-calamares-plasma6.nix`, das
+`installation-cd-graphical-calamares.nix` importiert. Damit kommen KDE-Live-Desktop,
+Calamares, Polkit und die nativen Ansichten sowie Partitionierungs-/Mount-Jobs
+aus Nixpkgs. Disko und `disko-install` werden nicht mehr verwendet.
+
+`installer/calamares/main.py` ist ausschließlich die Anbindung an unsere Flake:
+Vorprüfung, Übernahme der Benutzer-/Spracheinstellungen, Hardwarekonfiguration,
+rootgeschützter Passworthash, `nixos-install` und Modellkopie. Python ist hier eine
+Calamares-Modulschnittstelle und wird auch von der standardmäßigen NixOS-Anbindung
+verwendet; es gibt keinen eigenen interaktiven Python- oder Shell-Installer mehr.
+Die nativen Benutzer-Jobs werden nicht ausgeführt, weil unsere Flake Benutzer und
+dauerhaften Passworthash bereits deklarativ konfiguriert.
+
+Manuelle Partitionierung ist in diesem Stand deaktiviert. Das gepinnte
+Nixpkgs-Calamares-Paket enthält `dont-allow-manual-luks.patch`, der LUKS/LUKS2
+aus den manuellen Dateisystemdialogen entfernt. Wir entfernen diesen Patch nicht
+ungeprüft. Automatische LUKS2-Partitionierung wird unterstützt.
+Die Fortschrittsanzeige zeigt grobe Phasen, keine exakte Download-/Kopierprozentzahl.
 
 ## Gufo nutzen
 
@@ -105,12 +131,18 @@ reserviert nicht sofort Speicher und ist kein Schutz gegen jede Speicherauslastu
 
 ## Fehler und erneute Modellkopie
 
-Bei Fehlern oder Abbruch erscheint eine Shell. `install-m5` startet erneut,
-**partitioniert aber auch erneut**, wenn die Löschung bestätigt wird.
-Nach erfolgreicher Systeminstallation, aber fehlgeschlagener Modellkopie,
-die bestehende LUKS-Installation vom Stick nach `/mnt` mounten und
-`install-m5 --models-only` ausführen. Diese Option formatiert nichts; sie
-erwartet bereits `/mnt/etc/nixos/flake.lock` und kopiert die Modelle erneut.
+Bei Fehlern zeigt Calamares eine Fehlermeldung. Ein erneuter normaler
+Installationslauf **löscht die SSD erneut** nach Bestätigung. `install-m5` und
+`--models-only` gibt es nicht mehr.
+
+Nach erfolgreicher Systeminstallation, aber fehlgeschlagener Modellkopie, kann
+die bestehende verschlüsselte Installation vom Live-Desktop aus manuell entsperrt
+und nach `/mnt` gemountet werden. Modelle liegen auf dem Medium unter
+`/etc/m5-installer/models`; mit `cp -rL` kopieren, damit keine Store-Symlinks auf
+dem Ziel landen. Ziel: `/mnt/var/lib/gufo/models`. Danach im Zielsystem die Dateien
+`gufo:gufo` zuordnen und Lese-/Schreibrechte wie im Installationsjob setzen.
+Vorher unbedingt prüfen, dass `/mnt` wirklich die entsperrte Zielinstallation ist.
+
 Alternativ können die gleichen Modelle vom installierten System aus
 heruntergeladen werden:
 
@@ -124,13 +156,10 @@ Gufo setzt Downloads fort.
 ## System später ändern
 
 Die vollständige Konfiguration wird nach `/etc/nixos` kopiert, ergänzt um
-`installation.json` (Benutzername und gewählte SSD) und `hardware-configuration.nix`
-(Hardwaremodule). Disko liefert Dateisysteme und LUKS-Konfiguration anhand des
-deklarativen Layouts; die generierte Hardwarekonfiguration enthält keine Dateisysteme.
+`installation.json` (Benutzername, Hostname und Spracheinstellungen) und
+`hardware-configuration.nix` (Hardware, Dateisysteme und LUKS-UUIDs).
 Diese beiden Dateien sind keine Geheimnisse, enthalten aber gerätespezifische Daten.
-Die SSD-Auswahl wird für spätere Disko-Aufrufe gespeichert; vor jedem erneuten
-Partitionieren muss der Gerätename überprüft werden. Ein normales `nixos-rebuild`
-partitioniert oder formatiert nichts.
+Ein normales `nixos-rebuild` partitioniert oder formatiert nichts.
 
 ```bash
 sudo nixos-rebuild switch --flake path:/etc/nixos#m5
@@ -172,8 +201,9 @@ Quellen im geprüften Commit:
 [Installationsbefehle](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4532-L4603)
 und [Commit](https://github.com/km-clay/nixos-wizard/commit/386def227ec27ea61bdfd9c3e7afeab7da39102a).
 
-Wir bleiben deshalb bei `disko-install` und einem kleinen interaktiven Wrapper.
-Diese Entscheidung kann bei funktionierendem Flake-Support neu geprüft werden.
+Zum Prüfzeitpunkt verwendeten wir deshalb `disko-install` mit einem Wrapper.
+Inzwischen verwenden wir Calamares mit einer M5-Flake-Anbindung. Die Bewertung
+von nixos-wizard kann bei funktionierendem Flake-Support neu geprüft werden.
 
 ## Aktuelle Bauumgebung
 

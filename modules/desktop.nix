@@ -14,10 +14,18 @@ let
   hardwareFile = ../hardware-configuration.nix;
 in
 {
-  imports = [
-    (import ./disk-layout.nix { device = identity.disk or "/dev/nvme0n1"; })
-  ]
-  ++ lib.optional (builtins.pathExists hardwareFile) hardwareFile;
+  imports = lib.optional (builtins.pathExists hardwareFile) hardwareFile;
+  # Only for evaluation before Calamares generates the real UUID-based layout.
+  fileSystems = lib.mkIf (!(builtins.pathExists hardwareFile)) {
+    "/" = {
+      device = "/dev/mapper/cryptroot";
+      fsType = "btrfs";
+    };
+    "/boot" = {
+      device = "/dev/disk/by-label/EFI";
+      fsType = "vfat";
+    };
+  };
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -42,13 +50,16 @@ in
   };
   hardware.cpu.amd.updateMicrocode = true;
 
-  networking.hostName = "bosgame-m5";
+  networking.hostName = identity.hostname or "bosgame-m5";
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
-  time.timeZone = "Europe/Berlin";
-  i18n.defaultLocale = "de_DE.UTF-8";
-  console.keyMap = "de";
-  services.xserver.xkb.layout = "de";
+  time.timeZone = identity.timezone or "Europe/Berlin";
+  i18n.defaultLocale = identity.locale or "de_DE.UTF-8";
+  console.keyMap = identity.consoleKeyMap or "de";
+  services.xserver.xkb = {
+    layout = identity.keyboardLayout or "de";
+    variant = identity.keyboardVariant or "";
+  };
 
   services.displayManager.sddm = {
     enable = true;
@@ -84,6 +95,7 @@ in
   users.users.root.hashedPassword = "!";
   users.users.${identity.username} = {
     isNormalUser = true;
+    description = identity.fullname or "";
     extraGroups = [
       "wheel"
       "networkmanager"
@@ -118,7 +130,7 @@ in
   systemd.tmpfiles.rules = [
     "d /var/lib/gufo 0755 gufo gufo -"
     "d /var/lib/gufo/models 0755 gufo gufo -"
-    # disko-install copies models as root; make them owned by the service user.
+    # Also repair ownership after recovering an interrupted model copy.
     "Z /var/lib/gufo/models - gufo gufo -"
     "d /var/lib/nixos-secrets 0700 root root -"
   ];

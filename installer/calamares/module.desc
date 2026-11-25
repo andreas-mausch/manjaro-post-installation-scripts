@@ -1,0 +1,5 @@
+---
+type: job
+name: m5
+interface: python
+script: main.py
