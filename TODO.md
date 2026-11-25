@@ -1,5 +1,7 @@
 # Vorbereitung
 
+- [ ] UEFI-Voraussetzung auf der Calamares-Willkommensseite in BIOS- und UEFI-VM testen; BIOS muss „Weiter“ vor der Partitionierung sperren.
+
 - [ ] Nach Offline-Installation in der VM Online-Update mit `nix flake update` und Rebuild prüfen; lokale Locks müssen wieder über die ursprünglichen GitHub-Inputs aktualisierbar sein.
 
 - [ ] ISO bauen und Boot/Installation in einer VM prüfen.
@@ -7,6 +9,8 @@
 - [ ] Gufo-GPU und Modell auf dem echten M5 prüfen (nicht in einer VM möglich).
 
 ## Erledigt
+
+- [x] 2026-11-25: UEFI-Requirement als separates C++-Welcome-Modul implementieren, vorhandene UI/Prüfungen delegieren und den verworfenen Partitionierungs-Patch entfernen. Paketbuild geprüft; UI-/Firmware-Test in VM steht aus.
 
 - [x] 2026-11-25: M5-Fehlerdiagnose mit Phase, Validierungsgrund bzw. Programm/Exit-Code und geheimnisfreien Logmeldungen ergänzen; Adapter-Tests erweitern. Journal-Ausgabe im VM-Test noch prüfen.
 

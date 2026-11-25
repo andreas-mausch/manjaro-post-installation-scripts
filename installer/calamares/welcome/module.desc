@@ -1,0 +1,5 @@
+---
+type: view
+name: uefiwelcome
+interface: qtplugin
+load: libuefiwelcome.so

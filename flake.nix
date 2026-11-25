@@ -167,6 +167,11 @@
         ];
         instances = [
           {
+            module = "uefiwelcome";
+            id = "uefiwelcome";
+            config = "welcome.conf";
+          }
+          {
             module = "packagechooser";
             id = "models";
             config = "m5-models.conf";
@@ -186,7 +191,7 @@
         sequence = [
           {
             show = [
-              "welcome"
+              "uefiwelcome"
               "locale"
               "keyboard"
               "users"
@@ -370,9 +375,24 @@
         offline = true;
       };
       validateSettings = yaml "m5-validate.conf" { stage = "validate"; };
+      welcomeModule = pkgs.stdenv.mkDerivation {
+        pname = "calamares-uefi-welcome";
+        version = "1";
+        src = ./installer/calamares/welcome;
+        nativeBuildInputs = [
+          pkgs.cmake
+          pkgs.qt6.wrapQtAppsHook
+        ];
+        buildInputs = [ pkgs.calamares ] ++ pkgs.calamares.buildInputs;
+        dontWrapQtApps = true;
+        cmakeFlags = [
+          "-DUPSTREAM_WELCOME=${pkgs.calamares}/lib/calamares/modules/welcome/libcalamares_viewmodule_welcome.so"
+        ];
+      };
       calamaresExtensions = pkgs.calamares-nixos-extensions.overrideAttrs (old: {
         postInstall = (old.postInstall or "") + ''
           mkdir -p $out/lib/calamares/modules/m5
+          cp -r ${welcomeModule}/lib/calamares/modules/uefiwelcome $out/lib/calamares/modules/
           cp ${./installer/calamares/main.py} $out/lib/calamares/modules/m5/main.py
           cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/m5/module.desc
           cp ${calamaresSettings} $out/etc/calamares/settings.conf
@@ -417,6 +437,7 @@
       };
       packages.${system} = {
         calamares-extensions = calamaresExtensions;
+        calamares-welcome = welcomeModule;
         models = modelFiles;
         offline-source = offlineSource;
         offline-system = offlineSystem;

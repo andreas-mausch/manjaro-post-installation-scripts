@@ -262,6 +262,15 @@ einer vollständigen VM-Installation geprüft.
 
 ### Installationsfehler diagnostizieren
 
+Das separate `uefiwelcome`-Modul meldet UEFI als zwingende Voraussetzung bereits
+auf der Willkommensseite. Bei BIOS-Start bleibt „Weiter“ gesperrt und der
+Hinweis fordert einen Neustart im UEFI-Modus (bei VMs: UEFI/OVMF).
+Die spätere M5-Vorprüfung bleibt zusätzlich aktiv. Ein BIOS-Fallback ist
+nicht vorgesehen. Die frühe Prüfung muss noch in der VM bestätigt werden.
+Das C++-Modul lädt die unveränderte Calamares-Willkommensseite und ergänzt
+deren Requirements über die offizielle ViewStep-Schnittstelle. Es gibt keine
+zusätzliche Seite und keinen M5-Patch am Calamares-Quellcode.
+
 Der M5-Job nennt bei Fehlern die Phase und entweder den konkreten
 Validierungsgrund oder den Programmnamen mit Exit-Code. Betriebssystemfehler
 werden mit errno gemeldet. Befehlsargumente, Passwörter und Hashes werden nicht
