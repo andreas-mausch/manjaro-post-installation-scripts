@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 calamares = SimpleNamespace(
     utils=SimpleNamespace(obscure=lambda text: text, gettext_languages=lambda: ["en"],
-                          host_env_process_output=Mock()),
+                          host_env_process_output=Mock(), debug=Mock()),
     job=SimpleNamespace(setprogress=Mock(), configuration={"stage": "validate"}),
 )
 sys.modules["libcalamares"] = calamares
@@ -283,9 +283,21 @@ class AdapterTests(unittest.TestCase):
                 patch.object(adapter.subprocess, "run") as run:
             adapter.host("nixos-install", "--root", Path("/mnt"), stream=True)
         process.assert_called_once_with(
-            ["pkexec", "nixos-install", "--root", "/mnt"], None, "", 0,
+            ["pkexec", "nixos-install", "--root", "/mnt"], calamares.utils.debug, "", 0,
         )
         run.assert_not_called()
+
+    def test_streamed_output_reaches_calamares_logger_during_execution(self):
+        def emit_output(command, callback, stdin, timeout):
+            callback("building the configuration...")
+            callback("installing the boot loader...")
+            return 0
+
+        with patch.object(calamares.utils, "debug") as debug, \
+                patch.object(calamares.utils, "host_env_process_output", side_effect=emit_output):
+            self.assertEqual(adapter.host("nixos-install", stream=True), 0)
+        self.assertEqual([call.args[0] for call in debug.call_args_list],
+                         ["building the configuration...", "installing the boot loader..."])
 
     def test_streaming_failure_preserves_exit_code(self):
         error = subprocess.CalledProcessError(17, ["pkexec", "nixos-install"])

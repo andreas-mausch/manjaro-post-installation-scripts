@@ -27,10 +27,10 @@ def host(*args, input=None, capture=False, stream=False):
     if stream:
         if input is not None or capture:
             raise ValueError("Streaming commands must not receive input or capture output")
-        # Calamares forwards process output live to its logger (including the UI).
+        # A callback is required to enable Calamares' live output processing.
         # Only opt in for commands without secret input or echoed configuration.
         return libcalamares.utils.host_env_process_output(
-            ["pkexec", *map(str, args)], None, "", 0,
+            ["pkexec", *map(str, args)], libcalamares.utils.debug, "", 0,
         )
     return subprocess.run(
         ["pkexec", *map(str, args)], input=input, text=True, check=True,
