@@ -34,8 +34,11 @@ msgstr "Ungültiger Installations-Mountpoint."
 msgid "Checking target mounts"
 msgstr "Ziel-Mounts prüfen"
 
-msgid "Pinned configuration or models are missing from the image."
-msgstr "Gepinnte Konfiguration oder Modelle fehlen im Image."
+msgid "Pinned configuration is missing from the image."
+msgstr "Gepinnte Konfiguration fehlt im Image."
+
+msgid "Model weights are missing from the image."
+msgstr "Modellgewichte fehlen im Image."
 
 msgid "Preparing target configuration"
 msgstr "Zielkonfiguration vorbereiten"
@@ -55,8 +58,20 @@ msgstr "Systeminstallation"
 msgid "Copying model weights"
 msgstr "Modellgewichte kopieren"
 
-msgid "Install NixOS and optional model weights"
-msgstr "NixOS und optional Modellgewichte installieren"
+msgid "Install NixOS"
+msgstr "NixOS installieren"
+
+msgid "Copy model weights"
+msgstr "Modellgewichte kopieren"
+
+msgid "Invalid installer stage."
+msgstr "Ungültige Installer-Phase."
+
+msgid "Model copying failed"
+msgstr "Modellkopie fehlgeschlagen"
+
+msgid "NixOS has already been installed; model copying is incomplete. Do not reinstall or format the disk to retry the model copy."
+msgstr "NixOS wurde bereits installiert; die Modellkopie ist unvollständig. Für einen erneuten Kopierversuch nicht neu installieren oder den Datenträger formatieren."
 
 msgid "Preflight checks"
 msgstr "Vorprüfung"

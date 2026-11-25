@@ -84,8 +84,10 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 5. Die abschließende Installationsbestätigung akzeptieren. Vor der Partitionierung
    prüft das Installer-Modul UEFI, Löschmodus, keinen Swap
    sowie Benutzereingaben. Calamares partitioniert, formatiert und mountet.
-   Unser Job installiert anschließend `path:/…/etc/nixos#desktop` mit `nixos-install`
-   und kopiert bei Auswahl die Modelle vom Medium. Warten, bis die Finish-Seite
+   Der Job „Install NixOS“ installiert anschließend `path:/…/etc/nixos#desktop`
+   mit `nixos-install`. Danach kopiert der separate Job „Copy model weights“ bei
+   Auswahl die Modelle vom Medium; ohne Gewichte überspringt er die Kopie.
+   Warten, bis die Finish-Seite
    erscheint; 100 % allein bedeutet noch nicht, dass alle Abschlussjobs fertig sind.
 6. Neustarten, Stick entfernen. Bei Verschlüsselung beim Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
@@ -123,7 +125,10 @@ Manuelle Partitionierung ist in diesem Stand deaktiviert. Das gepinnte
 Nixpkgs-Calamares-Paket enthält `dont-allow-manual-luks.patch`, der LUKS/LUKS2
 aus den manuellen Dateisystemdialogen entfernt. Wir entfernen diesen Patch nicht
 ungeprüft. Automatische LUKS2-Partitionierung wird unterstützt.
-Die Fortschrittsanzeige zeigt grobe Phasen, keine exakte Download-/Kopierprozentzahl.
+Systeminstallation und Modellkopie sind getrennte Calamares-Job-Instanzen mit
+eigenen Titeln und Fortschrittsgewichten. Die Fortschrittsanzeige zeigt grobe
+Phasen, keine exakte Download-/Kopierprozentzahl. Beide Jobs verwenden denselben
+Adapter; ein Modellkopierfehler fordert keine erneute Systeminstallation.
 
 ### Offline mit dynamischen Einstellungen
 

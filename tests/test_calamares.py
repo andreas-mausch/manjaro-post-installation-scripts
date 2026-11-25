@@ -94,7 +94,7 @@ class AdapterTests(unittest.TestCase):
             source.mkdir()
             (source / "flake.lock").write_text("{}")
             (models / "flash-next-q4").mkdir(parents=True)
-            config = {"source": str(source), "models": str(models)}
+            config = {"source": str(source)}
             with (
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")) as run,
@@ -124,7 +124,7 @@ class AdapterTests(unittest.TestCase):
             # This suppresses a terminal prompt; NixOS separately locks root.
             self.assertIn("--no-root-passwd", install)
             self.assertIn("--show-hardware-config", " ".join(map(str, commands)))
-            self.assertTrue(any(command[:2] == ("cp", "-rL") for command in commands))
+            self.assertFalse(any(command[:2] == ("cp", "-rL") for command in commands))
             self.assertNotIn("user-test-secret", str(commands))
             self.assertNotIn("luks-test-secret", str(commands))
             self.assertEqual(run.call_args.kwargs["input"], "user-test-secret\n")
@@ -165,6 +165,52 @@ class AdapterTests(unittest.TestCase):
             result = adapter.run()
         self.assertIsInstance(result, tuple)
         self.assertNotIn("secret", str(result))
+
+    def test_model_job_copies_weights_without_installing_system(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            models = Path(temporary) / "models"
+            (models / "flash-next-q4").mkdir(parents=True)
+            calamares.globalstorage = self.storage()
+            calamares.job.configuration = {"stage": "models", "models": str(models)}
+            with patch.object(adapter, "host") as host, patch.object(adapter, "deploy") as deploy:
+                self.assertIsNone(adapter.run())
+            commands = [tuple(map(str, call.args)) for call in host.call_args_list]
+            self.assertIn(("cp", "-rL", str(models) + "/.",
+                           "/tmp/calamares-root-test/var/lib/gufo/models"), commands)
+            self.assertTrue(any(command[0] == "nixos-enter" for command in commands))
+            self.assertFalse(any(command[0] == "nixos-install" for command in commands))
+            deploy.assert_not_called()
+
+    def test_model_job_without_weights_does_nothing(self):
+        calamares.globalstorage = self.storage(packagechooser_models="without-models")
+        calamares.job.configuration = {"stage": "models"}
+        with patch.object(adapter, "host") as host, patch.object(adapter, "deploy") as deploy:
+            self.assertIsNone(adapter.run())
+        host.assert_not_called()
+        deploy.assert_not_called()
+
+    def test_model_failure_warns_against_reinstallation(self):
+        calamares.globalstorage = self.storage()
+        calamares.job.configuration = {"stage": "models"}
+        with patch.object(adapter, "copy_models", side_effect=subprocess.CalledProcessError(1, ["cp"])), \
+                self.assertLogs("desktop-installer"):
+            result = adapter.run()
+        self.assertEqual(result[0], "Model copying failed")
+        self.assertIn("NixOS has already been installed", result[1])
+        self.assertIn("Do not reinstall", result[1])
+
+    def test_model_job_rejects_missing_weights_before_copying(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(adapter, "host") as host:
+            with self.assertRaisesRegex(ValueError, "Model weights are missing"):
+                adapter.copy_models(self.storage(), {"models": temporary}, {})
+        self.assertFalse(any(call.args[0] == "cp" for call in host.call_args_list))
+
+    def test_job_titles_are_stage_specific(self):
+        for stage, title in (("validate", "Preflight checks"), ("install", "Install NixOS"),
+                             ("models", "Copy model weights")):
+            with self.subTest(stage=stage):
+                calamares.job.configuration = {"stage": stage}
+                self.assertEqual(adapter.pretty_name(), title)
 
     def test_validation_failure_reports_specific_reason(self):
         calamares.globalstorage = self.storage(firmwareType="bios")

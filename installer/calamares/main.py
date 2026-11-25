@@ -101,9 +101,8 @@ def deploy(gs, config, context=None):
     context["phase"] = _("Checking target mounts")
     root = validate_mounts(gs)
     source = Path(config["source"])
-    models = Path(config["models"])
-    if not (source / "flake.lock").is_file() or not (models / "flash-next-q4").is_dir():
-        raise ValueError(_("Pinned configuration or models are missing from the image."))
+    if not (source / "flake.lock").is_file():
+        raise ValueError(_("Pinned configuration is missing from the image."))
     destination = root / "etc/nixos"
     context["phase"] = _("Preparing target configuration")
     host("mkdir", "-p", destination)
@@ -140,19 +139,34 @@ def deploy(gs, config, context=None):
     # disabling package sources during ordinary installation.
     context["phase"] = _("System installation")
     host(*install_command, stream=True)
-    libcalamares.job.setprogress(0.7)
-    if gs.value("packagechooser_models") == "qwen":
-        context["phase"] = _("Copying model weights")
-        target_models = root / "var/lib/gufo/models"
-        host("mkdir", "-p", target_models)
-        host("cp", "-rL", str(models) + "/.", target_models)
-        host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
-        host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
+    libcalamares.job.setprogress(1.0)
+
+
+def copy_models(gs, config, context):
+    if gs.value("packagechooser_models") == "without-models":
+        libcalamares.job.setprogress(1.0)
+        return
+    context["phase"] = _("Checking target mounts")
+    root = validate_mounts(gs)
+    models = Path(config["models"])
+    if not (models / "flash-next-q4").is_dir():
+        raise ValueError(_("Model weights are missing from the image."))
+    context["phase"] = _("Copying model weights")
+    target_models = root / "var/lib/gufo/models"
+    host("mkdir", "-p", target_models)
+    host("cp", "-rL", str(models) + "/.", target_models)
+    host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
+    host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
     libcalamares.job.setprogress(1.0)
 
 
 def pretty_name():
-    return _("Install NixOS and optional model weights")
+    stage = libcalamares.job.configuration.get("stage")
+    if stage == "validate":
+        return _("Preflight checks")
+    if stage == "models":
+        return _("Copy model weights")
+    return _("Install NixOS")
 
 
 def run():
@@ -160,13 +174,19 @@ def run():
     started = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
     # This stage runs after Calamares' partition and mount jobs, even if the
     # adapter's own validation fails before deployment starts.
-    installation_started = libcalamares.job.configuration.get("stage") == "install"
+    stage = libcalamares.job.configuration.get("stage", "validate")
+    installation_started = stage in {"install", "models"}
     try:
         gs = libcalamares.globalstorage
         validate_selection(gs)
-        if installation_started:
+        if stage == "install":
             context["phase"] = _("Preparing system installation")
             deploy(gs, libcalamares.job.configuration, context)
+        elif stage == "models":
+            context["phase"] = _("Copying model weights")
+            copy_models(gs, libcalamares.job.configuration, context)
+        elif stage != "validate":
+            raise ValueError(_("Invalid installer stage."))
         return None
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         # Never log exception repr, command arguments, stdin or traceback:
@@ -193,11 +213,14 @@ def run():
         phase = context["phase"]
         logger.error("Desktop installer: %s: %s", phase, detail)
         state = (
+            _("NixOS has already been installed; model copying is incomplete. Do not reinstall or format the disk to retry the model copy.")
+            if stage == "models" else
             _("The target disk has already been partitioned; installation is incomplete. Do not reinstall or format again without checking the disk first.")
             if installation_started else
             _("Preflight checks failed before partitioning.")
         )
-        return (_("NixOS installation failed"),
+        title = _("Model copying failed") if stage == "models" else _("NixOS installation failed")
+        return (title,
                 _("Phase: {phase}. {detail}").format(phase=phase, detail=detail) + f"\n\n{state}\n\n" +
                 _("Original diagnostics: Calamares output or in the live terminal:") + "\n" +
                 f"sudo journalctl -b --since '{started}' --no-pager\n\n" +

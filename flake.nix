@@ -199,6 +199,12 @@
             config = "desktop-install.conf";
             weight = 50;
           }
+          {
+            module = "desktop";
+            id = "models";
+            config = "desktop-copy-models.conf";
+            weight = 50;
+          }
         ];
         sequence = [
           {
@@ -218,6 +224,7 @@
               "partition"
               "mount"
               "desktop@install"
+              "desktop@models"
               "umount"
             ];
           }
@@ -383,6 +390,9 @@
       installSettings = yaml "desktop-install.conf" {
         stage = "install";
         source = "${offlineSource}";
+      };
+      copyModelSettings = yaml "desktop-copy-models.conf" {
+        stage = "models";
         models = "${modelFiles}";
       };
       validateSettings = yaml "desktop-validate.conf" { stage = "validate"; };
@@ -418,6 +428,7 @@
           cp ${mountSettings} $out/etc/calamares/modules/mount.conf
           cp ${modelSettings} $out/etc/calamares/modules/desktop-models.conf
           cp ${installSettings} $out/etc/calamares/modules/desktop-install.conf
+          cp ${copyModelSettings} $out/etc/calamares/modules/desktop-copy-models.conf
           cp ${validateSettings} $out/etc/calamares/modules/desktop-validate.conf
         '';
       });

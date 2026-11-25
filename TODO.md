@@ -16,6 +16,8 @@ Stand: Manueller Offline-VM-Installationslauf, LUKS-Entsperrung und KDE-Start oh
 
 ## Weitere Vorbereitung
 
+- [ ] Getrennte Calamares-Jobs „Install NixOS“ und „Copy model weights“ mit der nächsten ISO prüfen: eigene Titel/Fortschrittsgewichte, Modelljob ohne gewählte Gewichte ohne Kopie, Modellfehler ohne Aufforderung zur erneuten Systeminstallation.
+
 - [ ] Live-Ausgabe von `nixos-install` im Calamares-Fenster „Toggle log“ mit der nächsten ISO prüfen: öffentliche Prozess-Schnittstelle statt nur geerbter stdout/stderr-Streams. Keine Passwort-/Konfigurationsbefehle ins UI-Log weiterreichen; aktueller Installationslauf bleibt unverändert.
 
 - [ ] Isolierten Offline-Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen; pro Variante frischen Store verwenden. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
