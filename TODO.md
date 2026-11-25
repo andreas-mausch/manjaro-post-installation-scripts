@@ -49,6 +49,8 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Erledigt
 
+- [x] 2026-11-25: Desktop-ISO in der vorhandenen VM installiert; Benutzer bestätigt erfolgreichen Installationslauf sowie erwartungsgemäß fehlendes Steam und Gufo. Kein Nachweis für andere Varianten, Offline-Netzwerkisolation, Boot ohne ISO oder Online-Update aus dieser Rückmeldung. Die Korrektur der Prozessausgabe im „Toggle log“ ist nicht in dieser ISO enthalten und bleibt separat zu prüfen.
+
 - [x] 2026-11-25: Module `base.nix`, `desktop.nix`, `gaming.nix` und `generative-ai.nix` mit Imports strukturieren; fünf ISO-Ausgaben anbieten. KDE/Calamares bleiben bei Base nur in der Live-Umgebung. Gufo-Inputs, Gewichte, Modell-Auswahl und Kopierjob nur bei AI/Full archivieren. Zielvariante für Rebuilds erhalten und in `installation.json` dokumentieren. Lokale Tests ergänzen; neue ISO-/VM-Prüfung bleibt offen.
 
 
