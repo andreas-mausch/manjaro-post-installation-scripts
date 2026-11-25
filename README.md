@@ -298,10 +298,82 @@ einer vollständigen VM-Installation geprüft.
 - **Prüfstand:** 16 Adaptertests und Formatprüfung bestanden. Die aktuelle
   Korrektur ist noch nicht in der ISO; vollständige netzlose Installation,
   Boot und anschließendes Online-Update bleiben unbestätigt.
+- **Live-Test der Korrektur:** Manueller `nixos-install` auf dem noch gemounteten
+  Ziel scheiterte auch ohne die ursprünglichen Sperren. Ein ausdrücklich
+  gesetzter `auto?trusted=1`-Substituter allein behob den Fehler ebenfalls nicht.
+  Die Optionsreihenfolge erklärt daher nicht den gesamten Installationsfehler.
+- **Weiterer Aufruffehler:** Ein verkürzter manueller Befehl ließ `build-dir`
+  weg und scheiterte am world-writable `/tmp`. Mit
+  `--option build-dir /nix/var/nix/builds` kam er bis zum Paketbuild.
+- **Direkte Store-Übernahme:** Drei fertige Bash-Pfade sind in der VM vorhanden.
+  `nix copy` in den Ziel-Store scheiterte zunächst an einer nicht vertrauenswürdig
+  signierten `libgcc`-Abhängigkeit; mit `--no-check-sigs` gelang die Kopie.
+  Der folgende Installationsversuch scheiterte dann an gnused/Python statt Bash.
+- **Signatur-Test:** Auch `--option require-sigs false` beim netzlosen
+  Installationsaufruf reichte nicht. Erste Fehler waren Quellendownloads von
+  Python 3.14.6, ACL 2.4.0 und attr 2.6.0. Keine dauerhafte Signatursperre ändern;
+  der Test ist kein Nachweis, dass diese Pakete auf der ISO fehlen.
+- **Aktuelle Untersuchung:** Separaten Ziel-Store nachstellen statt Pakete
+  direkt im Build-Store bereitzustellen. Ein Dry-Run mit `--offline` plante
+  13.460 Builds einschließlich Bootstrap-Werkzeugen; mit explizitem
+  `substitute = true` waren es 313 Builds. Der zweite Lauf meldete jedoch
+  eingeschränkte Einstellungen und einen nicht erlaubten lokalen Substituter
+  beim Host-Daemon. Daher kein sauberer Installationsnachweis; Nix' automatische
+  Deaktivierung von Substitution ohne Netzwerk bleibt zu untersuchen.
 - **Weiter nötig:** Echten Installationspfad mit separatem Ziel-Store und
   gesperrtem Netzwerk reproduzierbar vor ISO-Freigaben testen. Manuelle
   Werkzeuglisten können nach Updates erneut Lücken haben; Ableitung verbessern.
   Online-Erfolg beweist keine Offline-Vollständigkeit.
+- **Lokaler Reproduktionsversuch:** Echter Build mit getrennten Stores,
+  ausschließlich ISO-Pfaden als lokaler Paketquelle und gesperrtem Netzwerk
+  scheiterte ebenfalls am Bash-Quellendownload. Noch kein sauberer Nachweis:
+  Die folgende direkte Kopie deckte dereferenzierte Store-Symlinks im Harness
+  auf (Hash-Mismatch). Symlinks werden jetzt unverändert nachgebildet;
+  der Vergleichstest läuft erneut. Signaturprüfung war für diesen Test aus.
+  Noch kein vollständiger `nixos-install`-/Boot-Test: Ziel-Store liegt im
+  unprivilegierten Namespace regulär unter `/nix/store`, ISO-Store separat;
+  die innere Nix-Sandbox ist wegen Host-Namespace-Grenzen ausgeschaltet.
+- **Konkrete fehlende Ausgabe:** Das Log fordert zusätzlich Bashs `dev`-Output
+  `/nix/store/02pyv1n66h4l27zv105gip35b99qrqam-bash-5.3p20-dev` an; dieser
+  fehlt im ISO-Manifest, obwohl Bashs `out` vorhanden ist. Den auslösenden
+  übergeordneten Build-Zweig weiter verfolgen, nicht den ganzen Bootstrap bündeln.
+- **Audit-Lücke:** Der temporäre Graphabgleich markierte ganze Derivationen als
+  besucht und übersah später angeforderte zusätzliche Outputs derselben
+  Derivation. Die Analyse berücksichtigt jetzt einzelne Outputs; eine
+  verifizierte Installer-Korrektur steht weiterhin aus.
+- **Belegter Substitutionsausschluss:** Die auf der ISO vorhandene Perl-Umgebung
+  des Aktivierungsskripts (`7f11jkm…-perl-5.42.3-env.drv`) setzt in ihren
+  `structuredAttrs` ausdrücklich `allowSubstitutes = false`. Nix verlangt dann
+  ihre Build-Abhängigkeiten statt die fertige Ausgabe zu übernehmen. Der
+  Graphabgleich berücksichtigte diesen Ausschluss ebenfalls nicht.
+  Lokaler Vergleich mit `always-allow-substitutes = true` baute das Zielsystem
+  erfolgreich ohne Netzwerk. Der Store enthielt bereits direkt kopierte
+  ISO-Pakete; auch die Wiederholung mit frischem Ziel-Store ohne Vorkopieren
+  bestand: nur tatsächliche ISO-Pfade als Quelle, Netzwerk gesperrt.
+  Signaturprüfung war aus; Signaturstrategie, echte Installation und Boot
+  bleiben zu prüfen.
+- **Warum diese Sperre existiert:** Nicht Perl selbst, sondern Nixpkgs'
+  Bauanleitung für die Perl-Umgebung setzt `preferLocalBuild = true` und
+  `allowSubstitutes = false`. Die Umgebung kombiniert fertige Pakete und
+  erzeugt Wrapper. Solche kleinen Zusammenbau-Schritte sollen typischerweise
+  lokal günstiger sein als Cache-Abfrage und Download; das ist eine
+  Optimierungsentscheidung, keine Sicherheitsanforderung. Im separaten
+  Offline-Ziel-Store erzwingt sie jedoch zusätzliche Build-Werkzeuge, obwohl
+  das fertige Ergebnis auf der ISO liegt. `always-allow-substitutes` überstimmt
+  den Ausschluss, ohne die unabhängige Signaturprüfung abzuschalten.
+  Hash und vertrauenswürdige Signatur sichern Integrität und signierte Herkunft,
+  sind aber kein unabhängiger Beweis eines korrekten Builds.
+- **VM-Nachweis:** Manueller netzloser `nixos-install` auf den von Calamares
+  vorbereiteten Partitionen bestand mit lokalem Substituter, `substitute = true`
+  und `always-allow-substitutes = true`; `require-sigs = false` blieb nur für
+  diesen Diagnoselauf gesetzt. Etwa 12 GiB wurden übernommen, systemd-boot und
+  UEFI-Einträge eingerichtet, Abschlussmeldung `installation finished!`.
+  Danach Start ohne ISO, erfolgreiche LUKS-Entsperrung und KDE-Desktop.
+  Bestätigt ist diese verschlüsselte VM-Variante, nicht beliebige Hardware.
+- **Noch offen nach VM-Erfolg:** Optionen im Installer sauber umsetzen,
+  sichere Übernahme unsignierter ISO-Pakete ohne globale Signaturabschaltung,
+  automatisierter Regressionstest, vollständiger Calamares-Durchlauf ohne
+  manuelle Befehle sowie Online-Update. Bestehende ISO unverändert.
 
 #### Voraussetzungen und Diagnoseausgabe
 
