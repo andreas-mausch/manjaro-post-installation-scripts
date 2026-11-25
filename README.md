@@ -135,6 +135,10 @@ Die ISO verwendet das vorhandene NixOS-Modul
 `installation-cd-graphical-calamares.nix` importiert. Damit kommen KDE-Live-Desktop,
 Calamares, Polkit und die nativen Ansichten sowie Partitionierungs-/Mount-Jobs
 aus Nixpkgs. Disko und `disko-install` werden nicht mehr verwendet.
+Das kompilierte Calamares-Paket bleibt variantenunabhängig. Ein separater
+Wrapper setzt die Konfigurationspfade; Desktop-/Autostart-Eintrag und Polkit
+verweisen auf diesen Wrapper. Änderungen der Installer-Konfiguration lösen
+dadurch keine erneute Calamares-Kompilierung aus.
 
 `modules/installer/calamares/main.py` ist ausschließlich die Anbindung an unsere Flake:
 Vorprüfung, Übernahme der Benutzer-/Spracheinstellungen, Hardwarekonfiguration,

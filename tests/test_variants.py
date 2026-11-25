@@ -3,8 +3,19 @@ import json
 from pathlib import Path
 import sys
 
-for index in range(1, len(sys.argv), 3):
-    name, extensions, source = sys.argv[index:index + 3]
+for index in range(1, len(sys.argv), 4):
+    name, extensions, source, wrapper = sys.argv[index:index + 4]
+    wrapped = Path(wrapper)
+    executable = str(wrapped / "bin/calamares")
+    policy = (wrapped / "share/polkit-1/actions/io.calamares.calamares.policy").read_text()
+    assert f'>{executable}</annotate>' in policy, name
+    desktop = (wrapped / "share/applications/calamares.desktop").read_text()
+    assert f'TryExec={executable}\n' in desktop, name
+    assert f'pkexec {executable}' in desktop, name
+    script = (wrapped / "bin/calamares").read_text()
+    assert f'{extensions}/share' in script, name
+    assert f'{extensions}/etc' in script, name
+    assert '--xdg-config' in script, name
     ai = name in {"ai", "full"}
     configs = Path(extensions) / "etc/calamares"
     settings = json.loads((configs / "settings.conf").read_text())

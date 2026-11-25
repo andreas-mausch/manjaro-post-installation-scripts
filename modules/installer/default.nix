@@ -10,7 +10,13 @@
 }:
 {
   nixpkgs.overlays = [
-    (_final: _prev: { calamares-nixos-extensions = calamaresExtensions; })
+    (final: prev: {
+      calamares-nixos-extensions = calamaresExtensions;
+      calamares-nixos = final.callPackage ./calamares-package.nix {
+        calamares = prev.calamares;
+        inherit calamaresExtensions;
+      };
+    })
   ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # The generic rescue ISO includes ZFS, which need not support this kernel.
