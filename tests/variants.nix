@@ -34,7 +34,8 @@ let
     assert !(target.nix.settings ? always-allow-substitutes);
     assert live.services.desktopManager.plasma6.enable;
     assert (live.environment.etc ? "desktop-installer/models") == ai;
-    assert live.image.fileName == "nixos-${name}-installer.iso";
+    assert live.image.baseName == "nixos-${name}";
+    assert live.image.fileName == "nixos-${name}.iso";
     assert wrappedCalamares.unwrapped.drvPath == pkgs.calamares.drvPath;
     true
   ) (builtins.attrNames variants);

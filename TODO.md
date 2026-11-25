@@ -10,6 +10,8 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Weitere Vorbereitung
 
+- [ ] Gemeinsame Releases der Flake und ihrer Base-/Desktop-/Gaming-/AI-Module über Git-Tags (z. B. `v0.1.0`) einführen; optional dieselbe explizite Releaseversion im ISO-Dateinamen verwenden. Kein automatisch ermitteltes Builddatum und keine Änderung von `system.stateVersion` zur Projektversionierung.
+
 - [ ] Separaten Calamares-Wrapper mit der nächsten ISO prüfen: Autostart, Desktop-Start über Polkit, grafische Umgebung und variantenabhängige Konfigurationspfade. Kompiliertes Calamares bleibt unverändert; lokale Paket-/Policy-Tests ersetzen keinen GUI-Nachweis.
 
 - [ ] Später einen geeigneten TUI-Installer als Alternative zur grafischen Live-Umgebung prüfen; Zielmodule unabhängig von der Installationsoberfläche halten.

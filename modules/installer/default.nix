@@ -51,7 +51,7 @@
     pkgs.coreutils
     pkgs.cryptsetup
   ];
-  image.fileName = lib.mkForce "nixos-${variantName}-installer.iso";
+  image.baseName = lib.mkForce "nixos-${variantName}";
   # Avoid spending CPU compressing the roughly 115 GB of model files.
   isoImage.squashfsCompression = null;
 }
