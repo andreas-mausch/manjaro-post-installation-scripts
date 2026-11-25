@@ -28,15 +28,11 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 - [ ] Gemeinsame Releases der Flake und ihrer Base-/Desktop-/Gaming-/AI-Module über Git-Tags (z. B. `v0.1.0`) einführen; optional dieselbe explizite Releaseversion im ISO-Dateinamen verwenden. Kein automatisch ermitteltes Builddatum und keine Änderung von `system.stateVersion` zur Projektversionierung.
 
-- [ ] Separaten Calamares-Wrapper mit der nächsten ISO prüfen: Autostart, Desktop-Start über Polkit, grafische Umgebung und variantenabhängige Konfigurationspfade. Kompiliertes Calamares bleibt unverändert; lokale Paket-/Policy-Tests ersetzen keinen GUI-Nachweis.
+- [ ] Variantenabhängige Calamares-Konfigurationspfade auch für Base/Desktop/Gaming ohne Modellauswahl und AI mit Modellauswahl direkt in der Live-GUI prüfen; Full ist bestätigt.
 
 - [ ] Später einen geeigneten TUI-Installer als Alternative zur grafischen Live-Umgebung prüfen; Zielmodule unabhängig von der Installationsoberfläche halten.
 
 - [ ] UKI-Direktboot für das installierte System vorbereiten: UEFI startet das Unified Kernel Image ohne systemd-boot/GRUB. UKI-Erzeugung, Installation auf der EFI-Partition, UEFI-Booteinträge und sichere Updates mit Rückfall-/Recovery-Möglichkeit für vorherige Generationen umsetzen und testen. Grafische LUKS-Passwortabfrage über Plymouth in der Initrd integrieren; Theme, frühe GPU-Treiber und Passwort-/Textfallback auf Zielhardware prüfen. Plymouth ist unabhängig vom UKI-Direktboot nutzbar. Keine automatische LUKS-Entsperrung; Secure-Boot-Signierung ist ein separates Vorhaben.
-
-- [ ] Getrennte Calamares-Jobs „Install NixOS“ und „Copy model weights“ mit der nächsten ISO prüfen: eigene Titel/Fortschrittsgewichte, Modelljob ohne gewählte Gewichte ohne Kopie, Modellfehler ohne Aufforderung zur erneuten Systeminstallation.
-
-- [ ] Live-Ausgabe von `nixos-install` im Calamares-Fenster „Toggle log“ mit der nächsten ISO prüfen: öffentliche Prozess-Schnittstelle statt nur geerbter stdout/stderr-Streams. Keine Passwort-/Konfigurationsbefehle ins UI-Log weiterreichen.
 
 - [ ] Isolierten Offline-Systembuild-/Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen: getrennte Live-/Ziel-Stores, nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration. Kein Root-Test auf dem Host und keine zusätzliche Test-VM; echter Installations-/Bootnachweis direkt mit der ISO in der vorhandenen VM. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
 
@@ -53,10 +49,15 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Erledigt
 
+- [x] 2026-11-25: Benutzer bestätigt die verbleibenden Fälle der getrennten Calamares-Jobs als erledigt: ohne gewählte Gewichte keine Kopie, Modellfehler ohne Aufforderung zur erneuten Systeminstallation sowie eigene Titel und Übergang zwischen Systeminstallation und Modellkopie. Fortschrittsanzeige mit der neuen Full-ISO ebenfalls bestätigt.
+
+- [x] 2026-11-25: Benutzer bestätigt mit der neuen Full-ISO in der vorhandenen VM funktionierende Live-Logausgabe, Fortschrittsanzeige der Modellkopie und korrektes neues Modellverzeichnis. Kein Prüfsummennachweis für die sechs Dateien und keine Bestätigung von Kopierfehlerbehandlung oder Installation ohne Modellkopie.
+
+- [x] 2026-11-25: Separaten Calamares-Wrapper mit der neuen Full-ISO in der vorhandenen VM geprüft: Benutzer bestätigt Autostart, erneuten Desktop-Start über Polkit, korrekt dargestellte grafische Umgebung und sichtbare optionale Modellauswahl. GUI-Nachweis für Full; kein Installationsnachweis und keine Bestätigung der übrigen Varianten.
+
 - [x] 2026-11-25: Desktop-ISO in der vorhandenen VM installiert; Benutzer bestätigt erfolgreichen Installationslauf sowie erwartungsgemäß fehlendes Steam und Gufo. Kein Nachweis für andere Varianten, Offline-Netzwerkisolation, Boot ohne ISO oder Online-Update aus dieser Rückmeldung. Die Korrektur der Prozessausgabe im „Toggle log“ ist nicht in dieser ISO enthalten und bleibt separat zu prüfen.
 
 - [x] 2026-11-25: Module `base.nix`, `desktop.nix`, `gaming.nix` und `generative-ai.nix` mit Imports strukturieren; fünf ISO-Ausgaben anbieten. KDE/Calamares bleiben bei Base nur in der Live-Umgebung. Gufo-Inputs, Gewichte, Modell-Auswahl und Kopierjob nur bei AI/Full archivieren. Zielvariante für Rebuilds erhalten und in `installation.json` dokumentieren. Lokale Tests ergänzen; neue ISO-/VM-Prüfung bleibt offen.
-
 
 - [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung. Fix committed und ISO neu gebaut.
 
