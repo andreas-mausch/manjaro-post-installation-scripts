@@ -22,13 +22,17 @@ Build nötig. KDE und der Installer sind nicht an dieses GPU-Modell gebunden.
 
 Die Flake bietet fünf feste Zielzusammenstellungen:
 
-| Variante | Zielmodule                           | ISO-Ausgabe    |
-| -------- | ------------------------------------ | -------------- |
-| Base     | `base.nix`                           | `iso-base`     |
-| Desktop  | `desktop.nix`                        | `iso-desktop`  |
-| Gaming   | `gaming.nix`                         | `iso-gaming`   |
-| AI       | `desktop.nix` + `generative-ai/`      | `iso-ai`       |
-| Full     | `gaming.nix` + `generative-ai/`       | `iso-full`     |
+| Variante | Zielmodule                           | ISO-Ausgabe    | Freie Anwendungspakete |
+| -------- | ------------------------------------ | -------------- | ---------------------- |
+| Base     | `base.nix`                           | `iso-base`     | ✅                     |
+| Desktop  | `desktop.nix`                        | `iso-desktop`  | ✅                     |
+| Gaming   | `gaming.nix`                         | `iso-gaming`   | ❌ Steam               |
+| AI       | `desktop.nix` + `generative-ai/`      | `iso-ai`       | ✅                     |
+| Full     | `gaming.nix` + `generative-ai/`       | `iso-full`     | ❌ Steam               |
+
+Die Spalte beschreibt die Nixpkgs-Paketfreigabe, keinen vollständigen
+Lizenznachweis: Redistributable Firmware ist in allen Varianten aktiviert;
+Modellgewichte haben eigene Lizenzen.
 
 `desktop.nix` importiert `base.nix`, `gaming.nix` importiert `desktop.nix`.
 `generative-ai/default.nix` importiert nur `base.nix` und ist auch ohne Desktop nutzbar.
