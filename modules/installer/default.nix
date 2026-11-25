@@ -39,11 +39,8 @@
       "nix-command"
       "flakes"
     ];
-    extra-substituters = [ "https://gufo.cachix.org" ];
-    extra-trusted-public-keys = [
-      "gufo.cachix.org-1:rfZe3n4lHINgyoACKzs5EthIZmBNvEyCCtufUpth0PE="
-    ];
-  };
+  }
+  // lib.optionalAttrs (modelFiles != null) (import ../generative-ai/cache.nix);
   environment.systemPackages = [
     pkgs.networkmanager
     pkgs.mkpasswd

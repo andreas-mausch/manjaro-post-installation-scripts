@@ -332,6 +332,12 @@ Repo-Update-Ablauf ist dokumentiert, aber noch nicht in der vorhandenen VM gepr�
 
 ### Online aktualisieren nach der Offline-Installation
 
+Die erzeugte Ziel-Flake enthält keine Cache-Vorgaben unter `nixConfig`.
+AI-/Full-Systeme konfigurieren den Gufo-Cache und seinen Signaturschlüssel
+bereits über das AI-Modul im Nix-Daemon; dafür ist beim Update keine zusätzliche
+Flake-Zustimmung nötig. Auch die Entwicklungs-Flake enthält kein `nixConfig`;
+der Build-Rechner konfiguriert den optionalen Cache selbst (siehe unten).
+
 Die Offline-Installation verhindert keine späteren Online-Updates.
 Die archivierte `flake.lock` sperrt die Inputs zunächst auf lokale Store-Pfade,
 damit die Installation keine Quellen herunterladen muss. Die ursprünglichen
@@ -612,39 +618,44 @@ Mit daemonbasiertem Nix Store unter `/nix/store` und aktivierten Funktionen
 `nix-command` und `flakes` lässt sich die ISO so bauen:
 
 ```bash
-nix build .#iso --accept-flake-config
+nix build .#iso
 ```
 
-Der Nix-Daemon muss den Gufo-Cache samt Signaturschlüssel zulassen; andernfalls
-ignoriert er die Flake-Einstellungen und Gufo kann einen großen lokalen Build erfordern.
+Der Gufo-Cache ist optional. Ohne ihn funktionieren Builds weiterhin, können
+aber einen großen lokalen Gufo-/ROCm-Build erfordern.
 
 ### Gufo-Cache im Nix-Daemon freigeben
 
-Falls der Nix-Daemon den Cache noch nicht zulässt, in `/etc/nix/nix.conf`
-ergänzen beziehungsweise mit vorhandenen Einträgen zusammenführen:
+Auf einem NixOS-Build-Rechner im Systemmodul die gemeinsame Definition einbinden
+(den absoluten Pfad an den eigenen Checkout anpassen):
 
-```ini
-trusted-substituters = https://gufo.cachix.org
-extra-trusted-public-keys = gufo.cachix.org-1:rfZe3n4lHINgyoACKzs5EthIZmBNvEyCCtufUpth0PE=
+```nix
+{
+  nix.settings = import /path/to/repository/modules/generative-ai/cache.nix;
+}
 ```
 
-`trusted-substituters` erlaubt normalen Benutzern, den in der Flake angegebenen
-Cache zu verwenden. `extra-trusted-public-keys` ergänzt seinen Signaturschlüssel,
-ohne die bestehenden Standardschlüssel zu ersetzen. Eine pauschale Aufnahme des
-Benutzers in `trusted-users` ist dafür nicht nötig. Mit dieser Freigabe vertraut
-man den vom Gufo-Cache signierten Build-Ergebnissen.
-Die Freigabe allein garantiert nicht, dass Gufo und alle Abhängigkeiten als
-fertige Cache-Ergebnisse verfügbar sind; vor größeren Builds per Dry-run prüfen.
+Danach die Systemkonfiguration mit `sudo nixos-rebuild switch` aktivieren.
+Auf anderen Distributionen lassen sich die Einträge aus derselben Datei erzeugen:
+
+```bash
+nix eval --json --file modules/generative-ai/cache.nix \
+  | jq -r 'to_entries[] | "\(.key) = \(.value | join(" "))"'
+```
+
+Die Ausgabe in `/etc/nix/nix.conf` mit vorhandenen Einträgen zusammenführen.
+Die Definition ergänzt Cache und Signaturschlüssel, ohne die Nix-Standards zu
+ersetzen. `trusted-users` oder eine automatische Flake-Zustimmung sind nicht
+nötig. Damit vertraut man den vom Gufo-Cache signierten Build-Ergebnissen.
 
 **Nicht während eines laufenden ISO-Baus den Daemon neu starten.** Erst warten,
 bis alle laufenden Nix-Bauten abgeschlossen sind, dann:
 
 ```bash
 sudo systemctl restart nix-daemon.service
-nix build .#offline-system --dry-run --accept-flake-config
+nix build .#offline-system --dry-run
 ```
 
-Danach prüfen, dass die Warnungen über den untrusted Gufo-Substituter und den
-ignorierten Schlüssel verschwunden sind und Gufo/ROCm soweit verfügbar aus dem
-Cache eingeplant werden. Die Freigabe allein garantiert nicht, dass für jede
+Danach prüfen, ob Gufo/ROCm soweit verfügbar aus dem Cache eingeplant werden.
+Die Konfiguration allein garantiert nicht, dass für jede
 gesperrte Derivation bereits ein Cache-Ergebnis vorhanden ist.

@@ -6,13 +6,6 @@
     gufo.url = "github:gufo-org/gufo/v0.36.0";
   };
 
-  nixConfig = {
-    extra-substituters = [ "https://gufo.cachix.org" ];
-    extra-trusted-public-keys = [
-      "gufo.cachix.org-1:rfZe3n4lHINgyoACKzs5EthIZmBNvEyCCtufUpth0PE="
-    ];
-  };
-
   outputs =
     {
       self,
@@ -74,96 +67,22 @@
       mkVariant =
         name: variant:
         let
-          fullLock = builtins.fromJSON (builtins.readFile ./flake.lock);
-          reachable =
-            nodeName:
-            [ nodeName ]
-            ++ nixpkgs.lib.concatMap (edge: if builtins.isString edge then reachable edge else [ ]) (
-              builtins.attrValues (fullLock.nodes.${nodeName}.inputs or { })
-            );
-          selectedNodes = reachable fullLock.nodes.${fullLock.root}.inputs.nixpkgs;
-          originalLock =
-            if variant.ai then
-              fullLock
-            else
-              fullLock
-              // {
-                nodes =
-                  (nixpkgs.lib.filterAttrs (nodeName: _: builtins.elem nodeName selectedNodes) fullLock.nodes)
-                  // {
-                    ${fullLock.root} = {
-                      inputs = { inherit (fullLock.nodes.${fullLock.root}.inputs) nixpkgs; };
-                    };
-                  };
-              };
-          rootInputs = {
-            inherit nixpkgs;
-          }
-          // nixpkgs.lib.optionalAttrs variant.ai { inherit gufo; };
-          collectInputNodes =
-            nodeName: input:
-            [
-              {
-                name = nodeName;
-                value = input.outPath;
-              }
-            ]
-            ++ nixpkgs.lib.concatMap (
-              inputName:
-              let
-                edge = originalLock.nodes.${nodeName}.inputs.${inputName};
-              in
-              if builtins.isString edge then collectInputNodes edge input.inputs.${inputName} else [ ]
-            ) (builtins.attrNames (originalLock.nodes.${nodeName}.inputs or { }));
-          inputNodes = builtins.listToAttrs (
-            nixpkgs.lib.concatMap (
-              inputName:
-              collectInputNodes originalLock.nodes.${originalLock.root}.inputs.${inputName}
-                rootInputs.${inputName}
-            ) (builtins.attrNames rootInputs)
-          );
-          inputSources = nixpkgs.lib.unique (builtins.attrValues inputNodes);
-          localLock = originalLock // {
-            nodes = builtins.mapAttrs (
-              name: node:
-              if node ? locked then
-                node
-                // {
-                  locked = {
-                    type = "path";
-                    path = inputNodes.${name};
-                    narHash = node.locked.narHash;
-                  };
-                }
-              else
-                node
-            ) originalLock.nodes;
-          };
-          localLockFile = pkgs.writeText "desktop-offline-flake.lock" (builtins.toJSON localLock);
-          targetFlake = pkgs.writeText "${name}-flake.nix" ''
-            {
-              inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-              outputs = { self, nixpkgs }: {
-                nixosConfigurations.${name} = nixpkgs.lib.nixosSystem {
-                  system = "${system}";
-                  modules = [ ${
-                    nixpkgs.lib.concatMapStringsSep " " (
-                      module: "./modules/${builtins.baseNameOf module}"
-                    ) variant.modules
-                  } { system.extraDependencies = [ nixpkgs.outPath ]; } ];
-                };
-              };
+          archive = import ./modules/installer/offline-source.nix {
+            inherit
+              pkgs
+              self
+              nixpkgs
+              system
+              name
+              ;
+            rootInputs = {
+              inherit nixpkgs;
             }
-          '';
-          onlineLockFile = pkgs.writeText "${name}-online-flake.lock" (builtins.toJSON originalLock);
-          offlineSource = pkgs.runCommand "${name}-offline-source" { } ''
-            mkdir "$out"
-            cp -r ${self}/. "$out/"
-            chmod -R u+w "$out"
-            ${nixpkgs.lib.optionalString (!variant.ai) "cp ${targetFlake} \"$out/flake.nix\""}
-            cp ${onlineLockFile} "$out/flake.online.lock"
-            cp ${localLockFile} "$out/flake.lock"
-          '';
+            // nixpkgs.lib.optionalAttrs variant.ai { inherit gufo; };
+            targetModules = variant.modules;
+            reuseSetupOutputs = variant.ai;
+          };
+          inherit (archive) inputSources offlineSource;
           # Prebuild the fixed package set and encryption-related initrd components.
           # Do not include the complete .drv/source graph (Kernel/ROCm toolchains).
           target = mkTarget name variant inputSources;
@@ -233,24 +152,10 @@
               microcode-intel
               linux-firmware
             ]);
-          modelManifest = builtins.fromJSON (builtins.readFile ./modules/generative-ai/models.lock.json);
-          upstreamManifest = builtins.fromJSON (
-            builtins.readFile (gufo + "/src/models/qwen38_flash_next/models.lock.json")
-          );
-          modelFiles =
-            assert modelManifest == upstreamManifest;
-            pkgs.linkFarm "qwen-models" (
-              nixpkgs.lib.concatMap (
-                component:
-                map (file: {
-                  name = "${nixpkgs.lib.removePrefix "${offlineSeed.config.generative-ai.models.directory}/" offlineSeed.config.generative-ai.models.text-generation.qwen38FlashNext.directory}/${file.path}";
-                  path = pkgs.fetchurl {
-                    url = "https://huggingface.co/${component.source.hf}/resolve/${component.source.revision}/${file.path}";
-                    sha256 = file.sha256;
-                  };
-                }) component.files
-              ) (builtins.attrValues modelManifest.models.flash-next-q4)
-            );
+          modelFiles = import ./modules/generative-ai/model-files.nix {
+            inherit pkgs gufo;
+            models = offlineSeed.config.generative-ai.models;
+          };
           # Reuse NixOS' Calamares configuration and native view/storage modules.
           # Only replace the generic configuration generator with our flake adapter.
           yaml = name: value: pkgs.writeText name (builtins.toJSON value);

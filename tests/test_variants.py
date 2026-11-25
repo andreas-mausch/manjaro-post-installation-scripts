@@ -36,7 +36,13 @@ for index in range(1, len(sys.argv), 4):
         assert ("gufo" in inputs) == ai, (name, filename)
         if not ai:
             assert set(lock["nodes"]) == {lock["root"], inputs["nixpkgs"]}, (name, filename)
-    if not ai:
-        flake = (Path(source) / "flake.nix").read_text()
+    flake = (Path(source) / "flake.nix").read_text()
+    assert "nixConfig" not in flake, name
+    assert "extra-substituters" not in flake, name
+    assert "extra-trusted-public-keys" not in flake, name
+    if ai:
+        assert "outputs = inputs@{ self, gufo, nixpkgs }: (import ./setup-flake.nix).outputs inputs;" in flake, name
+        assert (Path(source) / "setup-flake.nix").is_file(), name
+    else:
         assert "gufo" not in flake, name
         assert f"nixosConfigurations.{name}" in flake, name

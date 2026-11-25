@@ -36,12 +36,7 @@ in
       }
     ];
     hardware.graphics.enable = true;
-    nix.settings = {
-      extra-substituters = [ "https://gufo.cachix.org" ];
-      extra-trusted-public-keys = [
-        "gufo.cachix.org-1:rfZe3n4lHINgyoACKzs5EthIZmBNvEyCCtufUpth0PE="
-      ];
-    };
+    nix.settings = import ./cache.nix;
     users.groups.gufo = { };
     users.users.gufo = {
       isSystemUser = true;

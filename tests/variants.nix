@@ -5,6 +5,7 @@
 }:
 let
   lib = pkgs.lib;
+  cache = import ../modules/generative-ai/cache.nix;
   valid = lib.all (
     name:
     let
@@ -34,6 +35,12 @@ let
     assert !(allowsUnfree { pname = "unrelated-proprietary-app"; });
     assert (target.systemd.services ? gufo) == ai;
     assert (target.users.users ? gufo) == ai;
+    assert
+      (target.nix.settings.extra-substituters or [ ]) == (if ai then cache.extra-substituters else [ ]);
+    assert
+      (live.nix.settings.extra-substituters or [ ]) == (if ai then cache.extra-substituters else [ ]);
+    assert !ai || target.nix.settings.extra-trusted-public-keys == cache.extra-trusted-public-keys;
+    assert !ai || live.nix.settings.extra-trusted-public-keys == cache.extra-trusted-public-keys;
     assert !ai || target.generative-ai.models.directory == "/var/lib/generative-ai/models";
     assert !ai || customAI.config.systemd.services.gufo.environment.GUFO_MODELS_DIR == "/srv/ai/models";
     assert
@@ -52,6 +59,7 @@ let
   ) (builtins.attrNames variants);
 in
 assert valid;
+assert !((import ../flake.nix) ? nixConfig);
 pkgs.runCommand "installer-variant-tests" { nativeBuildInputs = [ pkgs.python3 ]; } ''
   python3 ${./test_variants.py} ${
     lib.concatMapStringsSep " " (
