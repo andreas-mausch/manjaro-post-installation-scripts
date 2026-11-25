@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 calamares = SimpleNamespace(
-    utils=SimpleNamespace(obscure=lambda text: text),
+    utils=SimpleNamespace(obscure=lambda text: text, gettext_languages=lambda: ["en"]),
     job=SimpleNamespace(setprogress=Mock(), configuration={"stage": "validate"}),
 )
 sys.modules["libcalamares"] = calamares
@@ -155,9 +155,9 @@ class AdapterTests(unittest.TestCase):
         with self.assertLogs("m5-installer", level="ERROR") as logs:
             result = adapter.run()
         self.assertIn("UEFI", result[1])
-        self.assertIn("Vorprüfung", result[1])
+        self.assertIn("Preflight checks", result[1])
         self.assertIn("UEFI", " ".join(logs.output))
-        self.assertIn("vor dem Partitionierungsjob", result[1])
+        self.assertIn("before partitioning", result[1])
         self.assertIn("sudo journalctl -b --since", result[1])
 
     def test_installation_failure_reports_phase_and_partitioned_state(self):
@@ -165,15 +165,15 @@ class AdapterTests(unittest.TestCase):
         calamares.job.configuration = {"stage": "install"}
 
         def fail(gs, config, context):
-            context["phase"] = "Offline-Systeminstallation"
+            context["phase"] = adapter._("Offline system installation")
             raise subprocess.CalledProcessError(1, ["pkexec", "unshare", "--net", "--", "nixos-install"])
 
         with patch.object(adapter, "deploy", side_effect=fail), self.assertLogs("m5-installer"):
             result = adapter.run()
-        self.assertIn("Phase: Offline-Systeminstallation", result[1])
-        self.assertIn("Systeminstallationsaufruf fehlgeschlagen", result[1])
-        self.assertNotIn("unshare fehlgeschlagen", result[1])
-        self.assertIn("bereits partitioniert", result[1])
+        self.assertIn("Phase: Offline system installation", result[1])
+        self.assertIn("System installation command failed", result[1])
+        self.assertNotIn("unshare failed", result[1])
+        self.assertIn("already been partitioned", result[1])
 
     def test_install_stage_preflight_failure_still_warns_about_partitioning(self):
         calamares.globalstorage = self.storage(username="root")
@@ -181,7 +181,7 @@ class AdapterTests(unittest.TestCase):
         with self.assertLogs("m5-installer"), patch.object(adapter, "deploy") as deploy:
             result = adapter.run()
         deploy.assert_not_called()
-        self.assertIn("bereits partitioniert", result[1])
+        self.assertIn("already been partitioned", result[1])
 
     def test_host_preserves_original_diagnostics_without_logging_arguments(self):
         with patch.object(adapter.subprocess, "run") as run, self.assertLogs("m5-installer") as logs:
@@ -197,7 +197,7 @@ class AdapterTests(unittest.TestCase):
                                              output="secret-output", stderr="secret-stderr")
         with patch.object(adapter, "deploy", side_effect=error), self.assertLogs("m5-installer") as logs:
             result = adapter.run()
-        self.assertIn("cp fehlgeschlagen (Exit-Code 17)", result[1])
+        self.assertIn("cp failed (exit code 17)", result[1])
         self.assertNotIn("secret", str(result) + str(logs.output))
 
     def test_os_failure_does_not_expose_filename(self):

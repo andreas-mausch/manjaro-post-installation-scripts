@@ -405,6 +405,9 @@
           mkdir -p $out/lib/calamares/modules/m5
           cp -r ${welcomeModule}/lib/calamares/modules/uefiwelcome $out/lib/calamares/modules/
           cp ${./installer/calamares/main.py} $out/lib/calamares/modules/m5/main.py
+          mkdir -p $out/lib/calamares/modules/m5/locale/de/LC_MESSAGES
+          ${pkgs.gettext}/bin/msgfmt --check ${./installer/calamares/locale/de.po} \
+            -o $out/lib/calamares/modules/m5/locale/de/LC_MESSAGES/m5-installer.mo
           cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/m5/module.desc
           cp ${calamaresSettings} $out/etc/calamares/settings.conf
           # Offline installation must not be blocked by upstream's Internet check.

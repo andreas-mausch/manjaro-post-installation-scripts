@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"Language: de\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Choose whether to copy model weights."
+msgstr "Modellgewichte mit oder ohne Kopieren auswählen."
+
+msgid "Boot the USB drive in UEFI mode; disable Secure Boot."
+msgstr "Den Stick im UEFI-Modus booten; Secure Boot deaktivieren."
+
+msgid "For this image: erase the entire SSD and select no swap."
+msgstr "Für dieses Image: gesamte SSD löschen, kein Swap."
+
+msgid "Invalid or reserved username."
+msgstr "Ungültiger oder reservierter Benutzername."
+
+msgid "Automatic login is disabled for this image."
+msgstr "Automatische Anmeldung ist für dieses Image deaktiviert."
+
+msgid "Exactly one root partition is required."
+msgstr "Genau eine Root-Partition muss vorhanden sein."
+
+msgid "/boot must be an unencrypted EFI/FAT32 partition."
+msgstr "/boot muss eine unverschlüsselte EFI-/FAT32-Partition sein."
+
+msgid "This image does not support swap."
+msgstr "Dieses Image unterstützt keinen Swap."
+
+msgid "Invalid installation mount point."
+msgstr "Ungültiger Installations-Mountpoint."
+
+msgid "Checking target mounts"
+msgstr "Ziel-Mounts prüfen"
+
+msgid "Pinned configuration or models are missing from the image."
+msgstr "Gepinnte Konfiguration oder Modelle fehlen im Image."
+
+msgid "Preparing target configuration"
+msgstr "Zielkonfiguration vorbereiten"
+
+msgid "Generating hardware configuration"
+msgstr "Hardwarekonfiguration erzeugen"
+
+msgid "Preparing user access"
+msgstr "Benutzerzugang vorbereiten"
+
+msgid "Offline system installation"
+msgstr "Offline-Systeminstallation"
+
+msgid "System installation"
+msgstr "Systeminstallation"
+
+msgid "Copying model weights"
+msgstr "Modellgewichte kopieren"
+
+msgid "BOSGAME M5: install NixOS and optional model weights"
+msgstr "BOSGAME M5: NixOS und optional Modellgewichte installieren"
+
+msgid "Preflight checks"
+msgstr "Vorprüfung"
+
+msgid "Preparing system installation"
+msgstr "Systeminstallation vorbereiten"
+
+msgid "Subprocess"
+msgstr "Unterprozess"
+
+msgid "System installation command failed (exit code {code})."
+msgstr "Systeminstallationsaufruf fehlgeschlagen (Exit-Code {code})."
+
+msgid "{program} failed (exit code {code})."
+msgstr "{program} fehlgeschlagen (Exit-Code {code})."
+
+msgid "Operating system error (errno {errno})."
+msgstr "Betriebssystemfehler (errno {errno})."
+
+msgid "The target disk has already been partitioned; installation is incomplete. Do not reinstall or format again without checking the disk first."
+msgstr "Der Zieldatenträger wurde bereits partitioniert; die Installation ist unvollständig. Nicht ohne Prüfung erneut installieren oder formatieren."
+
+msgid "Preflight checks failed before partitioning."
+msgstr "Die Vorprüfung wurde vor dem Partitionierungsjob abgebrochen."
+
+msgid "M5 installation failed"
+msgstr "M5-Installation fehlgeschlagen"
+
+msgid "Phase: {phase}. {detail}"
+msgstr "Phase: {phase}. {detail}"
+
+msgid "Original diagnostics: Calamares output or in the live terminal:"
+msgstr "Originaldiagnostik: Calamares-Ausgabe oder im Live-Terminal:"
+
+msgid "Check the first error before subsequent errors. Review logs for sensitive data before sharing; no automatic upload."
+msgstr "Die erste Fehlermeldung vor den Folgefehlern prüfen. Protokolle vor Weitergabe auf sensible Daten prüfen; kein automatischer Upload."
