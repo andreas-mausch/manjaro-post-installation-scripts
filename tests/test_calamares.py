@@ -106,6 +106,17 @@ class AdapterTests(unittest.TestCase):
             self.assertNotIn("substituters", install)
             self.assertNotIn("builders", install)
             self.assertNotIn("flake-registry", install)
+            options = {
+                install[index + 1]: install[index + 2]
+                for index, argument in enumerate(install) if argument == "--option"
+            }
+            self.assertEqual(options["substitute"], "true")
+            self.assertEqual(options["always-allow-substitutes"], "true")
+            self.assertNotIn("require-sigs", options)
+            for call in host.call_args_list:
+                if call.args[0] == "tee":
+                    self.assertNotIn("always-allow-substitutes", call.kwargs.get("input", ""))
+                    self.assertNotIn("alwaysAllowSubstitutes", call.kwargs.get("input", ""))
             self.assertIn("path:/tmp/calamares-root-test/etc/nixos#m5", install)
             self.assertIn("--no-update-lock-file", install)
             # This suppresses a terminal prompt; NixOS separately locks root.

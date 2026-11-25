@@ -1,5 +1,17 @@
 # Vorbereitung
 
+## Als Nächstes: verifizierten Offline-Fix in den Installer übernehmen
+
+1. [x] 2026-11-25: Im Adapter `substitute = true` und `always-allow-substitutes = true` ausschließlich als Installationsoptionen setzen; lokalen ISO-Store und konfigurierte Online-Quellen erhalten. Keine dauerhafte Zielsystemeinstellung.
+2. [ ] Signaturbehandlung lösen: unsignierte ISO-Pakete sicher übernehmen, ohne die Signaturprüfung für Online-Caches global abzuschalten.
+3. [ ] Reproduzierbaren Offline-Regressionstest mit getrenntem Live-/Ziel-Store ergänzen: nur ISO-Inhalte, kein Netzwerk, pro Variante frischer Ziel-Store; mit/ohne LUKS und abweichender Benutzer-/Hardwarekonfiguration.
+4. [ ] Nach bestandenen Tests committen; erst danach die ISO neu bauen.
+5. [ ] Vollständigen Calamares-Durchlauf ohne manuelle Terminalbefehle, Boot ohne ISO und anschließendes Online-Update prüfen.
+
+Stand: Manueller Offline-VM-Installationslauf, LUKS-Entsperrung und KDE-Start ohne ISO erfolgreich; sichere Signaturstrategie und vollständiger grafischer Durchlauf noch offen.
+
+## Weitere Vorbereitung
+
 - [ ] Isolierten Offline-Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen; pro Variante frischen Store verwenden. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
 
 - [ ] Neue Diagnosephasen, Journal-Zeitfilter und Warnung zum bereits partitionierten Ziel bei einem realen VM-Installationsfehler prüfen; Originalausgabe muss die erste Nix-Fehlermeldung enthalten.

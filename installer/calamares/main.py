@@ -122,6 +122,10 @@ def deploy(gs, config, context=None):
         "--flake", f"path:{destination}#m5", "--no-write-lock-file",
         "--no-update-lock-file", "--no-channel-copy",
         "--option", "build-dir", "/nix/var/nix/builds",
+        # Nixpkgs' perl-5.42.3-env for activation sets allowSubstitutes = false.
+        # Override that only for installation, never in the target's nix.settings.
+        "--option", "substitute", "true",
+        "--option", "always-allow-substitutes", "true",
     ]
     # Keep nixos-install's live-store substituter and configured online caches.
     # Offline completeness is verified by network-isolated tests, not by
