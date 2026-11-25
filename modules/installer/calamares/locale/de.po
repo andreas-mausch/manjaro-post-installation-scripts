@@ -4,6 +4,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "Calamares did not provide a hostname."
+msgstr "Calamares hat keinen Hostnamen bereitgestellt."
+
 msgid "Choose whether to copy model weights."
 msgstr "Modellgewichte mit oder ohne Kopieren auswählen."
 

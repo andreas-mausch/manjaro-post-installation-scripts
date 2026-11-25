@@ -364,7 +364,7 @@
               ];
             };
             hostname = {
-              location = "None";
+              location = "EtcFile";
               writeHostsFile = false;
               forbidden_names = [ "localhost" ];
             };

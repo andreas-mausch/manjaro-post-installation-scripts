@@ -23,7 +23,7 @@ spec.loader.exec_module(adapter)
 class AdapterTests(unittest.TestCase):
     def storage(self, **changes):
         values = {
-            "firmwareType": "efi", "username": "testuser",
+            "firmwareType": "efi", "username": "testuser", "hostname": "nixos-desktop",
             "password": "user-test-secret", "luksPassphrase": "luks-test-secret",
             "partitionChoices": {"install": "erase", "swap": "none"},
             "partitions": [
@@ -37,6 +37,11 @@ class AdapterTests(unittest.TestCase):
 
     def test_valid_selection(self):
         adapter.validate_selection(self.storage())
+
+    def test_identity_requires_hostname_from_calamares(self):
+        for hostname in [None, "", "   "]:
+            with self.subTest(hostname=hostname), self.assertRaisesRegex(ValueError, "did not provide a hostname"):
+                adapter.identity(self.storage(hostname=hostname))
 
     def test_non_ai_preflight_needs_no_model_selection(self):
         calamares.globalstorage = self.storage(packagechooser_models=None)
@@ -188,7 +193,7 @@ class AdapterTests(unittest.TestCase):
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")),
             ):
-                adapter.deploy(self.storage(packagechooser_models="without-models", hostname=""),
+                adapter.deploy(self.storage(packagechooser_models="without-models"),
                                 {"source": str(source), "models": str(models)})
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             identity_call = next(call for call in host.call_args_list

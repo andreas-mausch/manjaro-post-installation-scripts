@@ -85,11 +85,14 @@ def validate_mounts(gs):
 
 
 def identity(gs):
+    hostname = gs.value("hostname")
+    if not isinstance(hostname, str) or not hostname.strip():
+        raise ValueError(_("Calamares did not provide a hostname."))
     locale = gs.value("localeConf") or {}
     return {
         "username": gs.value("username"),
         "fullname": gs.value("fullname") or "",
-        "hostname": gs.value("hostname") or "nixos-desktop",
+        "hostname": hostname,
         "timezone": "/".join(filter(None, [gs.value("locationRegion"), gs.value("locationZone")])) or "Europe/Berlin",
         "locale": (locale.get("LANG") or "de_DE.UTF-8").split("/")[0],
         "keyboardLayout": gs.value("keyboardLayout") or "de",

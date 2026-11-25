@@ -4,15 +4,8 @@
   ...
 }:
 let
-  # Legacy archives use installation.json; new installations own these
-  # settings in configuration.nix, imported by the target Flake.
+  # Installed systems own local settings in configuration.nix.
   localConfiguration = builtins.pathExists ../configuration.nix;
-  identityFile = ../installation.json;
-  identity =
-    if !localConfiguration && builtins.pathExists identityFile then
-      builtins.fromJSON (builtins.readFile identityFile)
-    else
-      { username = "desktopuser"; };
   hardwareFile = ../hardware-configuration.nix;
 in
 {
@@ -36,17 +29,16 @@ in
   # configuration. Do not impose GPU memory limits for a particular machine.
   hardware.enableRedistributableFirmware = true;
 
-  networking.hostName = lib.mkDefault (identity.hostname or "nixos-desktop");
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
-  time.timeZone = lib.mkDefault (identity.timezone or "Europe/Berlin");
-  i18n.defaultLocale = lib.mkDefault (identity.locale or "de_DE.UTF-8");
+  time.timeZone = lib.mkDefault "Europe/Berlin";
+  i18n.defaultLocale = lib.mkDefault "de_DE.UTF-8";
   # Keep the locale archive invariant when Calamares selects a different locale.
   i18n.supportedLocales = [ "all" ];
-  console.keyMap = lib.mkDefault (identity.consoleKeyMap or "de");
+  console.keyMap = lib.mkDefault "de";
   services.xserver.xkb = {
-    layout = lib.mkDefault (identity.keyboardLayout or "de");
-    variant = lib.mkDefault (identity.keyboardVariant or "");
+    layout = lib.mkDefault "de";
+    variant = lib.mkDefault "";
   };
 
   services.fstrim.enable = true;
@@ -61,9 +53,9 @@ in
   # Password hashes are only stored on the encrypted target, never in a flake.
   users.mutableUsers = false;
   users.users.root.hashedPassword = "!";
-  users.users.${identity.username} = lib.mkIf (!localConfiguration) {
+  users.users.desktopuser = lib.mkIf (!localConfiguration) {
     isNormalUser = true;
-    description = identity.fullname or "";
+    description = "";
     extraGroups = [
       "wheel"
       "networkmanager"
