@@ -113,7 +113,7 @@ Die ISO verwendet das vorhandene NixOS-Modul
 Calamares, Polkit und die nativen Ansichten sowie Partitionierungs-/Mount-Jobs
 aus Nixpkgs. Disko und `disko-install` werden nicht mehr verwendet.
 
-`installer/calamares/main.py` ist ausschließlich die Anbindung an unsere Flake:
+`modules/installer/calamares/main.py` ist ausschließlich die Anbindung an unsere Flake:
 Vorprüfung, Übernahme der Benutzer-/Spracheinstellungen, Hardwarekonfiguration,
 rootgeschützter Passworthash, `nixos-install` und Modellkopie. Python ist hier eine
 Calamares-Modulschnittstelle und wird auch von der standardmäßigen NixOS-Anbindung

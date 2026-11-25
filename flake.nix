@@ -399,7 +399,7 @@
       welcomeModule = pkgs.stdenv.mkDerivation {
         pname = "calamares-uefi-welcome";
         version = "1";
-        src = ./installer/calamares/welcome;
+        src = ./modules/installer/calamares/welcome;
         nativeBuildInputs = [
           pkgs.cmake
           pkgs.qt6.wrapQtAppsHook
@@ -414,11 +414,11 @@
         postInstall = (old.postInstall or "") + ''
           mkdir -p $out/lib/calamares/modules/desktop
           cp -r ${welcomeModule}/lib/calamares/modules/uefiwelcome $out/lib/calamares/modules/
-          cp ${./installer/calamares/main.py} $out/lib/calamares/modules/desktop/main.py
+          cp ${./modules/installer/calamares/main.py} $out/lib/calamares/modules/desktop/main.py
           mkdir -p $out/lib/calamares/modules/desktop/locale/de/LC_MESSAGES
-          ${pkgs.gettext}/bin/msgfmt --check ${./installer/calamares/locale/de.po} \
+          ${pkgs.gettext}/bin/msgfmt --check ${./modules/installer/calamares/locale/de.po} \
             -o $out/lib/calamares/modules/desktop/locale/de/LC_MESSAGES/desktop-installer.mo
-          cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/desktop/module.desc
+          cp ${./modules/installer/calamares/module.desc} $out/lib/calamares/modules/desktop/module.desc
           cp ${calamaresSettings} $out/etc/calamares/settings.conf
           # Offline installation must not be blocked by upstream's Internet check.
           sed -i '/^[[:space:]]*- internet$/d' $out/etc/calamares/modules/welcome.conf
@@ -456,7 +456,7 @@
           };
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix")
-            ./modules/installer.nix
+            ./modules/installer
           ];
         };
       };
@@ -478,7 +478,7 @@
           }
           ''
             export PYTHONDONTWRITEBYTECODE=1
-            python3 ${./tests/test_calamares.py} ${./installer/calamares/main.py}
+            python3 ${./tests/test_calamares.py} ${./modules/installer/calamares/main.py}
             touch "$out"
           '';
       formatter.${system} = pkgs.nixfmt-tree;
