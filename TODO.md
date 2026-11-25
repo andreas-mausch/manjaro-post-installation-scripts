@@ -1,5 +1,7 @@
 # Vorbereitung
 
+- [ ] Isolierten Offline-Assembly-Test reproduzierbar ins Repository übernehmen und vor jeder ISO-Freigabe verpflichtend ausführen; pro Variante frischen Store verwenden. Automatische Werkzeugableitung verbessern, statt langfristig nur eine manuelle Liste zu pflegen.
+
 - [ ] Neue Diagnosephasen, Journal-Zeitfilter und Warnung zum bereits partitionierten Ziel bei einem realen VM-Installationsfehler prüfen; Originalausgabe muss die erste Nix-Fehlermeldung enthalten.
 
 - [ ] Swap-Unterstützung vor Freigabe ergänzen: `nixos-generate-config` erfasst nur aktive Swap-Partitionen und keine Swapdateien; Calamares erstellt Swapdateien im hier nicht ausgeführten fstab-Modul. Zielgerätezuordnung und verschlüsselten Swap beim Neustart prüfen. Bis dahin bleibt „kein Swap“ erhalten.
@@ -15,6 +17,8 @@
 - [ ] Gufo-GPU und Modell auf dem echten M5 prüfen (nicht in einer VM möglich).
 
 ## Erledigt
+
+- [x] 2026-11-25: Offline-Assembly-Lücke dokumentieren und nach gezielter Ergänzung fertiger Werkzeuge beide Varianten im isolierten Store erfolgreich bauen (abweichende Identität/UUIDs/VirtIO, mit/ohne LUKS). Äußere Store-/Netzwerk-Isolation aktiv, innere Nix-Sandbox wegen UID-Mapping-Beschränkung deaktiviert; kein Installations-/Boot-Nachweis.
 
 - [x] 2026-11-25: UEFI-Requirement als separates C++-Welcome-Modul implementieren, vorhandene UI/Prüfungen delegieren und den verworfenen Partitionierungs-Patch entfernen. Paketbuild geprüft; UI-/Firmware-Test in VM steht aus.
 

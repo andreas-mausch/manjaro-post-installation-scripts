@@ -103,6 +103,8 @@
         etc
         bootStage2
         modulesClosure
+        # Include buildEnv's declared assembly dependencies as well.
+        (offlineSeed.config.system.path)
       ];
       assemblyTools = nixpkgs.lib.unique (
         nixpkgs.lib.concatMap (
@@ -140,6 +142,15 @@
           systemd
           makeWrapper
           lndir
+          # Activation and hardware-dependent initrd assembly need these
+          # finished outputs, not their compiler/source dependency graphs.
+          libcap-text-verifier
+          # buildEnv's generated builder also references these tools outside
+          # the nativeBuildInputs inspected above (Info and MIME/XML indexes).
+          texinfo
+          libxslt
+          microcode-amd
+          linux-firmware
         ]);
       modelManifest = builtins.fromJSON (builtins.readFile ./models.lock.json);
       upstreamManifest = builtins.fromJSON (

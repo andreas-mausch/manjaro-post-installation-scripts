@@ -264,6 +264,56 @@ einer vollständigen VM-Installation geprüft.
 
 ### Installationsfehler diagnostizieren
 
+#### Bekannte Offline-Assembly-Lücke (2026-11-25)
+
+Im netzlosen UEFI-VM-Test scheiterte `nixos-install` mit einem Versuch,
+`https://ftpmirror.gnu.org/bash/bash-5.3.tar.gz` herunterzuladen. Die spätere
+Meldung „unshare fehlgeschlagen“ bezeichnete nur den Aufruf, nicht die Ursache.
+Die Netzwerksperre funktionierte: Der Download konnte nicht stattfinden.
+
+Ursache: Die ISO bündelte das fertige Referenzsystem und seine
+Laufzeit-Abhängigkeiten, aber nicht alle Werkzeuge für den erneuten Aufbau
+einer abweichenden Zielkonfiguration. Benutzer, Sprache, Hardware und
+Dateisystem-UUIDs ändern Konfigurationsdateien, Systempfad und Initrd.
+Unter anderem fehlte Texinfo für den Systempfad-Aufbau. Nix versuchte deshalb,
+fehlende Werkzeuge mitsamt ihren Build-Abhängigkeiten selbst zu bauen.
+Leere `substituters` deaktivieren Binärcaches, nicht Quellendownloads;
+die zusätzliche Netzwerksperre ist weiterhin notwendig.
+
+Aktuelle Korrektur in `flake.nix`: zusätzliche deklarierte Systempfad-
+Abhängigkeiten sowie fertige Texinfo-, XML- und Capability-Werkzeuge,
+AMD-Microcode und Firmware bündeln. Nicht den vollständigen Quellen- und
+Compiler-Buildgraph für Kernel/ROCm aufnehmen. Ein normaler Build auf dem
+Entwicklungsrechner beweist keine Offline-Vollständigkeit, weil dessen Store
+und Netzwerk fehlende Pakete liefern können.
+
+Ein isolierter Assembly-Test hat am 2026-11-25 beide Varianten erfolgreich
+gebaut: Btrfs ohne Verschlüsselung und mit einer abweichend benannten
+LUKS-Zuordnung, jeweils mit anderem Benutzer, Hostnamen, Sprache, Zeitzone,
+Tastatur, UUIDs und VirtIO-Initrd-Modulen. Der eigene Test-Store wurde nur mit
+den vorgesehenen `system.extraDependencies` und archivierten Flake-Inputs
+befüllt; der Host-Nix-Store war ausgeblendet und das Netzwerk gesperrt.
+Die verschlüsselte Variante lief danach im gleichen Store und konnte
+bereits offline erzeugte gemeinsame Konfigurationsartefakte wiederverwenden.
+
+Testgrenze: Dies war ein Systembuild, keine Calamares-Installation und kein
+Boot-Test. Der Arch-Host stellte Nix und dessen Bibliotheken als Testharness
+bereit. Wegen nicht verfügbarer verschachtelter UID-Mappings war Nix'
+innere Build-Sandbox ausgeschaltet; die äußere Store-/Netzwerk-Isolation
+blieb aktiv. Die bisherigen Abbrüche an `setgroups` und `uid_map` betrafen
+diesen Testaufbau, nicht Paketabhängigkeiten. Die bestehende ISO enthält die
+Korrektur noch nicht; vollständige Offline-Installation und Neustart in einer
+UEFI-VM bleiben ausstehend.
+
+Wiederholungsrisiko: Eine manuell ergänzte Werkzeugliste kann nach Updates
+oder bei anderen Zielkonfigurationen erneut unvollständig werden. Deshalb
+muss ein reproduzierbarer isolierter Offline-Test vor jeder ISO-Freigabe
+automatisiert werden. Die Werkzeugableitung soll verbessert werden; der
+Test bleibt als unabhängige Prüfung notwendig. Erfolgreiche Tests belegen
+die getesteten Varianten, nicht beliebige Hardware oder Konfigurationen.
+
+#### Voraussetzungen und Diagnoseausgabe
+
 Das separate `uefiwelcome`-Modul meldet UEFI als zwingende Voraussetzung bereits
 auf der Willkommensseite. Bei BIOS-Start bleibt „Weiter“ gesperrt und der
 Hinweis fordert einen Neustart im UEFI-Modus (bei VMs: UEFI/OVMF).
