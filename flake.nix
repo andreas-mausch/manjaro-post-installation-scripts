@@ -22,7 +22,125 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      gufoPackage = gufo.packages.${system}.release;
+      releaseLock = builtins.fromJSON (
+        builtins.readFile (
+          if builtins.pathExists ./flake.online.lock then ./flake.online.lock else ./flake.lock
+        )
+      );
+      gufoRevision =
+        gufo.shortRev or (builtins.substring 0 7
+          releaseLock.nodes.${releaseLock.nodes.${releaseLock.root}.inputs.gufo}.locked.rev
+        );
+      # Local path inputs lack shortRev. Preserve Gufo's revision-dependent
+      # build arguments so offline evaluation reuses the exact release package.
+      gufoPackage = gufo.packages.${system}.release.override { revision = gufoRevision; };
+      # Archive every locked input, including Gufo's independent toolchains.
+      # Local path locks do not depend on the live image's fetcher-cache DB.
+      originalLock = builtins.fromJSON (builtins.readFile ./flake.lock);
+      rootInputs = { inherit nixpkgs gufo; };
+      collectInputNodes =
+        nodeName: input:
+        [
+          {
+            name = nodeName;
+            value = input.outPath;
+          }
+        ]
+        ++ nixpkgs.lib.concatMap (
+          inputName:
+          let
+            edge = originalLock.nodes.${nodeName}.inputs.${inputName};
+          in
+          if builtins.isString edge then collectInputNodes edge input.inputs.${inputName} else [ ]
+        ) (builtins.attrNames (originalLock.nodes.${nodeName}.inputs or { }));
+      inputNodes = builtins.listToAttrs (
+        nixpkgs.lib.concatMap (
+          inputName:
+          collectInputNodes originalLock.nodes.${originalLock.root}.inputs.${inputName}
+            rootInputs.${inputName}
+        ) (builtins.attrNames rootInputs)
+      );
+      inputSources = nixpkgs.lib.unique (builtins.attrValues inputNodes);
+      localLock = originalLock // {
+        nodes = builtins.mapAttrs (
+          name: node:
+          if node ? locked then
+            node
+            // {
+              locked = {
+                type = "path";
+                path = inputNodes.${name};
+                narHash = node.locked.narHash;
+              };
+            }
+          else
+            node
+        ) originalLock.nodes;
+      };
+      localLockFile = pkgs.writeText "m5-offline-flake.lock" (builtins.toJSON localLock);
+      offlineSource = pkgs.runCommand "m5-offline-source" { } ''
+        mkdir "$out"
+        cp -r ${self}/. "$out/"
+        chmod -R u+w "$out"
+        cp "$out/flake.lock" "$out/flake.online.lock"
+        cp ${localLockFile} "$out/flake.lock"
+      '';
+      # Prebuild the fixed package set and encryption-related initrd components.
+      # Do not include the complete .drv/source graph (Kernel/ROCm toolchains).
+      offlineSeed = self.nixosConfigurations.m5.extendModules {
+        modules = [
+          {
+            boot.initrd.luks.devices.cryptroot.device =
+              "/dev/disk/by-uuid/00000000-0000-0000-0000-000000000000";
+          }
+        ];
+      };
+      offlineSystem = offlineSeed.config.system.build.toplevel;
+      offlineAssembly = with offlineSeed.config.system.build; [
+        toplevel
+        initialRamdisk
+        initialRamdiskSecretAppender
+        etc
+        bootStage2
+        modulesClosure
+      ];
+      assemblyTools = nixpkgs.lib.unique (
+        nixpkgs.lib.concatMap (
+          drv:
+          builtins.filter nixpkgs.lib.isDerivation (
+            nixpkgs.lib.flatten [
+              (drv.drvAttrs.nativeBuildInputs or [ ])
+              (drv.drvAttrs.buildInputs or [ ])
+              (drv.drvAttrs.stdenv or [ ])
+            ]
+          )
+        ) offlineAssembly
+      );
+      # Dynamic settings assemble config files, units and an initrd. Reuse
+      # prebuilt Kernel/desktop/ROCm packages instead of recompiling them.
+      offlineTools =
+        assemblyTools
+        ++ (with pkgs; [
+          stdenvNoCC
+          bash
+          coreutils
+          findutils
+          gnugrep
+          gnused
+          gawk
+          diffutils
+          perl
+          jq
+          cpio
+          gzip
+          zstd
+          xz
+          kmod
+          kbd
+          systemd
+          makeWrapper
+          lndir
+        ]);
       modelManifest = builtins.fromJSON (builtins.readFile ./models.lock.json);
       upstreamManifest = builtins.fromJSON (
         builtins.readFile (gufo + "/src/models/qwen38_flash_next/models.lock.json")
@@ -214,8 +332,9 @@
       };
       installSettings = yaml "m5-install.conf" {
         stage = "install";
-        source = "${self}";
+        source = "${offlineSource}";
         models = "${modelFiles}";
+        offline = true;
       };
       validateSettings = yaml "m5-validate.conf" { stage = "validate"; };
       calamaresExtensions = pkgs.calamares-nixos-extensions.overrideAttrs (old: {
@@ -239,11 +358,21 @@
         m5 = nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = { inherit gufoPackage; };
-          modules = [ ./modules/desktop.nix ];
+          modules = [
+            ./modules/desktop.nix
+            { system.extraDependencies = inputSources; }
+          ];
         };
         installer = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { inherit calamaresExtensions modelFiles; };
+          specialArgs = {
+            inherit
+              calamaresExtensions
+              modelFiles
+              offlineSystem
+              offlineTools
+              ;
+          };
           modules = [
             (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix")
             ./modules/installer.nix
@@ -253,6 +382,8 @@
       packages.${system} = {
         calamares-extensions = calamaresExtensions;
         models = modelFiles;
+        offline-source = offlineSource;
+        offline-system = offlineSystem;
         iso = self.nixosConfigurations.installer.config.system.build.isoImage;
         default = self.packages.${system}.iso;
       };

@@ -74,16 +74,22 @@ class AdapterTests(unittest.TestCase):
             source.mkdir()
             (source / "flake.lock").write_text("{}")
             (models / "flash-next-q4").mkdir(parents=True)
-            config = {"source": str(source), "models": str(models)}
+            config = {"source": str(source), "models": str(models), "offline": True}
             with (
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")) as run,
             ):
                 adapter.deploy(self.storage(), config)
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
-            install = next(command for command in commands if command[0] == "nixos-install")
+            install = next(command for command in commands if "nixos-install" in command)
+            self.assertEqual(install[:4], ("unshare", "--net", "--", "nixos-install"))
+            self.assertIn("substituters", install)
+            self.assertIn("builders", install)
+            self.assertIn("flake-registry", install)
             self.assertIn("path:/tmp/calamares-root-test/etc/nixos#m5", install)
             self.assertIn("--no-update-lock-file", install)
+            # This suppresses a terminal prompt; NixOS separately locks root.
+            self.assertIn("--no-root-passwd", install)
             self.assertIn("--show-hardware-config", " ".join(map(str, commands)))
             self.assertTrue(any(command[:2] == ("cp", "-rL") for command in commands))
             self.assertNotIn("user-test-secret", str(commands))

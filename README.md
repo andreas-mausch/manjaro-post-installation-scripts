@@ -4,6 +4,8 @@ Grafischer Calamares-Installer für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
 Das gesamte gewählte Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
 Dieser Installer ist noch nicht auf dem M5 oder in einer VM erprobt.
+Die Offline-Variante ist implementiert, aber noch nicht durch eine vollständige
+Installation ohne Netzwerk verifiziert.
 
 ## Voraussetzungen und reproduzierbarer Bau
 
@@ -37,6 +39,8 @@ Die Modelle allein umfassen rund 115 GB; ein 256-GB-Stick ist ein sinnvoller
 Ausgangspunkt. Vor dem Schreiben die tatsächliche ISO-Größe prüfen.
 Bauen benötigt deutlich mehr
 freien Platz im Nix Store; das Repository allein ist klein.
+SquashFS-Kompression ist deaktiviert. Die Offline-ISO enthält zusätzlich das
+vorbereitete M5-System, lokale Flake-Inputs und Konfigurations-/Initrd-Werkzeuge.
 
 ## Stick vorbereiten
 
@@ -49,8 +53,8 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 1. Im BIOS Secure Boot deaktivieren und den UMA-Framebuffer möglichst klein
    einstellen (Gufo empfiehlt 512 MiB, sofern das BIOS dies anbietet).
 2. Stick im **UEFI-Modus** booten. Im KDE-Live-Desktop automatisch als `nixos`
-   anmelden. Ethernet anschließen oder WLAN über NetworkManager einrichten.
-   Das Image bietet keinen SSH-Zugang.
+   anmelden. Für die vorgesehene Offline-Installation ist kein Ethernet oder WLAN
+   erforderlich. Das Image bietet keinen SSH-Zugang.
 3. Calamares öffnen (Autostart oder Desktop-Verknüpfung). Sprache, Zeitzone,
    Tastatur und Benutzer samt Passwort wählen. KDE, Steam und Gufo sind durch
    unsere Flake fest vorgegeben; es gibt keine Desktop-Auswahl.
@@ -103,6 +107,51 @@ aus den manuellen Dateisystemdialogen entfernt. Wir entfernen diesen Patch nicht
 ungeprüft. Automatische LUKS2-Partitionierung wird unterstützt.
 Die Fortschrittsanzeige zeigt grobe Phasen, keine exakte Download-/Kopierprozentzahl.
 
+### Offline mit dynamischen Einstellungen
+
+`packages.x86_64-linux.offline-system` ist ein vorgebautes Referenzsystem mit
+dem festen KDE-/Steam-/Gufo-Paketsatz und LUKS-Initrd-Komponenten. Die ISO nimmt
+dessen Laufzeit-Closure sowie die direkten Build-Werkzeuge der System-,
+Dateisystem- und Initrd-Assemblierung mit. Das ist **nicht** die vollständige
+Source-/Compiler-Closure für Kernel, ROCm oder den gesamten Desktop.
+
+`packages.x86_64-linux.offline-source` archiviert alle gesperrten Flake-Inputs,
+einschließlich Gufo-Toolchains, und schreibt ihre Lock-Einträge auf lokale
+Store-Pfade um. Die originalen Netzwerk-Locks bleiben als `flake.online.lock`
+erhalten. Das installierte System hält die lokalen Input-Quellen als
+`system.extraDependencies` fest, damit die Lock-Pfade nicht nach dem Entfernen
+des Sticks verschwinden oder vom GC entfernt werden.
+Lokale Pfad-Inputs liefern keine Git-Kurzrevision. Gufo erhält deshalb explizit
+die ursprüngliche Kurzrevision aus dem Online-Lock, damit sein Store-Pfad gleich
+bleibt. Dies wurde durch Vergleich der Online-/Offline-Auswertung geprüft;
+alle gelisteten Systempakete außer dem neu erzeugten `nixos-version`-Script
+hatten identische Store-Pfade. Eine Offline-Auswertung der archivierten Flake
+mit deaktivierter Registry und deaktivierten entfernten Substitutern war erfolgreich.
+
+Benutzername, Hostname, Tastatur, Sprache und die tatsächlichen LUKS-/Dateisystem-
+UUIDs werden weiterhin erst bei der Installation festgelegt. Ein gemeinsames
+Archiv mit allen unterstützten Locales verhindert einen neuen Locale-Build
+bei abweichender Sprachwahl. Nix baut nur die davon abhängigen Systembausteine
+neu; Kernel, Desktop und Gufo sollen aus dem lokalen Store übernommen werden.
+Neue Pakete oder zusätzliche, nicht vorbereitete Hardwaretreiber sind davon
+nicht automatisch abgedeckt.
+
+Der M5-Job startet `nixos-install` mit `unshare --net`: Der Prozess hat keine
+Netzwerkverbindung nach außen. Entfernte Substituter und Builder sowie die
+Flake-Registry werden deaktiviert; `nixos-install` verwendet seinen lokalen
+`auto`-Substituter zum Übernehmen der Store-Pfade vom Live-System. Falls eine
+Abhängigkeit fehlt, muss die Installation scheitern statt sie herunterzuladen.
+`--no-root-passwd` unterdrückt ausschließlich den interaktiven Root-Passwort-
+Prompt; Root bleibt durch `hashedPassword = "!"` gesperrt, nicht passwortlos.
+
+Vor einer Zusage vollständiger Offlinefähigkeit muss die fertige ISO in einer
+UEFI-VM **ohne Netzwerkkarte** installiert werden: Benutzername und Sprache
+abweichend vom Referenzsystem wählen, neu booten, LUKS entsperren, in KDE anmelden,
+Steam-Programm und Gufo-Service-Konfiguration prüfen und alle sechs Modell-Dateien
+mit dem Manifest vergleichen. Die GPU-Ausführung bleibt ein Test auf dem M5.
+Steam-Anmeldung, Client-/Spiele-Updates und neue Systempakete benötigen später
+weiterhin Internet; sie sind nicht Teil der Offline-Installation.
+
 ## Gufo nutzen
 
 ```bash
@@ -124,8 +173,8 @@ liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
 `models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
 die Flake prüft, dass es exakt dem Manifest des gepinnten Gufo-Releases entspricht.
 Zusammen sind dies rund 115 GB (107 GiB) Download beim ISO-Bau, ohne Spiele und
-Systempakete. Internet wird am M5 weiterhin für die NixOS-Systeminstallation
-benötigt; die ISO ist kein vollständig offlinefähiger Systeminstaller.
+Systempakete. Alle Downloads erfolgen beim ISO-Bau; der Installationsschritt
+ist für einen ausschließlich lokalen Betrieb vorbereitet (VM-Nachweis steht aus).
 Desktop und KI teilen sich GPU und RAM: GTT auf 112 GiB begrenzt; dieser Wert
 reserviert nicht sofort Speicher und ist kein Schutz gegen jede Speicherauslastung.
 

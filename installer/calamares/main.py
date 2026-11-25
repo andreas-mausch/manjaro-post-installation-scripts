@@ -97,10 +97,23 @@ def deploy(gs, config):
     # No passwords/passphrases are copied into the flake or the Nix Store.
     del password, hashed
     libcalamares.job.setprogress(0.1)
-    host("nixos-install", "--root", root, "--no-root-passwd",
-         "--flake", f"path:{destination}#m5", "--no-write-lock-file",
-         "--no-update-lock-file", "--no-channel-copy",
-         "--option", "build-dir", "/nix/var/nix/builds")
+    install_command = [
+        "nixos-install", "--root", root, "--no-root-passwd",
+        "--flake", f"path:{destination}#m5", "--no-write-lock-file",
+        "--no-update-lock-file", "--no-channel-copy",
+        "--option", "build-dir", "/nix/var/nix/builds",
+    ]
+    if config.get("offline", False):
+        # nixos-install adds the live store as an auto/local substituter.
+        # No remote substitutes, builders or registry fetches; the network
+        # namespace also blocks accidental fixed-output downloads.
+        install_command += [
+            "--option", "substituters", "",
+            "--option", "builders", "",
+            "--option", "flake-registry", "",
+        ]
+        install_command = ["unshare", "--net", "--", *install_command]
+    host(*install_command)
     libcalamares.job.setprogress(0.7)
     target_models = root / "var/lib/gufo/models"
     host("mkdir", "-p", target_models)

@@ -55,6 +55,8 @@ in
   networking.firewall.enable = true;
   time.timeZone = identity.timezone or "Europe/Berlin";
   i18n.defaultLocale = identity.locale or "de_DE.UTF-8";
+  # Keep the locale archive invariant when Calamares selects a different locale.
+  i18n.supportedLocales = [ "all" ];
   console.keyMap = identity.consoleKeyMap or "de";
   services.xserver.xkb = {
     layout = identity.keyboardLayout or "de";

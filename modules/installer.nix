@@ -3,6 +3,8 @@
   pkgs,
   calamaresExtensions,
   modelFiles,
+  offlineSystem,
+  offlineTools,
   ...
 }:
 {
@@ -20,6 +22,9 @@
   console.keyMap = "de";
   time.timeZone = "Europe/Berlin";
   environment.etc."m5-installer/models".source = modelFiles;
+  # Reuse prebuilt packages and assembly tools through the live/local store.
+  # No complete source or compiler closure for Kernel/ROCm is included.
+  system.extraDependencies = [ offlineSystem ] ++ offlineTools;
   nix.settings = {
     experimental-features = [
       "nix-command"
