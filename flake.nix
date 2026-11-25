@@ -243,7 +243,7 @@
               nixpkgs.lib.concatMap (
                 component:
                 map (file: {
-                  name = "flash-next-q4/${file.path}";
+                  name = "${nixpkgs.lib.removePrefix "${offlineSeed.config.generative-ai.models.directory}/" offlineSeed.config.generative-ai.models.text-generation.qwen38FlashNext.directory}/${file.path}";
                   path = pkgs.fetchurl {
                     url = "https://huggingface.co/${component.source.hf}/resolve/${component.source.revision}/${file.path}";
                     sha256 = file.sha256;
@@ -480,6 +480,7 @@
           copyModelSettings = yaml "desktop-copy-models.conf" {
             stage = "models";
             models = "${modelFiles}";
+            modelsDirectory = offlineSeed.config.generative-ai.models.directory;
           };
           validateSettings = yaml "desktop-validate.conf" {
             stage = "validate";

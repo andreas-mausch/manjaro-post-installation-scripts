@@ -13,6 +13,9 @@ let
       live = build.installer.config;
       wrappedCalamares = build.installer.pkgs.calamares-nixos;
       ai = variants.${name}.ai;
+      customAI = build.target.extendModules {
+        modules = [ { generative-ai.models.directory = "/srv/ai/models"; } ];
+      };
       allowsUnfree = target.nixpkgs.config.allowUnfreePredicate or (_: false);
       desktop = name != "base";
       gaming = builtins.elem name [
@@ -31,6 +34,14 @@ let
     assert !(allowsUnfree { pname = "unrelated-proprietary-app"; });
     assert (target.systemd.services ? gufo) == ai;
     assert (target.users.users ? gufo) == ai;
+    assert !ai || target.generative-ai.models.directory == "/var/lib/generative-ai/models";
+    assert !ai || customAI.config.systemd.services.gufo.environment.GUFO_MODELS_DIR == "/srv/ai/models";
+    assert
+      !ai
+      || lib.hasInfix "--model /srv/ai/models/text-generation/Qwen3.8-Flash-Next/UD-Q4_K_XL/" customAI.config.systemd.services.gufo.serviceConfig.ExecStart;
+    assert
+      !ai
+      || lib.hasInfix "--mtp-model /srv/ai/models/text-generation/Qwen3.8-Flash-Next/MTP/" customAI.config.systemd.services.gufo.serviceConfig.ExecStart;
     assert !(target.nix.settings ? always-allow-substitutes);
     assert live.services.desktopManager.plasma6.enable;
     assert (live.environment.etc ? "desktop-installer/models") == ai;

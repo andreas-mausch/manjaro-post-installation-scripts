@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import shlex
 import subprocess
 
 import libcalamares
@@ -168,10 +169,13 @@ def copy_models(gs, config, context):
     context["phase"] = _("Checking target mounts")
     root = validate_mounts(gs)
     models = Path(config["models"])
-    if not (models / "flash-next-q4").is_dir():
+    if not models.is_dir():
         raise ValueError(_("Model weights are missing from the image."))
     context["phase"] = _("Copying model weights")
-    target_models = root / "var/lib/gufo/models"
+    models_directory = Path(config["modelsDirectory"])
+    if not models_directory.is_absolute() or ".." in models_directory.parts or models_directory == Path("/"):
+        raise ValueError(_("Invalid model directory."))
+    target_models = root / models_directory.relative_to("/")
     # The image uses symlinked Store files/directories; enumerate their contents.
     files = sorted(Path(folder) / name for folder, dirs, names in os.walk(models, followlinks=True)
                    for name in names)
@@ -179,7 +183,7 @@ def copy_models(gs, config, context):
     if not files or total == 0:
         raise ValueError(_("Model weights are missing from the image."))
     libcalamares.utils.debug(_("Copying {count} model files: {bytes} bytes ({gib:.2f} GiB) to {target}").format(
-        count=len(files), bytes=total, gib=total / 1024**3, target="/var/lib/gufo/models"))
+        count=len(files), bytes=total, gib=total / 1024**3, target=str(models_directory)))
     libcalamares.job.setprogress(0.0)
     host("mkdir", "-p", target_models)
     completed = 0
@@ -189,13 +193,14 @@ def copy_models(gs, config, context):
         size = source.stat().st_size
         libcalamares.utils.debug(_("Copying {name}: {bytes} bytes ({gib:.2f} GiB) to {target}").format(
             name=str(relative), bytes=size, gib=size / 1024**3,
-            target=str(Path("/var/lib/gufo/models") / relative)))
+            target=str(models_directory / relative)))
         host("mkdir", "-p", target.parent)
         copy_model_file(source, target, completed, total)
         completed += size
         libcalamares.job.setprogress(min(0.99, completed / total))
     host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
-    host("nixos-enter", "--root", root, "-c", "chown -R gufo:gufo /var/lib/gufo")
+    host("nixos-enter", "--root", root, "-c",
+         "chown -R gufo:gufo /var/lib/gufo " + shlex.quote(str(models_directory)))
     libcalamares.job.setprogress(1.0)
     libcalamares.utils.debug(_("Model copying completed: {bytes} bytes in {count} files.").format(
         bytes=total, count=len(files)))

@@ -116,3 +116,5 @@ msgstr "Kopiere {name}: {bytes} Bytes ({gib:.2f} GiB) nach {target}"
 
 msgid "Model copying completed: {bytes} bytes in {count} files."
 msgstr "Modellkopie abgeschlossen: {bytes} Bytes in {count} Dateien."
+msgid "Invalid model directory."
+msgstr "Ungültiges Modellverzeichnis."

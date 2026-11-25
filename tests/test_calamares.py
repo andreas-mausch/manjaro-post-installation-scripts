@@ -197,7 +197,8 @@ class AdapterTests(unittest.TestCase):
             (models / "flash-next-q4").mkdir(parents=True)
             (models / "flash-next-q4/weights.gguf").write_bytes(b"weights")
             calamares.globalstorage = self.storage()
-            calamares.job.configuration = {"stage": "models", "models": str(models)}
+            calamares.job.configuration = {"stage": "models", "models": str(models),
+                                           "modelsDirectory": "/var/lib/generative-ai/models"}
             with patch.object(adapter, "host") as host, patch.object(adapter, "deploy") as deploy, \
                     patch.object(adapter, "copy_model_file") as copy, \
                     patch.object(calamares.utils, "debug") as debug, \
@@ -205,12 +206,12 @@ class AdapterTests(unittest.TestCase):
                 self.assertIsNone(adapter.run())
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             copy.assert_called_once_with(models / "flash-next-q4/weights.gguf",
-                                         Path("/tmp/calamares-root-test/var/lib/gufo/models/flash-next-q4/weights.gguf"),
+                                         Path("/tmp/calamares-root-test/var/lib/generative-ai/models/flash-next-q4/weights.gguf"),
                                          0, 7)
             messages = [call.args[0] for call in debug.call_args_list]
             self.assertIn("1 model files: 7 bytes", messages[0])
             self.assertIn("flash-next-q4/weights.gguf", messages[1])
-            self.assertIn("/var/lib/gufo/models/flash-next-q4/weights.gguf", messages[1])
+            self.assertIn("/var/lib/generative-ai/models/flash-next-q4/weights.gguf", messages[1])
             self.assertNotIn("/tmp/calamares", str(messages))
             self.assertIn("Model copying completed", messages[2])
             self.assertEqual([call.args[0] for call in progress.call_args_list], [0.0, 0.99, 1.0])
@@ -238,6 +239,38 @@ class AdapterTests(unittest.TestCase):
                         adapter.copy_model_file(source, target, 8, 16)
                     progress.assert_called_once_with(0.75)
 
+    def test_model_directory_controls_copy_target_logs_and_ownership(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            models = Path(temporary)
+            (models / "flash-next-q4").mkdir()
+            (models / "flash-next-q4/weights.gguf").write_bytes(b"weights")
+            with patch.object(adapter, "host") as host, \
+                    patch.object(adapter, "copy_model_file") as copy, \
+                    patch.object(calamares.utils, "debug") as debug:
+                adapter.copy_models(self.storage(), {"models": temporary,
+                                    "modelsDirectory": "/srv/ai/models"}, {})
+            self.assertEqual(copy.call_args.args[1],
+                             Path("/tmp/calamares-root-test/srv/ai/models/flash-next-q4/weights.gguf"))
+            self.assertIn("/srv/ai/models", debug.call_args_list[0].args[0])
+            self.assertIn("/srv/ai/models", host.call_args.args[-1])
+
+    def test_model_copy_preserves_task_model_and_hf_layout_through_symlinks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            weights = base / "weights"
+            weights.mkdir()
+            (weights / "shard.gguf").write_bytes(b"weights")
+            models = base / "models"
+            qwen = models / "text-generation/Qwen3.8-Flash-Next"
+            qwen.mkdir(parents=True)
+            (qwen / "UD-Q4_K_XL").symlink_to(weights, target_is_directory=True)
+            with patch.object(adapter, "host"), patch.object(adapter, "copy_model_file") as copy:
+                adapter.copy_models(self.storage(), {"models": str(models),
+                                    "modelsDirectory": "/var/lib/generative-ai/models"}, {})
+            self.assertEqual(copy.call_args.args[1], Path(
+                "/tmp/calamares-root-test/var/lib/generative-ai/models/"
+                "text-generation/Qwen3.8-Flash-Next/UD-Q4_K_XL/shard.gguf"))
+
     def test_model_job_without_weights_does_nothing(self):
         calamares.globalstorage = self.storage(packagechooser_models="without-models")
         calamares.job.configuration = {"stage": "models"}
@@ -259,7 +292,8 @@ class AdapterTests(unittest.TestCase):
     def test_model_job_rejects_missing_weights_before_copying(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(adapter, "host") as host:
             with self.assertRaisesRegex(ValueError, "Model weights are missing"):
-                adapter.copy_models(self.storage(), {"models": temporary}, {})
+                adapter.copy_models(self.storage(), {"models": temporary,
+                                    "modelsDirectory": "/var/lib/generative-ai/models"}, {})
         self.assertFalse(any(call.args[0] == "cp" for call in host.call_args_list))
 
     def test_job_titles_are_stage_specific(self):

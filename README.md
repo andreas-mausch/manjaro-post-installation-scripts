@@ -36,6 +36,17 @@ Modellgewichte haben eigene Lizenzen.
 
 `desktop.nix` importiert `base.nix`, `gaming.nix` importiert `desktop.nix`.
 `generative-ai/default.nix` importiert nur `base.nix` und ist auch ohne Desktop nutzbar.
+Das AI-Modul definiert `generative-ai.models.directory` (Standard:
+`/var/lib/generative-ai/models`). Gufo, Verzeichnisregeln und Installer-Kopie verwenden
+denselben Wert. Eine spätere Änderung verschiebt bereits vorhandene Gewichte
+nicht automatisch; diese müssen separat ins neue Verzeichnis übernommen werden.
+Qwen-Gewichte liegen unter `text-generation/Qwen3.8-Flash-Next/UD-Q4_K_XL/`,
+MTP unter `text-generation/Qwen3.8-Flash-Next/MTP/` und der Projektor direkt
+unter `text-generation/Qwen3.8-Flash-Next/`. Die HF-Dateinamen bleiben erhalten.
+Gufo verwendet den konkreten Pfad des ersten GGUF-Shards statt eines Modellalias.
+`generative-ai.models.text-generation.directory` leitet sich vom Modellwurzelpfad
+ab; `generative-ai.models.text-generation.qwen38FlashNext.directory` davon.
+Die Unterverzeichnisse müssen innerhalb ihrer jeweiligen Elternverzeichnisse liegen.
 Alle Live-ISOs enthalten KDE und Calamares; das Base-Zielsystem enthält weder
 KDE noch Firefox. Gaming ergänzt Steam, AI ergänzt Gufo und dessen Unterstützung.
 Nur AI-/Full-ISOs enthalten alle sechs Qwen-Dateien und die optionale Modellkopie.
@@ -165,7 +176,7 @@ Adapter; ein Modellkopierfehler fordert keine erneute Systeminstallation.
 
 Bei AI/Full bietet Calamares vor der Zusammenfassung die Auswahl **mit Qwen-Modellgewichten**
 (vorausgewählt) oder **ohne Modellgewichte**. Ohne Gewichte entfällt das Kopieren
-der sechs Dateien nach `/var/lib/gufo/models`; dies spart etwa 107 GiB auf dem
+der sechs Dateien nach `/var/lib/generative-ai/models`; dies spart etwa 107 GiB auf dem
 Zielsystem. Die gewählte Modulzusammenstellung bleibt unverändert. Gufo bleibt
 manuell gestartet und benötigt für den Modellbetrieb später bereitgestellte
 Gewichte. Die Gewichte sind nur Bestandteil der Live-ISO, nicht der
@@ -240,7 +251,7 @@ neben dem Modell. `gufo diagnose` auf der tatsächlichen Zielhardware ausführen
 Der ISO-Bau lädt die Dateien, deren Revisionen, Größen und SHA-256-Prüfsummen
 in diesem gepinnten Release festgelegt sind, einschließlich MTP und Bildprojektor.
 Es gibt keinen automatischen Modell-Update-Timer. Die installierten Dateien
-liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
+liegen außerhalb des Nix Stores in `/var/lib/generative-ai/models`.
 `modules/generative-ai/models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
 die Flake prüft, dass es exakt dem Manifest des gepinnten Gufo-Releases entspricht.
 Zusammen sind dies rund 115 GB (107 GiB) Download beim ISO-Bau, ohne Spiele und
@@ -262,19 +273,15 @@ Nach erfolgreicher Systeminstallation, aber fehlgeschlagener Modellkopie, kann
 die bestehende verschlüsselte Installation vom Live-Desktop aus manuell entsperrt
 und nach `/mnt` gemountet werden. Modelle liegen auf dem Medium unter
 `/etc/desktop-installer/models`; mit `cp -rL` kopieren, damit keine Store-Symlinks auf
-dem Ziel landen. Ziel: `/mnt/var/lib/gufo/models`. Danach im Zielsystem die Dateien
+dem Ziel landen. Ziel: `/mnt/var/lib/generative-ai/models`. Danach im Zielsystem die Dateien
 `gufo:gufo` zuordnen und Lese-/Schreibrechte wie im Installationsjob setzen.
 Vorher unbedingt prüfen, dass `/mnt` wirklich die entsperrte Zielinstallation ist.
 
-Alternativ können die gleichen Modelle vom installierten System aus
-heruntergeladen werden:
-
-```bash
-sudo -u gufo env HOME=/var/lib/gufo GUFO_MODELS_DIR=/var/lib/gufo/models \
-  gufo model install flash-next-q4
-```
-
-Gufo setzt Downloads fort.
+Alternativ die sechs gepinnten Dateien aus
+`modules/generative-ai/models.lock.json` herunterladen und mit den dortigen
+Prüfsummen vergleichen. Dabei die oben beschriebene Verzeichnisstruktur und
+HF-Dateinamen beibehalten. `gufo model install flash-next-q4` verwendet Gufos
+eigene Alias-Verzeichnisstruktur und ersetzt diesen Ablauf nicht direkt.
 
 ## System später ändern
 
@@ -353,7 +360,7 @@ Für eine neuere Gufo-Version dort zuerst den gewünschten Release-Tag eintragen
 dann die obigen Update-/Rebuild-Befehle ausführen. Neue Releases können andere
 Konfigurationsoptionen oder Modellanforderungen haben. Modellgewichte in
 `modules/generative-ai/models.lock.json` werden durch `nix flake update` nicht aktualisiert; ebenso
-wenig die bereits nach `/var/lib/gufo/models` kopierten Dateien.
+wenig die bereits nach `/var/lib/generative-ai/models` kopierten Dateien.
 
 Für einen fehlgeschlagenen Update-Build kann der bisherige Lock wiederhergestellt
 werden; das bisher aktivierte System bleibt bei einem Build-Fehler erhalten:
