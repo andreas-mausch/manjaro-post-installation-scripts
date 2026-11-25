@@ -15,20 +15,10 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      releaseLock = builtins.fromJSON (
-        builtins.readFile (
-          if builtins.pathExists ./flake.online.lock then ./flake.online.lock else ./flake.lock
-        )
-      );
-      gufoRevision =
-        gufo.shortRev or (builtins.substring 0 7
-          releaseLock.nodes.${releaseLock.nodes.${releaseLock.root}.inputs.gufo}.locked.rev
-        );
-      # Local path inputs lack shortRev. Preserve Gufo's revision-dependent
-      # build arguments so offline evaluation reuses the exact release package.
-      gufoPackage = gufo.packages.${system}.release.override { revision = gufoRevision; };
-      # Archive every locked input, including Gufo's independent toolchains.
-      # Local path locks do not depend on the live image's fetcher-cache DB.
+      gufoPackage = import ./modules/generative-ai/gufo.nix {
+        inherit pkgs gufo;
+        source = self;
+      };
       variants = {
         base = {
           modules = [ ./modules/base.nix ];
