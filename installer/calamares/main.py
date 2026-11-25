@@ -1,5 +1,6 @@
 """Small Calamares job adapter: native UI/storage, pinned M5 flake deployment."""
 import json
+from datetime import datetime
 import logging
 from pathlib import Path
 import re
@@ -16,7 +17,8 @@ def host(*args, input=None, capture=False):
     logger.warning("M5 installer: running %s", Path(str(args[0])).name)
     return subprocess.run(
         ["pkexec", *map(str, args)], input=input, text=True, check=True,
-        stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
+        # Preserve original diagnostics in Calamares' inherited log streams.
+        stdout=subprocess.PIPE if capture else None,
     )
 
 
@@ -77,19 +79,24 @@ def identity(gs):
     }
 
 
-def deploy(gs, config):
+def deploy(gs, config, context=None):
+    context = context if context is not None else {}
+    context["phase"] = "Ziel-Mounts prüfen"
     root = validate_mounts(gs)
     source = Path(config["source"])
     models = Path(config["models"])
     if not (source / "flake.lock").is_file() or not (models / "flash-next-q4").is_dir():
         raise ValueError("Gepinnte Konfiguration oder Modelle fehlen im Image.")
     destination = root / "etc/nixos"
+    context["phase"] = "Zielkonfiguration vorbereiten"
     host("mkdir", "-p", destination)
     host("cp", "-r", str(source) + "/.", destination)
     host("chmod", "-R", "u+rwX,go+rX,go-w", destination)
     write_file(destination / "installation.json", json.dumps(identity(gs), indent=2) + "\n")
+    context["phase"] = "Hardwarekonfiguration erzeugen"
     hardware = host("nixos-generate-config", "--root", root, "--show-hardware-config", capture=True).stdout
     write_file(destination / "hardware-configuration.nix", hardware)
+    context["phase"] = "Benutzerzugang vorbereiten"
     secrets = root / "var/lib/nixos-secrets"
     host("install", "-d", "-m", "0700", secrets)
     password = libcalamares.utils.obscure(gs.value("password"))
@@ -117,9 +124,11 @@ def deploy(gs, config):
             "--option", "flake-registry", "",
         ]
         install_command = ["unshare", "--net", "--", *install_command]
+    context["phase"] = "Offline-Systeminstallation" if config.get("offline", False) else "Systeminstallation"
     host(*install_command)
     libcalamares.job.setprogress(0.7)
     if gs.value("packagechooser_models") == "qwen":
+        context["phase"] = "Modellgewichte kopieren"
         target_models = root / "var/lib/gufo/models"
         host("mkdir", "-p", target_models)
         host("cp", "-rL", str(models) + "/.", target_models)
@@ -133,13 +142,17 @@ def pretty_name():
 
 
 def run():
-    phase = "Vorprüfung"
+    context = {"phase": "Vorprüfung"}
+    started = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
+    # This stage runs after Calamares' partition and mount jobs, even if the
+    # adapter's own validation fails before deployment starts.
+    installation_started = libcalamares.job.configuration.get("stage") == "install"
     try:
         gs = libcalamares.globalstorage
         validate_selection(gs)
-        if libcalamares.job.configuration["stage"] == "install":
-            phase = "Systeminstallation und optionale Modellkopie"
-            deploy(gs, libcalamares.job.configuration)
+        if installation_started:
+            context["phase"] = "Systeminstallation vorbereiten"
+            deploy(gs, libcalamares.job.configuration, context)
         return None
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         # Never log exception repr, command arguments, stdin or traceback:
@@ -155,11 +168,25 @@ def run():
             if program not in {"mountpoint", "mkdir", "cp", "chmod", "install", "tee",
                                "nixos-generate-config", "mkpasswd", "unshare", "nixos-install", "nixos-enter"}:
                 program = "Unterprozess"
-            detail = f"{program} fehlgeschlagen (Exit-Code {error.returncode})."
+            if program in {"unshare", "nixos-install"}:
+                # An exit code alone cannot distinguish the wrapper from its
+                # child. Report the operation, not an invented root cause.
+                detail = f"Systeminstallationsaufruf fehlgeschlagen (Exit-Code {error.returncode})."
+            else:
+                detail = f"{program} fehlgeschlagen (Exit-Code {error.returncode})."
         else:
             detail = f"Betriebssystemfehler (errno {error.errno})."
+        phase = context["phase"]
         logger.error("M5 installer: %s: %s", phase, detail)
+        state = (
+            "Der Zieldatenträger wurde bereits partitioniert; die Installation ist unvollständig. "
+            "Nicht ohne Prüfung erneut installieren oder formatieren."
+            if installation_started else
+            "Die Vorprüfung wurde vor dem Partitionierungsjob abgebrochen."
+        )
         return ("M5-Installation fehlgeschlagen",
-                f"Phase: {phase}. {detail} "
-                "Details in der Calamares-Ausgabe bzw. im Journal (M5 installer). "
-                "Nach einem Fehler nicht ohne erneute Prüfung formatieren.")
+                f"Phase: {phase}. {detail}\n\n{state}\n\n"
+                "Originaldiagnostik: Calamares-Ausgabe oder im Live-Terminal:\n"
+                f"sudo journalctl -b --since '{started}' --no-pager\n\n"
+                "Die erste Fehlermeldung vor den Folgefehlern prüfen. "
+                "Protokolle vor Weitergabe auf sensible Daten prüfen; kein automatischer Upload.")

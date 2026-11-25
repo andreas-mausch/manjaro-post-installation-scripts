@@ -157,6 +157,38 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("UEFI", result[1])
         self.assertIn("Vorprüfung", result[1])
         self.assertIn("UEFI", " ".join(logs.output))
+        self.assertIn("vor dem Partitionierungsjob", result[1])
+        self.assertIn("sudo journalctl -b --since", result[1])
+
+    def test_installation_failure_reports_phase_and_partitioned_state(self):
+        calamares.globalstorage = self.storage()
+        calamares.job.configuration = {"stage": "install"}
+
+        def fail(gs, config, context):
+            context["phase"] = "Offline-Systeminstallation"
+            raise subprocess.CalledProcessError(1, ["pkexec", "unshare", "--net", "--", "nixos-install"])
+
+        with patch.object(adapter, "deploy", side_effect=fail), self.assertLogs("m5-installer"):
+            result = adapter.run()
+        self.assertIn("Phase: Offline-Systeminstallation", result[1])
+        self.assertIn("Systeminstallationsaufruf fehlgeschlagen", result[1])
+        self.assertNotIn("unshare fehlgeschlagen", result[1])
+        self.assertIn("bereits partitioniert", result[1])
+
+    def test_install_stage_preflight_failure_still_warns_about_partitioning(self):
+        calamares.globalstorage = self.storage(username="root")
+        calamares.job.configuration = {"stage": "install"}
+        with self.assertLogs("m5-installer"), patch.object(adapter, "deploy") as deploy:
+            result = adapter.run()
+        deploy.assert_not_called()
+        self.assertIn("bereits partitioniert", result[1])
+
+    def test_host_preserves_original_diagnostics_without_logging_arguments(self):
+        with patch.object(adapter.subprocess, "run") as run, self.assertLogs("m5-installer") as logs:
+            adapter.host("cp", "secret-argument")
+        self.assertIsNone(run.call_args.kwargs["stdout"])
+        self.assertNotIn("stderr", run.call_args.kwargs)
+        self.assertNotIn("secret-argument", str(logs.output))
 
     def test_command_failure_reports_program_and_exit_code_without_secrets(self):
         calamares.globalstorage = self.storage()

@@ -1,5 +1,7 @@
 # Vorbereitung
 
+- [ ] Neue Diagnosephasen, Journal-Zeitfilter und Warnung zum bereits partitionierten Ziel bei einem realen VM-Installationsfehler prüfen; Originalausgabe muss die erste Nix-Fehlermeldung enthalten.
+
 - [ ] Swap-Unterstützung vor Freigabe ergänzen: `nixos-generate-config` erfasst nur aktive Swap-Partitionen und keine Swapdateien; Calamares erstellt Swapdateien im hier nicht ausgeführten fstab-Modul. Zielgerätezuordnung und verschlüsselten Swap beim Neustart prüfen. Bis dahin bleibt „kein Swap“ erhalten.
 
 - [ ] Installation mit und ohne LUKS2 in einer UEFI-VM testen; Calamares muss bei aktivierter Verschlüsselung leere oder unterschiedliche Passphrasen vor der Installation abfangen.

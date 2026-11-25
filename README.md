@@ -274,10 +274,22 @@ deren Requirements über die offizielle ViewStep-Schnittstelle. Es gibt keine
 zusätzliche Seite und keinen M5-Patch am Calamares-Quellcode.
 
 Der M5-Job nennt bei Fehlern die Phase und entweder den konkreten
-Validierungsgrund oder den Programmnamen mit Exit-Code. Betriebssystemfehler
+Validierungsgrund oder den Programmnamen mit Exit-Code. Bei `unshare` und
+`nixos-install` wird stattdessen der Systeminstallationsaufruf benannt:
+Der Exit-Code allein unterscheidet Wrapper- und Kindprozessfehler nicht.
+Ziel-Mounts, Konfiguration, Benutzerzugang, Systeminstallation und Modellkopie
+haben eigene Diagnosephasen. Betriebssystemfehler
 werden mit errno gemeldet. Befehlsargumente, Passwörter und Hashes werden nicht
 in diese Diagnose übernommen. Jeder gestartete Adapter-Befehl wird nur mit
 seinem Programmnamen in der Calamares-Ausgabe protokolliert.
+Nicht zur Weiterverarbeitung erfasste Unterprozessausgaben werden nicht mehr
+verworfen, sondern an die vorhandenen Calamares-Ausgabeströme weitergegeben.
+Diese Originalausgaben sind nicht sanitisiert; vor Weitergabe auf sensible
+Daten prüfen. Es erfolgt kein automatischer Upload.
+Der Fehlerdialog enthält einen Journal-Befehl ab Beginn des Adapter-Aufrufs.
+Die erste Fehlermeldung prüfen, nicht nur spätere Nix-Abhängigkeitsfehler.
+Fehler im Installationsjob warnen ausdrücklich, dass bereits partitioniert
+wurde und die Installation unvollständig ist, auch bei erneuter Vorprüfung.
 Beim automatisch gestarteten Installer kann diese Ausgabe im Journal der
 Live-VM mit `sudo journalctl -b --no-pager` gelesen werden; nach
 `M5 installer` suchen. Die VM vor dem Sichern der Diagnose nicht neu starten.
