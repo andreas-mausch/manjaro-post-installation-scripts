@@ -374,6 +374,22 @@ einer vollständigen VM-Installation geprüft.
   sichere Übernahme unsignierter ISO-Pakete ohne globale Signaturabschaltung,
   automatisierter Regressionstest, vollständiger Calamares-Durchlauf ohne
   manuelle Befehle sowie Online-Update. Bestehende ISO unverändert.
+- **Signaturstrategie:** Nix 2.35 erlaubt mit dem Store-Parameter `trusted=1`
+  unsignierte Substitute aus genau dieser Quelle. `nixos-install` setzt bereits
+  `auto?trusted=1` für den lokalen Live-Store. Keine globale Abschaltung von
+  `require-sigs` und keine zusätzliche Signaturausnahme im Adapter nötig;
+  Online-Caches behalten ihre normale Signaturprüfung. Vertrauen setzt eine
+  vertrauenswürdig bezogene ISO und einen nicht manipulierten Live-Store voraus.
+- **Lokaler Signaturtest:** Frischer Ziel-Store, nur ISO-Pfade, kein Netzwerk,
+  `require-sigs = true` und `local?root=/mnt&trusted=1`: Systembuild bestanden.
+  Auch der Gesamtablauf ohne `--no-check-sigs` bestand: Flake-Archiv samt Inputs
+  zuerst mit `nix-store --realise` über denselben vertrauenswürdigen lokalen
+  Substituter übernehmen, anschließend Zielsystem bauen. Direktes `nix copy`
+  ohne Signaturausnahme scheiterte dagegen an unsignierten Flake-Inputs;
+  quellenbezogenes Substituter-Vertrauen gilt nicht automatisch für direkte
+  Kopieraufrufe. Der Test verwendet die lokale Store-Variante statt `auto`
+  und ist noch kein vollständiger Installationstest. Die Quellenübernahme
+  im tatsächlichen `nixos-install`-Pfad bleibt separat zu validieren.
 
 #### Voraussetzungen und Diagnoseausgabe
 
