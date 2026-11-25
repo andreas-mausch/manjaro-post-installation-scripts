@@ -6,6 +6,8 @@
 
 ## Erledigt
 
+- [x] 2026-11-25: Gufo-Cache und Signaturschlüssel im Nix-Daemon freigegeben und Cache-Nutzung per Dry-run geprüft; ROCm wird geladen, Gufo selbst bleibt ein lokaler Build.
+
 - [x] 2026-11-25: Offline-Referenzsystem, lokale Flake-Locks und gezielte Assemblierungswerkzeuge in die ISO aufnehmen; Installation ohne externe Netzwerkverbindung erzwingen. Keine vollständige Kernel-/ROCm-Build-Closure mitnehmen.
 - [x] 2026-11-25: Calamares-Root-Dateisystem auf Btrfs in LUKS2 mit zstd-Kompression umstellen, zunächst ohne zusätzliche Subvolumes oder Snapshot-Automatik.
 - [x] 2026-11-25: Disko und disko-install entfernen; vorhandene grafische NixOS-Calamares-ISO mit M5-Flake-/Modell-Anbindung verwenden. Laufenden alten ISO-Bau für Downloads unangetastet lassen.

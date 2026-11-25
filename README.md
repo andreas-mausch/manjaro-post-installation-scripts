@@ -267,3 +267,38 @@ Der frühere isolierte tmpfs-Store wird nicht mehr verwendet. Das Projekt liegt
 dauerhaft unter `~/Desktop/2026-11-25 nixOS Spike`.
 Der Nix-Daemon muss den Gufo-Cache samt Signaturschlüssel zulassen; andernfalls
 ignoriert er die Flake-Einstellungen und Gufo kann einen großen lokalen Build erfordern.
+
+### Gufo-Cache im Nix-Daemon freigeben
+
+Auf dem Vorbereitungsrechner sind diese Freigaben eingerichtet. In
+`/etc/nix/nix.conf` ergänzen bzw. mit vorhandenen Einträgen zusammenführen:
+
+```ini
+trusted-substituters = https://gufo.cachix.org
+extra-trusted-public-keys = gufo.cachix.org-1:rfZe3n4lHINgyoACKzs5EthIZmBNvEyCCtufUpth0PE=
+```
+
+`trusted-substituters` erlaubt normalen Benutzern, den in der Flake angegebenen
+Cache zu verwenden. `extra-trusted-public-keys` ergänzt seinen Signaturschlüssel,
+ohne die bestehenden Standardschlüssel zu ersetzen. Eine pauschale Aufnahme des
+Benutzers in `trusted-users` ist dafür nicht nötig. Mit dieser Freigabe vertraut
+man den vom Gufo-Cache signierten Build-Ergebnissen.
+Die Cache-Nutzung wurde am 2026-11-25 nach dem Daemon-Neustart per Dry-run
+geprüft: `rocblas-gfx1151` wird geladen, Gufo selbst bleibt als lokaler Build
+eingeplant. Für das Offline-Referenzsystem wurden 235 Builds und 3,7 GiB Download
+(11,0 GiB entpackt) geplant. Die Warnung zur untrusted Cache-URL ist verschwunden;
+die weiterhin ignorierte clientseitige Schlüssel-Einstellung der Flake ist
+unnötig, da der Schlüssel im Daemon hinterlegt ist.
+
+**Nicht während eines laufenden ISO-Baus den Daemon neu starten.** Erst warten,
+bis alle laufenden Nix-Bauten abgeschlossen sind, dann:
+
+```bash
+sudo systemctl restart nix-daemon.service
+nix build .#offline-system --dry-run --accept-flake-config
+```
+
+Danach prüfen, dass die Warnungen über den untrusted Gufo-Substituter und den
+ignorierten Schlüssel verschwunden sind und Gufo/ROCm soweit verfügbar aus dem
+Cache eingeplant werden. Die Freigabe allein garantiert nicht, dass für jede
+gesperrte Derivation bereits ein Cache-Ergebnis vorhanden ist.
