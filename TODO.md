@@ -8,6 +8,8 @@
 
 ## Erledigt
 
+- [x] 2026-11-25: Im Offline-VM-Test entdeckte Internet-Pflichtprüfung der Calamares-Willkommensseite entfernen; RAM-/Speicherprüfungen beibehalten. Neue ISO und erneuter VM-Test erforderlich.
+
 - [x] 2026-11-25: Native Calamares-Auswahl für optionales Kopieren der Qwen-Gewichte ergänzen (standardmäßig mit Gewichten); Adapter-Tests für beide Varianten. VM-Prüfung steht aus.
 
 - [x] 2026-11-25: Gufo-Cache und Signaturschlüssel im Nix-Daemon freigegeben und Cache-Nutzung per Dry-run geprüft; ROCm wird geladen, Gufo selbst bleibt ein lokaler Build.

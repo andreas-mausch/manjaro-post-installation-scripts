@@ -376,6 +376,8 @@
           cp ${./installer/calamares/main.py} $out/lib/calamares/modules/m5/main.py
           cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/m5/module.desc
           cp ${calamaresSettings} $out/etc/calamares/settings.conf
+          # Offline installation must not be blocked by upstream's Internet check.
+          sed -i '/^[[:space:]]*- internet$/d' $out/etc/calamares/modules/welcome.conf
           substituteInPlace $out/etc/calamares/settings.conf --replace-fail @out@ $out
           cp ${partitionSettings} $out/etc/calamares/modules/partition.conf
           cp ${userSettings} $out/etc/calamares/modules/users.conf
