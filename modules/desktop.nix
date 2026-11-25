@@ -10,7 +10,7 @@ let
     if builtins.pathExists identityFile then
       builtins.fromJSON (builtins.readFile identityFile)
     else
-      { username = "m5user"; };
+      { username = "desktopuser"; };
   hardwareFile = ../hardware-configuration.nix;
 in
 {
@@ -30,27 +30,15 @@ in
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.initrd.availableKernelModules = [
-    "nvme"
-    "xhci_pci"
-    "usbhid"
-  ];
-  boot.initrd.kernelModules = [ "amdgpu" ];
-  boot.kernelModules = [ "kvm-amd" ];
-  # GTT is a mapping limit, not a reservation. 112 GiB leaves room for the
-  # desktop; limit Gufo's context and stop it before demanding games.
-  boot.kernelParams = [
-    "amdgpu.gttsize=114688"
-    "ttm.pages_limit=29360128"
-  ];
+  # Device drivers and CPU microcode are selected by the generated hardware
+  # configuration. Do not impose GPU memory limits for a particular machine.
   hardware.enableRedistributableFirmware = true;
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
   };
-  hardware.cpu.amd.updateMicrocode = true;
 
-  networking.hostName = identity.hostname or "bosgame-m5";
+  networking.hostName = identity.hostname or "nixos-desktop";
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
   time.timeZone = identity.timezone or "Europe/Berlin";

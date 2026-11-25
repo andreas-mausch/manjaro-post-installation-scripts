@@ -55,8 +55,8 @@ msgstr "Systeminstallation"
 msgid "Copying model weights"
 msgstr "Modellgewichte kopieren"
 
-msgid "BOSGAME M5: install NixOS and optional model weights"
-msgstr "BOSGAME M5: NixOS und optional Modellgewichte installieren"
+msgid "Install NixOS and optional model weights"
+msgstr "NixOS und optional Modellgewichte installieren"
 
 msgid "Preflight checks"
 msgstr "Vorprüfung"
@@ -82,8 +82,8 @@ msgstr "Der Zieldatenträger wurde bereits partitioniert; die Installation ist u
 msgid "Preflight checks failed before partitioning."
 msgstr "Die Vorprüfung wurde vor dem Partitionierungsjob abgebrochen."
 
-msgid "M5 installation failed"
-msgstr "M5-Installation fehlgeschlagen"
+msgid "NixOS installation failed"
+msgstr "NixOS-Installation fehlgeschlagen"
 
 msgid "Phase: {phase}. {detail}"
 msgstr "Phase: {phase}. {detail}"

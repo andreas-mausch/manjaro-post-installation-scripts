@@ -21,7 +21,7 @@
   services.openssh.enable = lib.mkForce false;
   console.keyMap = "de";
   time.timeZone = "Europe/Berlin";
-  environment.etc."m5-installer/models".source = modelFiles;
+  environment.etc."desktop-installer/models".source = modelFiles;
   # Reuse prebuilt packages and assembly tools through the live/local store.
   # No complete source or compiler closure for Kernel/ROCm is included.
   system.extraDependencies = [ offlineSystem ] ++ offlineTools;
@@ -42,7 +42,7 @@
     pkgs.coreutils
     pkgs.cryptsetup
   ];
-  image.fileName = lib.mkForce "bosgame-m5-installer.iso";
+  image.fileName = lib.mkForce "nixos-desktop-installer.iso";
   # Avoid spending CPU compressing the roughly 115 GB of model files.
   isoImage.squashfsCompression = null;
 }

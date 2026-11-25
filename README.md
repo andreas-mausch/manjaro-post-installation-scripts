@@ -1,13 +1,28 @@
-# BOSGAME M5: NixOS, KDE, Steam und Gufo
+# NixOS-Desktop: KDE, Steam und Gufo
 
-Grafischer Calamares-Installer für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
+Grafischer Calamares-Installer für x86_64-Rechner mit UEFI.
 Das gesamte gewählte Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
-Dieser Installer ist noch nicht auf dem M5 oder in einer VM erprobt.
-Die Offline-Variante ist implementiert, aber noch nicht durch eine vollständige
-Installation ohne Netzwerk verifiziert.
+Die bisherige ISO wurde offline mit Calamares in einer UEFI-VM installiert;
+anschließend starteten KDE und Gufo. Die generalisierte Konfiguration muss
+erneut mit einer ISO geprüft werden. Reale Hardware und der vollständige
+Online-Update-/Rebuild-Ablauf sind noch nicht verifiziert.
+
+Ausgangspunkt des Projekts war ein Bosgame M5. Das Setup enthält keine
+dafür festgelegten GPU-Speicherlimits oder
+erzwungenen AMD-Treiber. Hardwaretreiber und CPU-Microcode werden über die bei
+der Installation erzeugte Hardwarekonfiguration ausgewählt. Das ist keine
+Zusage universeller Hardware- oder Offline-Treiberunterstützung. Das gepinnte
+Gufo-Release verwendet upstream ein ROCm-Backend für AMD Strix Halo (`gfx1151`);
+für andere GPUs ist ein passendes Gufo-Backend beziehungsweise ein anderer
+Build nötig. KDE und der Installer sind nicht an dieses GPU-Modell gebunden.
 
 ## Voraussetzungen und reproduzierbarer Bau
+
+Die Flake stellt `nixosConfigurations.desktop` für das Zielsystem und
+`nixosConfigurations.installer` für die Live-ISO bereit. Der Zielname `desktop`
+ist unabhängig vom bei der Installation gewählten Hostnamen. AI-/Gaming-Module
+und getrennte ISO-Varianten sind geplant, aber noch nicht umgesetzt.
 
 Ein Linux-x86_64-Rechner mit funktionierender Nix-Installation und Nix Store.
 Die Flake aktiviert `nix-command` und `flakes` nicht für das aufrufende Nix;
@@ -31,16 +46,16 @@ Der Gufo-Cachix-Cache wird zusätzlich zum NixOS-Cache verwendet; damit vertraut
 man auch dessen signierten Builds. Ohne akzeptierten Cache können große lokale
 ROCm-/Gufo-Builds erforderlich werden.
 
-Das Image liegt unter `result/iso/bosgame-m5-installer.iso` und enthält den
+Das Image liegt unter `result/iso/` und enthält den
 Installer, die gesperrte Flake sowie alle sechs Modell-Dateien. Diese werden
 beim ISO-Bau heruntergeladen und anhand der gepinnten SHA-256-Prüfsummen geprüft.
-Der Installer kopiert sie vom Stick auf die SSD, ohne Modelldownload.
+Der Installer kopiert sie auf Wunsch vom Stick auf das Ziel, ohne Modelldownload.
 Die Modelle allein umfassen rund 115 GB; ein 256-GB-Stick ist ein sinnvoller
 Ausgangspunkt. Vor dem Schreiben die tatsächliche ISO-Größe prüfen.
 Bauen benötigt deutlich mehr
 freien Platz im Nix Store; das Repository allein ist klein.
 SquashFS-Kompression ist deaktiviert. Die Offline-ISO enthält zusätzlich das
-vorbereitete M5-System, lokale Flake-Inputs und Konfigurations-/Initrd-Werkzeuge.
+vorbereitete Desktop-System, lokale Flake-Inputs und Konfigurations-/Initrd-Werkzeuge.
 
 ## Stick vorbereiten
 
@@ -50,8 +65,8 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 
 ## Installation
 
-1. Im BIOS Secure Boot deaktivieren und den UMA-Framebuffer möglichst klein
-   einstellen (Gufo empfiehlt 512 MiB, sofern das BIOS dies anbietet).
+1. In der Firmware Secure Boot deaktivieren. Für GPU-Inferenz zusätzlich die
+   Gufo-Anforderungen für die vorhandene GPU und deren Speicher prüfen.
 2. Stick im **UEFI-Modus** booten. Im KDE-Live-Desktop automatisch als `nixos`
    anmelden. Für die vorgesehene Offline-Installation ist kein Ethernet oder WLAN
    erforderlich. Das Image bietet keinen SSH-Zugang.
@@ -67,10 +82,11 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
    ohne unseren zusätzlichen USB-/Transportfilter und ohne abgetippten Löschtext.
    Modell, Größe und Zielgerät deshalb in der Zusammenfassung genau prüfen.
 5. Die abschließende Installationsbestätigung akzeptieren. Vor der Partitionierung
-   prüft das M5-Modul UEFI, Löschmodus, keinen Swap
+   prüft das Installer-Modul UEFI, Löschmodus, keinen Swap
    sowie Benutzereingaben. Calamares partitioniert, formatiert und mountet.
-   Unser Job installiert anschließend `path:/…/etc/nixos#m5` mit `nixos-install`
-   und kopiert die Modelle vom Medium. Warten, bis **beides** abgeschlossen ist.
+   Unser Job installiert anschließend `path:/…/etc/nixos#desktop` mit `nixos-install`
+   und kopiert bei Auswahl die Modelle vom Medium. Warten, bis die Finish-Seite
+   erscheint; 100 % allein bedeutet noch nicht, dass alle Abschlussjobs fertig sind.
 6. Neustarten, Stick entfernen. Bei Verschlüsselung beim Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
 
@@ -147,7 +163,7 @@ neu; Kernel, Desktop und Gufo sollen aus dem lokalen Store übernommen werden.
 Neue Pakete oder zusätzliche, nicht vorbereitete Hardwaretreiber sind davon
 nicht automatisch abgedeckt.
 
-Der M5-Job lässt `nixos-install` seinen lokalen `auto`-Substituter zum
+Der Installer-Job lässt `nixos-install` seinen lokalen `auto`-Substituter zum
 Übernehmen der Store-Pfade vom Live-System verwenden. Konfigurierte entfernte
 Binärcaches bleiben ebenfalls erlaubt, wenn Netzwerk verfügbar ist. Die
 Installation soll auch ohne Netzwerk vollständig aus der ISO funktionieren;
@@ -160,7 +176,8 @@ Vor einer Zusage vollständiger Offlinefähigkeit muss die fertige ISO in einer
 UEFI-VM **ohne Netzwerkkarte** installiert werden: Benutzername und Sprache
 abweichend vom Referenzsystem wählen, neu booten, LUKS entsperren, in KDE anmelden,
 Steam-Programm und Gufo-Service-Konfiguration prüfen und alle sechs Modell-Dateien
-mit dem Manifest vergleichen. Die GPU-Ausführung bleibt ein Test auf dem M5.
+mit dem Manifest vergleichen. GPU-Ausführung auf geeigneter realer Hardware
+oder mit GPU-Durchreichung prüfen.
 Steam-Anmeldung, Client-/Spiele-Updates und neue Systempakete benötigen später
 weiterhin Internet; sie sind nicht Teil der Offline-Installation.
 
@@ -176,7 +193,7 @@ sudo systemctl stop gufo
 OpenAI-kompatible API: `http://127.0.0.1:8080/v1`, Modellname `flash-next`.
 Der Dienst wird **nicht** beim Boot gestartet und ist nicht im LAN erreichbar.
 Konfiguration: eine Sitzung, 32.768 Tokens Kontext, MTP, Bildprojektor automatisch
-neben dem Modell. `gufo diagnose` auf dem echten M5 ausführen.
+neben dem Modell. `gufo diagnose` auf der tatsächlichen Zielhardware ausführen.
 
 Der ISO-Bau lädt die Dateien, deren Revisionen, Größen und SHA-256-Prüfsummen
 in diesem gepinnten Release festgelegt sind, einschließlich MTP und Bildprojektor.
@@ -185,21 +202,24 @@ liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
 `models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
 die Flake prüft, dass es exakt dem Manifest des gepinnten Gufo-Releases entspricht.
 Zusammen sind dies rund 115 GB (107 GiB) Download beim ISO-Bau, ohne Spiele und
-Systempakete. Alle Downloads erfolgen beim ISO-Bau; der Installationsschritt
-ist für einen ausschließlich lokalen Betrieb vorbereitet (VM-Nachweis steht aus).
-Desktop und KI teilen sich GPU und RAM: GTT auf 112 GiB begrenzt; dieser Wert
-reserviert nicht sofort Speicher und ist kein Schutz gegen jede Speicherauslastung.
+Systempakete. Alle Modelldownloads erfolgen beim ISO-Bau; die Modellkopie selbst
+benötigt keine Netzwerkverbindung. Der Abgleich aller sechs Dateien im
+installierten System bleibt separat zu prüfen.
+Modellbetrieb setzt genügend RAM beziehungsweise GPU-Speicher und ein von Gufo
+unterstütztes Backend voraus. Installation und `gufo --version` allein beweisen
+keine funktionierende GPU-Inferenz. GPU-Speicherlimits, Kontextgröße und
+Treiberkonfiguration müssen zur tatsächlichen Hardware passen.
 
 ## Fehler und erneute Modellkopie
 
 Bei Fehlern zeigt Calamares eine Fehlermeldung. Ein erneuter normaler
-Installationslauf **löscht die SSD erneut** nach Bestätigung. `install-m5` und
-`--models-only` gibt es nicht mehr.
+Installationslauf **löscht das Ziellaufwerk erneut** nach Bestätigung. Es gibt
+keinen separaten interaktiven Installer für reine Modellkopien.
 
 Nach erfolgreicher Systeminstallation, aber fehlgeschlagener Modellkopie, kann
 die bestehende verschlüsselte Installation vom Live-Desktop aus manuell entsperrt
 und nach `/mnt` gemountet werden. Modelle liegen auf dem Medium unter
-`/etc/m5-installer/models`; mit `cp -rL` kopieren, damit keine Store-Symlinks auf
+`/etc/desktop-installer/models`; mit `cp -rL` kopieren, damit keine Store-Symlinks auf
 dem Ziel landen. Ziel: `/mnt/var/lib/gufo/models`. Danach im Zielsystem die Dateien
 `gufo:gufo` zuordnen und Lese-/Schreibrechte wie im Installationsjob setzen.
 Vorher unbedingt prüfen, dass `/mnt` wirklich die entsperrte Zielinstallation ist.
@@ -232,14 +252,14 @@ Mit Internetverbindung auf dem installierten System:
 cd /etc/nixos
 sudo cp flake.lock flake.before-update.lock
 sudo nix flake update
-sudo nixos-rebuild switch --flake path:/etc/nixos#m5
+sudo nixos-rebuild switch --flake path:/etc/nixos#desktop
 ```
 
 Damit werden alle Flake-Inputs innerhalb ihrer angegebenen Branches bzw. Tags
 aktualisiert. Der Nixpkgs-Input folgt `nixos-unstable`: aktualisiert werden die
 darin enthaltenen Paketversionen, nicht zwingend jedes neueste Upstream-Release.
 Quellen und Pakete dürfen beim Update online geladen werden; die
-Netzwerkisolation gilt nur für den Installationsjob auf der Live-ISO.
+Netzwerkisolation gilt nur für Offline-Tests, nicht für normale Installationen.
 
 Gufo ist in `flake.nix` explizit auf `github:gufo-org/gufo/v0.36.0` festgelegt.
 Für eine neuere Gufo-Version dort zuerst den gewünschten Release-Tag eintragen,
@@ -396,13 +416,13 @@ einer vollständigen VM-Installation geprüft.
 Das separate `uefiwelcome`-Modul meldet UEFI als zwingende Voraussetzung bereits
 auf der Willkommensseite. Bei BIOS-Start bleibt „Weiter“ gesperrt und der
 Hinweis fordert einen Neustart im UEFI-Modus (bei VMs: UEFI/OVMF).
-Die spätere M5-Vorprüfung bleibt zusätzlich aktiv. Ein BIOS-Fallback ist
+Die spätere Installer-Vorprüfung bleibt zusätzlich aktiv. Ein BIOS-Fallback ist
 nicht vorgesehen. Die frühe Prüfung muss noch in der VM bestätigt werden.
 Das C++-Modul lädt die unveränderte Calamares-Willkommensseite und ergänzt
 deren Requirements über die offizielle ViewStep-Schnittstelle. Es gibt keine
-zusätzliche Seite und keinen M5-Patch am Calamares-Quellcode.
+zusätzliche Seite und keinen projektspezifischen Patch am Calamares-Quellcode.
 
-Der M5-Job nennt bei Fehlern die Phase und entweder den konkreten
+Der Installer-Job nennt bei Fehlern die Phase und entweder den konkreten
 Validierungsgrund oder den Programmnamen mit Exit-Code. Bei `unshare` und
 `nixos-install` wird stattdessen der Systeminstallationsaufruf benannt:
 Der Exit-Code allein unterscheidet Wrapper- und Kindprozessfehler nicht.
@@ -411,8 +431,12 @@ haben eigene Diagnosephasen. Betriebssystemfehler
 werden mit errno gemeldet. Befehlsargumente, Passwörter und Hashes werden nicht
 in diese Diagnose übernommen. Jeder gestartete Adapter-Befehl wird nur mit
 seinem Programmnamen in der Calamares-Ausgabe protokolliert.
-Nicht zur Weiterverarbeitung erfasste Unterprozessausgaben werden nicht mehr
-verworfen, sondern an die vorhandenen Calamares-Ausgabeströme weitergegeben.
+`nixos-install` verwendet Calamares' öffentliche Prozess-Schnittstelle, um
+seine Ausgabe während des Laufs an den Calamares-Logger weiterzugeben.
+Die Anzeige unter „Toggle log“ muss mit der nächsten ISO noch geprüft werden.
+Passwort- und Konfigurationsbefehle bleiben von diesem Streaming ausgeschlossen.
+Andere Unterprozessausgaben gehen weiterhin an geerbte stdout/stderr-Streams;
+das allein macht sie nicht im UI-Log sichtbar.
 Diese Originalausgaben sind nicht sanitisiert; vor Weitergabe auf sensible
 Daten prüfen. Es erfolgt kein automatischer Upload.
 Der Fehlerdialog enthält einen Journal-Befehl ab Beginn des Adapter-Aufrufs.
@@ -421,7 +445,7 @@ Fehler im Installationsjob warnen ausdrücklich, dass bereits partitioniert
 wurde und die Installation unvollständig ist, auch bei erneuter Vorprüfung.
 Beim automatisch gestarteten Installer kann diese Ausgabe im Journal der
 Live-VM mit `sudo journalctl -b --no-pager` gelesen werden; nach
-`M5 installer` suchen. Die VM vor dem Sichern der Diagnose nicht neu starten.
+`Desktop installer` suchen. Die VM vor dem Sichern der Diagnose nicht neu starten.
 Für einen manuell gestarteten Installer dessen Terminalausgabe sichern.
 
 ### Konfiguration ändern ohne Paketupdate
@@ -433,7 +457,7 @@ Diese beiden Dateien sind keine Geheimnisse, enthalten aber gerätespezifische D
 Ein normales `nixos-rebuild` partitioniert oder formatiert nichts.
 
 ```bash
-sudo nixos-rebuild switch --flake path:/etc/nixos#m5
+sudo nixos-rebuild switch --flake path:/etc/nixos#desktop
 ```
 
 Bei einem späteren Git-Repository dort müssen auch die generierten Dateien
@@ -452,7 +476,7 @@ oder ein eigenes Archiv der Pakete und Modelle voraus.
 
 Geprüft am 2026-11-25: [km-clay/nixos-wizard](https://github.com/km-clay/nixos-wizard)
 hat eine passende TUI für SSD-Auswahl, Partitionierung und Benutzeranlage,
-installiert aber noch keine vorhandene Flake wie unsere M5-Konfiguration.
+installiert aber noch keine vorhandene Flake wie unsere Desktop-Konfiguration.
 Prüfstand: Commit `386def227ec27ea61bdfd9c3e7afeab7da39102a`.
 
 - Ein Menü „Source Flake“ fragt einen lokalen oder entfernten Flake-Pfad ab.
@@ -473,27 +497,25 @@ Quellen im geprüften Commit:
 und [Commit](https://github.com/km-clay/nixos-wizard/commit/386def227ec27ea61bdfd9c3e7afeab7da39102a).
 
 Zum Prüfzeitpunkt verwendeten wir deshalb `disko-install` mit einem Wrapper.
-Inzwischen verwenden wir Calamares mit einer M5-Flake-Anbindung. Die Bewertung
+Inzwischen verwenden wir Calamares mit einer Flake-Anbindung. Die Bewertung
 von nixos-wizard kann bei funktionierendem Flake-Support neu geprüft werden.
 
 ## Aktuelle Bauumgebung
 
-Auf diesem Vorbereitungsrechner ist der normale daemonbasierte Nix Store
-unter `/nix/store` eingerichtet. `nix-command` und `flakes` sind bereits aktiviert:
+Mit daemonbasiertem Nix Store unter `/nix/store` und aktivierten Funktionen
+`nix-command` und `flakes` lässt sich die ISO so bauen:
 
 ```bash
 nix build .#iso --accept-flake-config
 ```
 
-Der frühere isolierte tmpfs-Store wird nicht mehr verwendet. Das Projekt liegt
-dauerhaft unter `~/Desktop/2026-11-25 nixOS Spike`.
 Der Nix-Daemon muss den Gufo-Cache samt Signaturschlüssel zulassen; andernfalls
 ignoriert er die Flake-Einstellungen und Gufo kann einen großen lokalen Build erfordern.
 
 ### Gufo-Cache im Nix-Daemon freigeben
 
-Auf dem Vorbereitungsrechner sind diese Freigaben eingerichtet. In
-`/etc/nix/nix.conf` ergänzen bzw. mit vorhandenen Einträgen zusammenführen:
+Falls der Nix-Daemon den Cache noch nicht zulässt, in `/etc/nix/nix.conf`
+ergänzen beziehungsweise mit vorhandenen Einträgen zusammenführen:
 
 ```ini
 trusted-substituters = https://gufo.cachix.org
@@ -505,12 +527,8 @@ Cache zu verwenden. `extra-trusted-public-keys` ergänzt seinen Signaturschlüss
 ohne die bestehenden Standardschlüssel zu ersetzen. Eine pauschale Aufnahme des
 Benutzers in `trusted-users` ist dafür nicht nötig. Mit dieser Freigabe vertraut
 man den vom Gufo-Cache signierten Build-Ergebnissen.
-Die Cache-Nutzung wurde am 2026-11-25 nach dem Daemon-Neustart per Dry-run
-geprüft: `rocblas-gfx1151` wird geladen, Gufo selbst bleibt als lokaler Build
-eingeplant. Für das Offline-Referenzsystem wurden 235 Builds und 3,7 GiB Download
-(11,0 GiB entpackt) geplant. Die Warnung zur untrusted Cache-URL ist verschwunden;
-die weiterhin ignorierte clientseitige Schlüssel-Einstellung der Flake ist
-unnötig, da der Schlüssel im Daemon hinterlegt ist.
+Die Freigabe allein garantiert nicht, dass Gufo und alle Abhängigkeiten als
+fertige Cache-Ergebnisse verfügbar sind; vor größeren Builds per Dry-run prüfen.
 
 **Nicht während eines laufenden ISO-Baus den Daemon neu starten.** Erst warten,
 bis alle laufenden Nix-Bauten abgeschlossen sind, dann:

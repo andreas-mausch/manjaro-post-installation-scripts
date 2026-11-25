@@ -1,5 +1,5 @@
 {
-  description = "Reproducible BOSGAME M5 desktop and interactive LUKS installer";
+  description = "Reproducible NixOS KDE desktop with Steam, Gufo and a graphical installer";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -77,8 +77,8 @@
             node
         ) originalLock.nodes;
       };
-      localLockFile = pkgs.writeText "m5-offline-flake.lock" (builtins.toJSON localLock);
-      offlineSource = pkgs.runCommand "m5-offline-source" { } ''
+      localLockFile = pkgs.writeText "desktop-offline-flake.lock" (builtins.toJSON localLock);
+      offlineSource = pkgs.runCommand "desktop-offline-source" { } ''
         mkdir "$out"
         cp -r ${self}/. "$out/"
         chmod -R u+w "$out"
@@ -87,7 +87,7 @@
       '';
       # Prebuild the fixed package set and encryption-related initrd components.
       # Do not include the complete .drv/source graph (Kernel/ROCm toolchains).
-      offlineSeed = self.nixosConfigurations.m5.extendModules {
+      offlineSeed = self.nixosConfigurations.desktop.extendModules {
         modules = [
           {
             boot.initrd.luks.devices.cryptroot.device =
@@ -150,13 +150,14 @@
           texinfo
           libxslt
           microcode-amd
+          microcode-intel
           linux-firmware
         ]);
       modelManifest = builtins.fromJSON (builtins.readFile ./models.lock.json);
       upstreamManifest = builtins.fromJSON (
         builtins.readFile (gufo + "/src/models/qwen38_flash_next/models.lock.json")
       );
-      modelFiles = pkgs.linkFarm "m5-models" (
+      modelFiles = pkgs.linkFarm "qwen-models" (
         nixpkgs.lib.concatMap (
           component:
           map (file: {
@@ -185,17 +186,17 @@
           {
             module = "packagechooser";
             id = "models";
-            config = "m5-models.conf";
+            config = "desktop-models.conf";
           }
           {
-            module = "m5";
+            module = "desktop";
             id = "validate";
-            config = "m5-validate.conf";
+            config = "desktop-validate.conf";
           }
           {
-            module = "m5";
+            module = "desktop";
             id = "install";
-            config = "m5-install.conf";
+            config = "desktop-install.conf";
             weight = 50;
           }
         ];
@@ -213,10 +214,10 @@
           }
           {
             exec = [
-              "m5@validate"
+              "desktop@validate"
               "partition"
               "mount"
-              "m5@install"
+              "desktop@install"
               "umount"
             ];
           }
@@ -231,7 +232,7 @@
         hide-back-and-next-during-exec = true;
         quit-at-end = false;
       };
-      modelSettings = yaml "m5-models.conf" {
+      modelSettings = yaml "desktop-models.conf" {
         mode = "required";
         method = "legacy";
         default = "qwen";
@@ -379,12 +380,12 @@
           forbidden_names = [ "localhost" ];
         };
       };
-      installSettings = yaml "m5-install.conf" {
+      installSettings = yaml "desktop-install.conf" {
         stage = "install";
         source = "${offlineSource}";
         models = "${modelFiles}";
       };
-      validateSettings = yaml "m5-validate.conf" { stage = "validate"; };
+      validateSettings = yaml "desktop-validate.conf" { stage = "validate"; };
       welcomeModule = pkgs.stdenv.mkDerivation {
         pname = "calamares-uefi-welcome";
         version = "1";
@@ -401,13 +402,13 @@
       };
       calamaresExtensions = pkgs.calamares-nixos-extensions.overrideAttrs (old: {
         postInstall = (old.postInstall or "") + ''
-          mkdir -p $out/lib/calamares/modules/m5
+          mkdir -p $out/lib/calamares/modules/desktop
           cp -r ${welcomeModule}/lib/calamares/modules/uefiwelcome $out/lib/calamares/modules/
-          cp ${./installer/calamares/main.py} $out/lib/calamares/modules/m5/main.py
-          mkdir -p $out/lib/calamares/modules/m5/locale/de/LC_MESSAGES
+          cp ${./installer/calamares/main.py} $out/lib/calamares/modules/desktop/main.py
+          mkdir -p $out/lib/calamares/modules/desktop/locale/de/LC_MESSAGES
           ${pkgs.gettext}/bin/msgfmt --check ${./installer/calamares/locale/de.po} \
-            -o $out/lib/calamares/modules/m5/locale/de/LC_MESSAGES/m5-installer.mo
-          cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/m5/module.desc
+            -o $out/lib/calamares/modules/desktop/locale/de/LC_MESSAGES/desktop-installer.mo
+          cp ${./installer/calamares/module.desc} $out/lib/calamares/modules/desktop/module.desc
           cp ${calamaresSettings} $out/etc/calamares/settings.conf
           # Offline installation must not be blocked by upstream's Internet check.
           sed -i '/^[[:space:]]*- internet$/d' $out/etc/calamares/modules/welcome.conf
@@ -415,16 +416,16 @@
           cp ${partitionSettings} $out/etc/calamares/modules/partition.conf
           cp ${userSettings} $out/etc/calamares/modules/users.conf
           cp ${mountSettings} $out/etc/calamares/modules/mount.conf
-          cp ${modelSettings} $out/etc/calamares/modules/m5-models.conf
-          cp ${installSettings} $out/etc/calamares/modules/m5-install.conf
-          cp ${validateSettings} $out/etc/calamares/modules/m5-validate.conf
+          cp ${modelSettings} $out/etc/calamares/modules/desktop-models.conf
+          cp ${installSettings} $out/etc/calamares/modules/desktop-install.conf
+          cp ${validateSettings} $out/etc/calamares/modules/desktop-validate.conf
         '';
       });
     in
     assert modelManifest == upstreamManifest;
     {
       nixosConfigurations = {
-        m5 = nixpkgs.lib.nixosSystem {
+        desktop = nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = { inherit gufoPackage; };
           modules = [
@@ -458,7 +459,7 @@
         default = self.packages.${system}.iso;
       };
       checks.${system}.installer-tests =
-        pkgs.runCommand "m5-installer-tests"
+        pkgs.runCommand "desktop-installer-tests"
           {
             nativeBuildInputs = [
               pkgs.python3

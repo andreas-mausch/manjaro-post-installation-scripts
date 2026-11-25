@@ -23,7 +23,7 @@ spec.loader.exec_module(adapter)
 class AdapterTests(unittest.TestCase):
     def storage(self, **changes):
         values = {
-            "firmwareType": "efi", "username": "neonew",
+            "firmwareType": "efi", "username": "testuser",
             "password": "user-test-secret", "luksPassphrase": "luks-test-secret",
             "partitionChoices": {"install": "erase", "swap": "none"},
             "partitions": [
@@ -57,7 +57,7 @@ class AdapterTests(unittest.TestCase):
             {"packagechooser_models": None}, {"packagechooser_models": "unexpected"},
             {"firmwareType": "bios"},
             {"username": "gufo"}, {"username": "x\ny"},
-            {"username": "root"}, {"autoLoginUser": "neonew"},
+            {"username": "root"}, {"autoLoginUser": "testuser"},
             {"partitionChoices": {"install": "manual", "swap": "none"}},
             {"partitionChoices": {"install": "erase", "swap": "small"}},
         ]:
@@ -119,7 +119,7 @@ class AdapterTests(unittest.TestCase):
                 if call.args[0] == "tee":
                     self.assertNotIn("always-allow-substitutes", call.kwargs.get("input", ""))
                     self.assertNotIn("alwaysAllowSubstitutes", call.kwargs.get("input", ""))
-            self.assertIn("path:/tmp/calamares-root-test/etc/nixos#m5", install)
+            self.assertIn("path:/tmp/calamares-root-test/etc/nixos#desktop", install)
             self.assertIn("--no-update-lock-file", install)
             # This suppresses a terminal prompt; NixOS separately locks root.
             self.assertIn("--no-root-passwd", install)
@@ -131,7 +131,7 @@ class AdapterTests(unittest.TestCase):
             identity_call = next(call for call in host.call_args_list
                                  if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))
             data = json.loads(identity_call.kwargs["input"])
-            self.assertEqual(data["username"], "neonew")
+            self.assertEqual(data["username"], "testuser")
             self.assertNotIn("password", data)
             hash_call = next(call for call in host.call_args_list
                              if call.args[0] == "tee" and str(call.args[1]).endswith("user-password.hash"))
@@ -148,9 +148,12 @@ class AdapterTests(unittest.TestCase):
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")),
             ):
-                adapter.deploy(self.storage(packagechooser_models="without-models"),
-                               {"source": str(source), "models": str(models)})
+                adapter.deploy(self.storage(packagechooser_models="without-models", hostname=""),
+                                {"source": str(source), "models": str(models)})
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
+            identity_call = next(call for call in host.call_args_list
+                                 if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))
+            self.assertEqual(json.loads(identity_call.kwargs["input"])["hostname"], "nixos-desktop")
             self.assertTrue(any("nixos-install" in command for command in commands))
             self.assertFalse(any(command[:2] == ("cp", "-rL") for command in commands))
             self.assertFalse(any("/var/lib/gufo/models" in " ".join(command) for command in commands))
@@ -166,7 +169,7 @@ class AdapterTests(unittest.TestCase):
     def test_validation_failure_reports_specific_reason(self):
         calamares.globalstorage = self.storage(firmwareType="bios")
         calamares.job.configuration = {"stage": "validate"}
-        with self.assertLogs("m5-installer", level="ERROR") as logs:
+        with self.assertLogs("desktop-installer", level="ERROR") as logs:
             result = adapter.run()
         self.assertIn("UEFI", result[1])
         self.assertIn("Preflight checks", result[1])
@@ -182,7 +185,7 @@ class AdapterTests(unittest.TestCase):
             context["phase"] = adapter._("Offline system installation")
             raise subprocess.CalledProcessError(1, ["pkexec", "unshare", "--net", "--", "nixos-install"])
 
-        with patch.object(adapter, "deploy", side_effect=fail), self.assertLogs("m5-installer"):
+        with patch.object(adapter, "deploy", side_effect=fail), self.assertLogs("desktop-installer"):
             result = adapter.run()
         self.assertIn("Phase: Offline system installation", result[1])
         self.assertIn("System installation command failed", result[1])
@@ -192,13 +195,13 @@ class AdapterTests(unittest.TestCase):
     def test_install_stage_preflight_failure_still_warns_about_partitioning(self):
         calamares.globalstorage = self.storage(username="root")
         calamares.job.configuration = {"stage": "install"}
-        with self.assertLogs("m5-installer"), patch.object(adapter, "deploy") as deploy:
+        with self.assertLogs("desktop-installer"), patch.object(adapter, "deploy") as deploy:
             result = adapter.run()
         deploy.assert_not_called()
         self.assertIn("already been partitioned", result[1])
 
     def test_host_preserves_original_diagnostics_without_logging_arguments(self):
-        with patch.object(adapter.subprocess, "run") as run, self.assertLogs("m5-installer") as logs:
+        with patch.object(adapter.subprocess, "run") as run, self.assertLogs("desktop-installer") as logs:
             adapter.host("cp", "secret-argument")
         self.assertIsNone(run.call_args.kwargs["stdout"])
         self.assertNotIn("stderr", run.call_args.kwargs)
@@ -233,7 +236,7 @@ class AdapterTests(unittest.TestCase):
         calamares.job.configuration = {"stage": "install"}
         error = subprocess.CalledProcessError(17, ["pkexec", "cp", "secret-argument"],
                                              output="secret-output", stderr="secret-stderr")
-        with patch.object(adapter, "deploy", side_effect=error), self.assertLogs("m5-installer") as logs:
+        with patch.object(adapter, "deploy", side_effect=error), self.assertLogs("desktop-installer") as logs:
             result = adapter.run()
         self.assertIn("cp failed (exit code 17)", result[1])
         self.assertNotIn("secret", str(result) + str(logs.output))
@@ -241,7 +244,7 @@ class AdapterTests(unittest.TestCase):
     def test_os_failure_does_not_expose_filename(self):
         calamares.globalstorage = self.storage()
         calamares.job.configuration = {"stage": "install"}
-        with patch.object(adapter, "deploy", side_effect=OSError(2, "secret", "secret-path")), self.assertLogs("m5-installer") as logs:
+        with patch.object(adapter, "deploy", side_effect=OSError(2, "secret", "secret-path")), self.assertLogs("desktop-installer") as logs:
             result = adapter.run()
         self.assertIn("errno 2", result[1])
         self.assertNotIn("secret", str(result) + str(logs.output))

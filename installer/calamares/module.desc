@@ -1,5 +1,5 @@
 ---
 type: job
-name: m5
+name: desktop
 interface: python
 script: main.py

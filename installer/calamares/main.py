@@ -1,4 +1,4 @@
-"""Small Calamares job adapter: native UI/storage, pinned M5 flake deployment."""
+"""Small Calamares job adapter: native UI/storage, pinned desktop deployment."""
 import json
 import gettext
 from datetime import datetime
@@ -10,20 +10,20 @@ import subprocess
 import libcalamares
 
 
-logger = logging.getLogger("m5-installer")
+logger = logging.getLogger("desktop-installer")
 
 
 def _(message):
     # Resolve the current UI language on each call, including after switching it.
     return gettext.translation(
-        "m5-installer", localedir=Path(__file__).parent / "locale",
+        "desktop-installer", localedir=Path(__file__).parent / "locale",
         languages=libcalamares.utils.gettext_languages(), fallback=True,
     ).gettext(message)
 
 
 def host(*args, input=None, capture=False, stream=False):
     # Use Calamares' existing Polkit environment; never put secrets in arguments.
-    logger.warning("M5 installer: running %s", Path(str(args[0])).name)
+    logger.warning("Desktop installer: running %s", Path(str(args[0])).name)
     if stream:
         if input is not None or capture:
             raise ValueError("Streaming commands must not receive input or capture output")
@@ -87,7 +87,7 @@ def identity(gs):
     return {
         "username": gs.value("username"),
         "fullname": gs.value("fullname") or "",
-        "hostname": gs.value("hostname") or "bosgame-m5",
+        "hostname": gs.value("hostname") or "nixos-desktop",
         "timezone": "/".join(filter(None, [gs.value("locationRegion"), gs.value("locationZone")])) or "Europe/Berlin",
         "locale": (locale.get("LANG") or "de_DE.UTF-8").split("/")[0],
         "keyboardLayout": gs.value("keyboardLayout") or "de",
@@ -127,7 +127,7 @@ def deploy(gs, config, context=None):
     libcalamares.job.setprogress(0.1)
     install_command = [
         "nixos-install", "--root", root, "--no-root-passwd",
-        "--flake", f"path:{destination}#m5", "--no-write-lock-file",
+        "--flake", f"path:{destination}#desktop", "--no-write-lock-file",
         "--no-update-lock-file", "--no-channel-copy",
         "--option", "build-dir", "/nix/var/nix/builds",
         # Nixpkgs' perl-5.42.3-env for activation sets allowSubstitutes = false.
@@ -152,7 +152,7 @@ def deploy(gs, config, context=None):
 
 
 def pretty_name():
-    return _("BOSGAME M5: install NixOS and optional model weights")
+    return _("Install NixOS and optional model weights")
 
 
 def run():
@@ -191,13 +191,13 @@ def run():
         else:
             detail = _("Operating system error (errno {errno}).").format(errno=error.errno)
         phase = context["phase"]
-        logger.error("M5 installer: %s: %s", phase, detail)
+        logger.error("Desktop installer: %s: %s", phase, detail)
         state = (
             _("The target disk has already been partitioned; installation is incomplete. Do not reinstall or format again without checking the disk first.")
             if installation_started else
             _("Preflight checks failed before partitioning.")
         )
-        return (_("M5 installation failed"),
+        return (_("NixOS installation failed"),
                 _("Phase: {phase}. {detail}").format(phase=phase, detail=detail) + f"\n\n{state}\n\n" +
                 _("Original diagnostics: Calamares output or in the live terminal:") + "\n" +
                 f"sudo journalctl -b --since '{started}' --no-pager\n\n" +
