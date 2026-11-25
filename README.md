@@ -274,6 +274,51 @@ Gufo setzt Downloads fort.
 
 ## System später ändern
 
+### Änderungen dieses Repositories übernehmen
+
+Eine Neuinstallation oder neue ISO ist dafür nicht nötig: Neue Tools, Dienste
+und Module werden durch einen Rebuild übernommen. Persönliche Dateien bleiben
+erhalten; Dienste können dabei neu gestartet werden. Kerneländerungen benötigen
+gegebenenfalls einen Neustart. Ein Rebuild ersetzt keine Datensicherung.
+
+`nix flake update` aktualisiert nur die Flake-Abhängigkeiten, nicht unsere
+Moduldateien. Die unter `/etc/nixos` installierte Flake ist eine archivierte Kopie,
+kein automatisch eingerichteter Git-Checkout. Änderungen dieses Projekts daher
+separat über einen eigenen Checkout übernehmen, beispielsweise unter
+`~/coding/nixos-setup`.
+
+**Der Checkout muss die Daten genau dieses Ziel-PCs enthalten.** Unsere Module
+lesen `hardware-configuration.nix` und `installation.json` relativ zur Flake.
+Ohne diese Dateien greifen Evaluierungsdefaults statt der tatsächlichen
+Datenträger-UUIDs und Benutzeridentität. Vor dem ersten Rebuild aus dem Checkout
+die vorhandenen Dateien übernehmen (bestehende lokale Dateien vorher prüfen):
+
+```bash
+cd ~/coding/nixos-setup
+cp /etc/nixos/hardware-configuration.nix .
+cp /etc/nixos/installation.json .
+sudo nixos-rebuild switch --flake "path:$HOME/coding/nixos-setup#desktop"
+```
+
+`#desktop` durch die tatsächlich installierte beziehungsweise bewusst gewünschte
+Variante ersetzen. Der Passworthash bleibt auf dem Ziel-PC unter
+`/var/lib/nixos-secrets/user-password.hash`; ihn nicht ins Repository kopieren.
+Die beiden übernommenen Dateien sind im Repository absichtlich Git-ignoriert.
+Deshalb hier **`path:` verwenden**: Ein automatisch als Git-Flake behandelter
+Checkout würde ignorierte/unversionierte Dateien nicht in die Quelle aufnehmen.
+Ein Rebuild ohne diese Dateien ist für unser Setup nicht der richtige Ablauf.
+
+Später nach Prüfung der Projektänderungen im Checkout `git pull --ff-only`
+ausführen (lokale Änderungen vorher berücksichtigen) und denselben Rebuild
+wiederholen. Optional zusätzlich `nix flake update` ausführen, wenn auch die
+Abhängigkeiten auf einen neuen Stand gebracht werden sollen. Für einen vom
+Projekt veröffentlichten, reproduzierbaren Stand dessen `flake.lock` verwenden.
+
+Der Rebuild kopiert den Checkout nicht automatisch nach `/etc/nixos`.
+Für spätere Updates weiter dieselbe Konfigurationsquelle verwenden; sonst könnte
+ein Rebuild aus `/etc/nixos` wieder den alten Stand aktivieren. Dieser
+Repo-Update-Ablauf ist dokumentiert, aber noch nicht in der vorhandenen VM geprüft.
+
 ### Online aktualisieren nach der Offline-Installation
 
 Die Offline-Installation verhindert keine späteren Online-Updates.

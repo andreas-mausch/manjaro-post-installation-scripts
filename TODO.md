@@ -10,6 +10,8 @@ Stand: Der bisherige Offline-Calamares-Test in der vorhandenen UEFI-VM ist abges
 
 ## Weitere Vorbereitung
 
+- [ ] Einen installierten PC auf den neuen Stand dieses Repositories bringen können, ohne Neuinstallation und ohne seine Hardware- oder Benutzerdaten ins Entwicklungsrepo kopieren zu müssen. Dafür bleibt die PC-Konfiguration unter `/etc/nixos` und bindet die wiederverwendbaren Setup-Module als gepinnten Flake-Input ein. Die bisherigen relativen Hardware-/Identitätsimporte anpassen; auch Updates aus einem lokalen Checkout ohne `--impure` unterstützen. Ablauf dokumentieren und testen.
+
 - [ ] Gemeinsame Releases der Flake und ihrer Base-/Desktop-/Gaming-/AI-Module über Git-Tags (z. B. `v0.1.0`) einführen; optional dieselbe explizite Releaseversion im ISO-Dateinamen verwenden. Kein automatisch ermitteltes Builddatum und keine Änderung von `system.stateVersion` zur Projektversionierung.
 
 - [ ] Separaten Calamares-Wrapper mit der nächsten ISO prüfen: Autostart, Desktop-Start über Polkit, grafische Umgebung und variantenabhängige Konfigurationspfade. Kompiliertes Calamares bleibt unverändert; lokale Paket-/Policy-Tests ersetzen keinen GUI-Nachweis.
