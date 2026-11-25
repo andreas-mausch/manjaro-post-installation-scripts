@@ -38,4 +38,6 @@
     pkgs.cryptsetup
   ];
   image.fileName = lib.mkForce "bosgame-m5-installer.iso";
+  # Avoid spending CPU compressing the roughly 115 GB of model files.
+  isoImage.squashfsCompression = null;
 }
