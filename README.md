@@ -1,6 +1,6 @@
 # BOSGAME M5: NixOS, KDE, Steam und Gufo
 
-Interaktiver Online-Installer für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
+Interaktiver Installer mit Disko für den M5 mit Ryzen AI Max+ 395 und 128 GB RAM.
 Das gesamte gewählte NVMe-, SATA- oder VirtIO-Laufwerk wird nach ausdrücklicher Bestätigung
 neu partitioniert. **Alle vorhandenen Daten einschließlich Windows werden gelöscht.**
 Dieser Installer ist noch nicht auf dem M5 oder in einer VM erprobt.
@@ -30,11 +30,12 @@ man auch dessen signierten Builds. Ohne akzeptierten Cache können große lokale
 ROCm-/Gufo-Builds erforderlich werden.
 
 Das Image liegt unter `result/iso/bosgame-m5-installer.iso` und enthält den
-Installer, die gesperrte Flake sowie Gufo für den Modelldownload. Die großen
-Modell-Dateien werden erst am M5 auf die verschlüsselte SSD heruntergeladen.
-Damit braucht der Stick nicht 256 GB: Seine erforderliche Größe ergibt sich
-aus der fertigen ISO. 32 GB sind ein vernünftiger Ausgangspunkt, aber vor dem
-Schreiben die tatsächliche ISO-Größe prüfen. Bauen benötigt deutlich mehr
+Installer, die gesperrte Flake sowie alle sechs Modell-Dateien. Diese werden
+beim ISO-Bau heruntergeladen und anhand der gepinnten SHA-256-Prüfsummen geprüft.
+Der Installer kopiert sie vom Stick auf die verschlüsselte SSD, ohne Modelldownload.
+Die Modelle allein umfassen rund 115 GB; ein 256-GB-Stick ist ein sinnvoller
+Ausgangspunkt. Vor dem Schreiben die tatsächliche ISO-Größe prüfen.
+Bauen benötigt deutlich mehr
 freien Platz im Nix Store; das Repository allein ist klein.
 
 ## Stick vorbereiten
@@ -50,13 +51,16 @@ ausgeführten Schreibbefehl für einen geratenen Gerätenamen.
 2. Stick im **UEFI-Modus** booten. Ethernet anschließen; alternativ fragt der
    Installer nach Einrichtung per `nmtui`. Das Image startet lokal als root und
    bietet keinen SSH-Zugang.
-3. Der Installer auf der ersten Konsole fragt SSD, Benutzername, Benutzerpasswort
-   und LUKS-Passphrase ab. Passwörter werden verdeckt eingegeben und wiederholt.
+3. Der Shell-Installer auf der ersten Konsole fragt SSD, Benutzername und
+   Benutzerpasswort ab. Python ist nicht nötig; verwendet werden die üblichen
+   NixOS-Werkzeuge und Disko. Das Benutzerpasswort wird verdeckt wiederholt.
 4. Den Löschtext mit dem exakten SSD-Gerätenamen bestätigen. Davor werden keine
    Datenträger verändert. Nur ungemountete NVMe-, SATA- und VirtIO-Laufwerke ab
    256 GiB sind wählbar. USB-, entfernbare und schreibgeschützte Laufwerke sind
    ausgeschlossen; andere Datenträger werden nicht automatisch verwendet.
-5. Warten, bis Systeminstallation **und Modelldownload** abgeschlossen sind.
+5. Disko partitioniert, formatiert und mountet anhand von `modules/disk-layout.nix`.
+   Es fragt nach der LUKS-Passphrase samt Wiederholung. Warten, bis Systeminstallation **und
+   Modellkopie vom Stick** abgeschlossen sind.
 6. `reboot`, Stick entfernen. Bei jedem Boot LUKS-Passphrase eingeben, anschließend
    mit dem gewählten Benutzerpasswort in KDE anmelden.
 
@@ -66,8 +70,8 @@ Partition mit Kernel und Initrd bleibt unverschlüsselt; das schützt nicht vor
 Manipulation durch jemanden mit physischem Zugriff. Es gibt keinen gespeicherten
 LUKS-Schlüssel und keine automatische TPM-Entsperrung.
 
-Die LUKS-Passphrase wird nur kurz in einer rootgeschützten Datei unter `/run`
-(RAM) verwendet. Nur der Benutzerpassworthash wird auf der verschlüsselten SSD
+Die LUKS-Passphrase wird von Disko verdeckt abgefragt; der Installer legt
+keine Schlüsseldatei an. Nur der Benutzerpassworthash wird auf der verschlüsselten SSD
 unter `/var/lib/nixos-secrets/user-password.hash` gespeichert, nie im Nix Store.
 Root-Anmeldung ist gesperrt; der Benutzer kann mit Passwort `sudo` verwenden.
 
@@ -85,38 +89,46 @@ Der Dienst wird **nicht** beim Boot gestartet und ist nicht im LAN erreichbar.
 Konfiguration: eine Sitzung, 32.768 Tokens Kontext, MTP, Bildprojektor automatisch
 neben dem Modell. `gufo diagnose` auf dem echten M5 ausführen.
 
-Gufo lädt mit `gufo model install flash-next-q4` die Dateien, deren Revisionen,
-Größen und SHA-256-Prüfsummen in diesem gepinnten Release festgelegt sind,
-einschließlich MTP und Bildprojektor. Es gibt keinen automatischen Modell-Update-
-Timer. Die Dateien liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
+Der ISO-Bau lädt die Dateien, deren Revisionen, Größen und SHA-256-Prüfsummen
+in diesem gepinnten Release festgelegt sind, einschließlich MTP und Bildprojektor.
+Es gibt keinen automatischen Modell-Update-Timer. Die installierten Dateien
+liegen außerhalb des Nix Stores in `/var/lib/gufo/models`.
 `models.lock.json` dokumentiert diese sechs Dateien zusätzlich im Repository;
 die Flake prüft, dass es exakt dem Manifest des gepinnten Gufo-Releases entspricht.
-Zusammen sind dies rund 115 GB (107 GiB) Download, ohne Spiele und Systempakete.
-Downloads brauchen viel Speicherplatz, Bandbreite und je nach Verbindung Zeit.
+Zusammen sind dies rund 115 GB (107 GiB) Download beim ISO-Bau, ohne Spiele und
+Systempakete. Internet wird am M5 weiterhin für die NixOS-Systeminstallation
+benötigt; die ISO ist kein vollständig offlinefähiger Systeminstaller.
 Desktop und KI teilen sich GPU und RAM: GTT auf 112 GiB begrenzt; dieser Wert
 reserviert nicht sofort Speicher und ist kein Schutz gegen jede Speicherauslastung.
 
-## Fehler und erneute Downloads
+## Fehler und erneute Modellkopie
 
 Bei Fehlern oder Abbruch erscheint eine Shell. `install-m5` startet erneut,
 **partitioniert aber auch erneut**, wenn die Löschung bestätigt wird.
-Nach erfolgreicher Systeminstallation, aber fehlgeschlagenem Modelldownload,
-kann man stattdessen vom installierten System aus fortsetzen:
+Nach erfolgreicher Systeminstallation, aber fehlgeschlagener Modellkopie,
+die bestehende LUKS-Installation vom Stick nach `/mnt` mounten und
+`install-m5 --models-only` ausführen. Diese Option formatiert nichts; sie
+erwartet bereits `/mnt/etc/nixos/flake.lock` und kopiert die Modelle erneut.
+Alternativ können die gleichen Modelle vom installierten System aus
+heruntergeladen werden:
 
 ```bash
 sudo -u gufo env HOME=/var/lib/gufo GUFO_MODELS_DIR=/var/lib/gufo/models \
   gufo model install flash-next-q4
 ```
 
-Gufo setzt Downloads fort. Alternativ die bestehende LUKS-Installation vom Stick
-nach `/mnt` mounten und `install-m5 --models-only` ausführen. Diese Option formatiert
-nichts; sie erwartet bereits `/mnt/etc/nixos/flake.lock`.
+Gufo setzt Downloads fort.
 
 ## System später ändern
 
 Die vollständige Konfiguration wird nach `/etc/nixos` kopiert, ergänzt um
-`installation.json` (Benutzername) und `hardware-configuration.nix` (UUIDs).
+`installation.json` (Benutzername und gewählte SSD) und `hardware-configuration.nix`
+(Hardwaremodule). Disko liefert Dateisysteme und LUKS-Konfiguration anhand des
+deklarativen Layouts; die generierte Hardwarekonfiguration enthält keine Dateisysteme.
 Diese beiden Dateien sind keine Geheimnisse, enthalten aber gerätespezifische Daten.
+Die SSD-Auswahl wird für spätere Disko-Aufrufe gespeichert; vor jedem erneuten
+Partitionieren muss der Gerätename überprüft werden. Ein normales `nixos-rebuild`
+partitioniert oder formatiert nichts.
 
 ```bash
 sudo nixos-rebuild switch --flake path:/etc/nixos#m5
@@ -136,17 +148,14 @@ oder ein eigenes Archiv der Pakete und Modelle voraus.
 
 ## Aktuelle Bauumgebung
 
-Auf diesem Vorbereitungsrechner ist bislang nur die Nix-Binary installiert,
-kein systemweiter Store. Die bisherigen Prüfungen verwenden deshalb den
-isolierten Store `/tmp/opencode/m5-nix-root`:
+Auf diesem Vorbereitungsrechner ist der normale daemonbasierte Nix Store
+unter `/nix/store` eingerichtet. `nix-command` und `flakes` sind bereits aktiviert:
 
 ```bash
-nix --extra-experimental-features 'nix-command flakes' \
-  --store 'local?root=/tmp/opencode/m5-nix-root' \
-  build .#iso --no-link --accept-flake-config
+nix build .#iso --accept-flake-config
 ```
 
-Dieser Store liegt hier auf tmpfs und geht beim Neustart verloren. Das Projekt
-liegt dauerhaft unter `~/Desktop/2026-11-25 nixOS Spike`.
-Für spätere größere Bauten ist ein normal eingerichteter Nix Store auf einer SSD
-sinnvoller. Die Konfiguration selbst benötigt den isolierten Store nicht.
+Der frühere isolierte tmpfs-Store wird nicht mehr verwendet. Das Projekt liegt
+dauerhaft unter `~/Desktop/2026-11-25 nixOS Spike`.
+Der Nix-Daemon muss den Gufo-Cache samt Signaturschlüssel zulassen; andernfalls
+ignoriert er die Flake-Einstellungen und Gufo kann einen großen lokalen Build erfordern.

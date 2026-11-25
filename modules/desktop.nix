@@ -14,20 +14,10 @@ let
   hardwareFile = ../hardware-configuration.nix;
 in
 {
-  imports = lib.optional (builtins.pathExists hardwareFile) hardwareFile;
-
-  # The fallback only permits evaluation before installation. The installer
-  # writes the real hardware configuration with filesystem and LUKS UUIDs.
-  fileSystems = lib.mkIf (!(builtins.pathExists hardwareFile)) {
-    "/" = {
-      device = "/dev/mapper/cryptroot";
-      fsType = "ext4";
-    };
-    "/boot" = {
-      device = "/dev/disk/by-label/M5EFI";
-      fsType = "vfat";
-    };
-  };
+  imports = [
+    (import ./disk-layout.nix { device = identity.disk or "/dev/nvme0n1"; })
+  ]
+  ++ lib.optional (builtins.pathExists hardwareFile) hardwareFile;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

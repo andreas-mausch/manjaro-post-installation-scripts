@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     gufo.url = "github:gufo-org/gufo/v0.36.0";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   nixConfig = {
@@ -18,34 +22,49 @@
       self,
       nixpkgs,
       gufo,
+      disko,
     }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       gufoPackage = gufo.packages.${system}.release;
+      diskoPackage = disko.packages.${system}.default;
       modelManifest = builtins.fromJSON (builtins.readFile ./models.lock.json);
       upstreamManifest = builtins.fromJSON (
         builtins.readFile (gufo + "/src/models/qwen38_flash_next/models.lock.json")
       );
+      modelFiles = pkgs.linkFarm "m5-models" (
+        nixpkgs.lib.concatMap (
+          component:
+          map (file: {
+            name = "flash-next-q4/${file.path}";
+            path = pkgs.fetchurl {
+              url = "https://huggingface.co/${component.source.hf}/resolve/${component.source.revision}/${file.path}";
+              sha256 = file.sha256;
+            };
+          }) component.files
+        ) (builtins.attrValues modelManifest.models.flash-next-q4)
+      );
       installer = pkgs.writeShellApplication {
         name = "install-m5";
-        runtimeInputs = with pkgs; [
-          python3
-          util-linux
-          parted
-          cryptsetup
-          dosfstools
-          e2fsprogs
-          mkpasswd
-          nixos-install-tools
-          coreutils
-          networkmanager
-          systemd
-        ];
+        runtimeInputs =
+          with pkgs;
+          [
+            jq
+            util-linux
+            cryptsetup
+            mkpasswd
+            nixos-install-tools
+            coreutils
+            networkmanager
+            systemd
+          ]
+          ++ [ diskoPackage ];
         text = ''
           export M5_SOURCE=${self}
-          export M5_GUFO=${gufoPackage}/bin/gufo
-          exec python3 ${./installer/install.py} "$@"
+          export M5_MODELS=${modelFiles}
+          export M5_NIXPKGS=${nixpkgs}
+          ${builtins.readFile ./installer/install.sh}
         '';
       };
     in
@@ -55,7 +74,10 @@
         m5 = nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = { inherit gufoPackage; };
-          modules = [ ./modules/desktop.nix ];
+          modules = [
+            disko.nixosModules.disko
+            ./modules/desktop.nix
+          ];
         };
         installer = nixpkgs.lib.nixosSystem {
           inherit system;
@@ -68,17 +90,23 @@
       };
       packages.${system} = {
         inherit installer;
+        models = modelFiles;
         iso = self.nixosConfigurations.installer.config.system.build.isoImage;
         default = self.packages.${system}.iso;
       };
       checks.${system}.installer-tests =
         pkgs.runCommand "m5-installer-tests"
           {
-            nativeBuildInputs = [ pkgs.python3 ];
+            nativeBuildInputs = [
+              pkgs.bash
+              pkgs.shellcheck
+              pkgs.jq
+            ];
           }
           ''
-            export PYTHONDONTWRITEBYTECODE=1
-            python3 ${./tests/test_installer.py} ${./installer/install.py}
+            bash -n ${./installer/install.sh}
+            shellcheck ${./installer/install.sh}
+            bash ${./tests/test_installer.sh} ${./installer/install.sh}
             touch "$out"
           '';
       formatter.${system} = pkgs.nixfmt-tree;
