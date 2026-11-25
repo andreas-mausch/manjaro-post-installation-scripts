@@ -213,6 +213,55 @@ Gufo setzt Downloads fort.
 
 ## System später ändern
 
+### Online aktualisieren nach der Offline-Installation
+
+Die Offline-Installation verhindert keine späteren Online-Updates.
+Die archivierte `flake.lock` sperrt die Inputs zunächst auf lokale Store-Pfade,
+damit die Installation keine Quellen herunterladen muss. Die ursprünglichen
+GitHub-Adressen in `flake.nix` bleiben dagegen unverändert erhalten.
+`nix flake update` löst diese Adressen neu auf und ersetzt die lokalen Locks
+durch aktuelle Netzwerk-Locks. `flake.online.lock` ist eine Sicherung des
+ursprünglichen Online-Stands, keine Voraussetzung für ein Update.
+
+Mit Internetverbindung auf dem installierten System:
+
+```bash
+cd /etc/nixos
+sudo cp flake.lock flake.before-update.lock
+sudo nix flake update
+sudo nixos-rebuild switch --flake path:/etc/nixos#m5
+```
+
+Damit werden alle Flake-Inputs innerhalb ihrer angegebenen Branches bzw. Tags
+aktualisiert. Der Nixpkgs-Input folgt `nixos-unstable`: aktualisiert werden die
+darin enthaltenen Paketversionen, nicht zwingend jedes neueste Upstream-Release.
+Quellen und Pakete dürfen beim Update online geladen werden; die
+Netzwerkisolation gilt nur für den Installationsjob auf der Live-ISO.
+
+Gufo ist in `flake.nix` explizit auf `github:gufo-org/gufo/v0.36.0` festgelegt.
+Für eine neuere Gufo-Version dort zuerst den gewünschten Release-Tag eintragen,
+dann die obigen Update-/Rebuild-Befehle ausführen. Neue Releases können andere
+Konfigurationsoptionen oder Modellanforderungen haben. Modellgewichte in
+`models.lock.json` werden durch `nix flake update` nicht aktualisiert; ebenso
+wenig die bereits nach `/var/lib/gufo/models` kopierten Dateien.
+
+Für einen fehlgeschlagenen Update-Build kann der bisherige Lock wiederhergestellt
+werden; das bisher aktivierte System bleibt bei einem Build-Fehler erhalten:
+
+```bash
+sudo cp /etc/nixos/flake.before-update.lock /etc/nixos/flake.lock
+```
+
+Nach erfolgreicher Aktivierung lässt sich bei Problemen mit
+`sudo nixos-rebuild switch --rollback` zur vorherigen Systemgeneration wechseln.
+Das setzt die Konfigurationsdateien und den Lock nicht zurück; dafür die
+entsprechenden Sicherungen bzw. Git-Versionen verwenden.
+
+Der Online-Update-Ablauf der installierten Offline-Flake ist noch nicht in
+einer vollständigen VM-Installation geprüft.
+
+### Konfiguration ändern ohne Paketupdate
+
 Die vollständige Konfiguration wird nach `/etc/nixos` kopiert, ergänzt um
 `installation.json` (Benutzername, Hostname und Spracheinstellungen) und
 `hardware-configuration.nix` (Hardware, Dateisysteme und LUKS-UUIDs).

@@ -1,5 +1,7 @@
 # Vorbereitung
 
+- [ ] Nach Offline-Installation in der VM Online-Update mit `nix flake update` und Rebuild prüfen; lokale Locks müssen wieder über die ursprünglichen GitHub-Inputs aktualisierbar sein.
+
 - [ ] ISO bauen und Boot/Installation in einer VM prüfen.
 - [ ] Offline-Installation in UEFI-VM ohne Netzwerkkarte mit abweichendem Benutzer, Sprache und generierten UUIDs vollständig prüfen; fehlende lokale Assemblierungsabhängigkeiten ergänzen.
 - [ ] Gufo-GPU und Modell auf dem echten M5 prüfen (nicht in einer VM möglich).
