@@ -45,4 +45,6 @@ for index in range(1, len(sys.argv), 4):
         assert (Path(source) / "setup-flake.nix").is_file(), name
     else:
         assert "gufo" not in flake, name
-        assert f"nixosConfigurations.{name}" in flake, name
+        assert f"nixosConfigurations = {{ {name} = target; }}" in flake, name
+        assert "./configuration.nix" in flake, name
+        assert '"${target.config.networking.hostName}" = target;' in flake, name

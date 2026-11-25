@@ -98,6 +98,40 @@ def identity(gs):
     }
 
 
+def nix_string(value):
+    # JSON string escapes are valid here; additionally prevent Nix interpolation.
+    return json.dumps(value, ensure_ascii=False).replace("${", "\\${")
+
+
+def local_configuration(installation):
+    quoted = {key: nix_string(value) for key, value in installation.items()}
+    return f'''# Local settings for this PC. Rebuild with: sudo nixos-rebuild switch
+{{ ... }}:
+{{
+  imports = [ ./hardware-configuration.nix ];
+
+  networking.hostName = {quoted["hostname"]};
+  time.timeZone = {quoted["timezone"]};
+  i18n.defaultLocale = {quoted["locale"]};
+  console.keyMap = {quoted["consoleKeyMap"]};
+  services.xserver.xkb = {{
+    layout = {quoted["keyboardLayout"]};
+    variant = {quoted["keyboardVariant"]};
+  }};
+
+  users.users.{quoted["username"]} = {{
+    isNormalUser = true;
+    description = {quoted["fullname"]};
+    extraGroups = [ "wheel" "networkmanager" "video" "render" ];
+    hashedPasswordFile = "/var/lib/nixos-secrets/user-password.hash";
+  }};
+
+  # Compatibility baseline, not the current release version.
+  system.stateVersion = "26.05";
+}}
+'''
+
+
 def deploy(gs, config, context=None):
     context = context if context is not None else {}
     context["phase"] = _("Checking target mounts")
@@ -115,6 +149,7 @@ def deploy(gs, config, context=None):
     context["phase"] = _("Generating hardware configuration")
     hardware = host("nixos-generate-config", "--root", root, "--show-hardware-config", capture=True).stdout
     write_file(destination / "hardware-configuration.nix", hardware)
+    write_file(destination / "configuration.nix", local_configuration(installation))
     context["phase"] = _("Preparing user access")
     secrets = root / "var/lib/nixos-secrets"
     host("install", "-d", "-m", "0700", secrets)
@@ -129,7 +164,7 @@ def deploy(gs, config, context=None):
     libcalamares.job.setprogress(0.1)
     install_command = [
         "nixos-install", "--root", root, "--no-root-passwd",
-        "--flake", f"path:{destination}#{config.get('target', 'desktop')}", "--no-write-lock-file",
+        "--flake", f"path:{destination}#{installation['hostname']}", "--no-write-lock-file",
         "--no-update-lock-file", "--no-channel-copy",
         "--option", "build-dir", "/nix/var/nix/builds",
         # Nixpkgs' perl-5.42.3-env for activation sets allowSubstitutes = false.

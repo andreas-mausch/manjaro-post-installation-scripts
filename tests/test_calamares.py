@@ -47,7 +47,7 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             adapter.validate_selection(self.storage(firmwareType="bios"), with_models=False)
 
-    def test_each_variant_deploys_its_own_update_target(self):
+    def test_each_variant_deploys_hostname_target_and_records_variant(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary)
             (source / "flake.lock").write_text("{}")
@@ -55,10 +55,10 @@ class AdapterTests(unittest.TestCase):
                 with self.subTest(variant=variant), \
                         patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host, \
                         patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")):
-                    adapter.deploy(self.storage(packagechooser_models=None),
+                    adapter.deploy(self.storage(packagechooser_models=None, hostname="workstation"),
                                    {"source": str(source), "target": variant, "withModels": False})
                     command = next(call.args for call in host.call_args_list if call.args[0] == "nixos-install")
-                    self.assertIn(f"path:/tmp/calamares-root-test/etc/nixos#{variant}", command)
+                    self.assertIn("path:/tmp/calamares-root-test/etc/nixos#workstation", command)
                     identity_call = next(call for call in host.call_args_list
                                          if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))
                     self.assertEqual(json.loads(identity_call.kwargs["input"])["variant"], variant)
@@ -144,7 +144,7 @@ class AdapterTests(unittest.TestCase):
                 if call.args[0] == "tee":
                     self.assertNotIn("always-allow-substitutes", call.kwargs.get("input", ""))
                     self.assertNotIn("alwaysAllowSubstitutes", call.kwargs.get("input", ""))
-            self.assertIn("path:/tmp/calamares-root-test/etc/nixos#desktop", install)
+            self.assertIn("path:/tmp/calamares-root-test/etc/nixos#nixos-desktop", install)
             self.assertIn("--no-update-lock-file", install)
             # This suppresses a terminal prompt; NixOS separately locks root.
             self.assertIn("--no-root-passwd", install)
@@ -158,9 +158,24 @@ class AdapterTests(unittest.TestCase):
             data = json.loads(identity_call.kwargs["input"])
             self.assertEqual(data["username"], "testuser")
             self.assertNotIn("password", data)
+            configuration_call = next(call for call in host.call_args_list
+                                      if call.args[0] == "tee" and str(call.args[1]).endswith("/configuration.nix"))
+            configuration = configuration_call.kwargs["input"]
+            self.assertIn("imports = [ ./hardware-configuration.nix ];", configuration)
+            self.assertIn('users.users."testuser"', configuration)
+            self.assertIn('networking.hostName = "nixos-desktop";', configuration)
+            self.assertIn('system.stateVersion = "26.05";', configuration)
+            self.assertNotIn("user-test-secret", configuration)
+            self.assertNotIn("$y$hash", configuration)
             hash_call = next(call for call in host.call_args_list
                              if call.args[0] == "tee" and str(call.args[1]).endswith("user-password.hash"))
             self.assertEqual(hash_call.kwargs["input"], "$y$hash\n")
+
+    def test_local_configuration_escapes_nix_interpolation_and_quotes(self):
+        installation = adapter.identity(self.storage(fullname='A "quoted" ${builtins.abort "oops"} name'))
+        configuration = adapter.local_configuration(installation)
+        self.assertIn('\\${builtins.abort', configuration)
+        self.assertIn('\\"quoted\\"', configuration)
 
     def test_deployment_without_models_still_installs_system(self):
         with tempfile.TemporaryDirectory() as temporary:

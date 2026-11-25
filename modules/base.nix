@@ -4,18 +4,21 @@
   ...
 }:
 let
+  # Legacy archives use installation.json; new installations own these
+  # settings in configuration.nix, imported by the target Flake.
+  localConfiguration = builtins.pathExists ../configuration.nix;
   identityFile = ../installation.json;
   identity =
-    if builtins.pathExists identityFile then
+    if !localConfiguration && builtins.pathExists identityFile then
       builtins.fromJSON (builtins.readFile identityFile)
     else
       { username = "desktopuser"; };
   hardwareFile = ../hardware-configuration.nix;
 in
 {
-  imports = lib.optional (builtins.pathExists hardwareFile) hardwareFile;
+  imports = lib.optional (!localConfiguration && builtins.pathExists hardwareFile) hardwareFile;
   # Only for evaluation before Calamares generates the real UUID-based layout.
-  fileSystems = lib.mkIf (!(builtins.pathExists hardwareFile)) {
+  fileSystems = lib.mkIf (!localConfiguration && !(builtins.pathExists hardwareFile)) {
     "/" = {
       device = "/dev/mapper/cryptroot";
       fsType = "btrfs";
@@ -33,17 +36,17 @@ in
   # configuration. Do not impose GPU memory limits for a particular machine.
   hardware.enableRedistributableFirmware = true;
 
-  networking.hostName = identity.hostname or "nixos-desktop";
+  networking.hostName = lib.mkDefault (identity.hostname or "nixos-desktop");
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
-  time.timeZone = identity.timezone or "Europe/Berlin";
-  i18n.defaultLocale = identity.locale or "de_DE.UTF-8";
+  time.timeZone = lib.mkDefault (identity.timezone or "Europe/Berlin");
+  i18n.defaultLocale = lib.mkDefault (identity.locale or "de_DE.UTF-8");
   # Keep the locale archive invariant when Calamares selects a different locale.
   i18n.supportedLocales = [ "all" ];
-  console.keyMap = identity.consoleKeyMap or "de";
+  console.keyMap = lib.mkDefault (identity.consoleKeyMap or "de");
   services.xserver.xkb = {
-    layout = identity.keyboardLayout or "de";
-    variant = identity.keyboardVariant or "";
+    layout = lib.mkDefault (identity.keyboardLayout or "de");
+    variant = lib.mkDefault (identity.keyboardVariant or "");
   };
 
   services.fstrim.enable = true;
@@ -58,7 +61,7 @@ in
   # Password hashes are only stored on the encrypted target, never in a flake.
   users.mutableUsers = false;
   users.users.root.hashedPassword = "!";
-  users.users.${identity.username} = {
+  users.users.${identity.username} = lib.mkIf (!localConfiguration) {
     isNormalUser = true;
     description = identity.fullname or "";
     extraGroups = [
@@ -73,5 +76,5 @@ in
   systemd.tmpfiles.rules = [
     "d /var/lib/nixos-secrets 0700 root root -"
   ];
-  system.stateVersion = "26.05";
+  system.stateVersion = lib.mkDefault "26.05";
 }

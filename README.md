@@ -9,8 +9,9 @@ update and rebuild of that installation, followed by a successful reboot.
 With the new Full ISO, the user also confirmed Calamares autostart, desktop
 launch through Polkit, graphical display, model selection, live logging,
 model-copy progress, the new model directory and separate-job behavior.
-These checks do not establish all variants or a complete new offline
-installation/update cycle. Real hardware remains untested.
+The user also confirmed boot without the ISO, Steam/Gufo and online updating
+followed by reboot with the new Full installation. This evidence does not
+cover all variants or real hardware.
 
 The project started with a Bosgame M5. The setup does not impose GPU memory
 limits or force AMD drivers for that machine. Hardware drivers and CPU
@@ -59,7 +60,9 @@ remains enabled through the separate NixOS hardware option, so the setup
 should not be understood as exclusively free software.
 Without AI, Gufo/toolchain inputs are also removed from the installed Flake.
 
-Targets are named `nixosConfigurations.<variant>`; live configurations are
+Targets are named `nixosConfigurations.<variant>`; installed systems also
+provide a target named after `networking.hostName` for the standard
+`sudo nixos-rebuild switch` command. Live configurations are
 `nixosConfigurations.installer-<variant>`. `iso`, `default` and `installer`
 remain aliases for Full. These names are independent of the chosen hostname.
 All variants have been evaluated locally. Desktop installation and the new
@@ -126,7 +129,7 @@ with a guessed device name is provided deliberately.
 5. Accept the final installation confirmation. Before partitioning, the
    installer module validates UEFI, erase mode, no swap and user input.
    Calamares partitions, formats and mounts. “Install NixOS” then installs
-   `path:/…/etc/nixos#<variant>` using `nixos-install`. For AI/Full, the separate
+   `path:/…/etc/nixos#<hostname>` using `nixos-install`. For AI/Full, the separate
    “Copy model weights” job subsequently copies selected models from the
    medium; without weights it skips copying. Wait for the Finish page;
    100% alone does not mean all final jobs have completed.
@@ -186,7 +189,7 @@ Gufo remains manually started and needs weights provided later for model use.
 Weights belong only to the live ISO, not the target-system package closure.
 ISO size and build-space requirements do not change. The user confirmed the
 no-copy behavior and separate-job handling; broader offline variant testing
-and file-checksum verification remain outstanding.
+remains outstanding.
 
 `packages.x86_64-linux.offline-system` is a prebuilt reference system with
 the Full package set and LUKS initrd components. Each ISO instead includes
@@ -195,9 +198,13 @@ for system, filesystem and initrd assembly. This is **not** the full
 source/compiler closure for the kernel, ROCm or the entire desktop.
 
 The variant is recorded in `/etc/nixos/installation.json` as `variant`.
-Use the same Flake target for later rebuilds, for example
-`sudo nixos-rebuild switch --flake /etc/nixos#full`. In the desktop examples
-below, replace `#desktop` with the actually installed variant.
+New installations generate `/etc/nixos/configuration.nix` for local settings
+and import it from the target Flake. It imports the hardware configuration
+and owns hostname, user, language and the existing `system.stateVersion`.
+The hostname target follows `networking.hostName`; the variant target remains
+available, for example `sudo nixos-rebuild switch --flake /etc/nixos#full`.
+In the desktop examples below, replace
+`#desktop` with the actually installed variant.
 
 `packages.x86_64-linux.offline-source` archives all selected locked Flake inputs,
 including Gufo toolchains, and rewrites their lock entries to local store paths.
@@ -229,7 +236,8 @@ root remains locked through `hashedPassword = "!"`, not passwordless.
 Before claiming complete offline support, install the finished ISO in a UEFI VM
 **without a network adapter**: choose a username and language different from
 the reference, reboot, unlock LUKS, log into KDE, check Steam and the Gufo service
-configuration, and compare all six model files with the manifest. Test GPU
+configuration. Model downloads are checked against the pinned manifest during
+the ISO build; no additional target-file checksum pass is required. Test GPU
 execution on suitable real hardware or with GPU passthrough.
 Steam login, client/game updates and new system packages still require Internet
 later; they are not part of offline installation.
@@ -257,8 +265,9 @@ the Nix store at `/var/lib/generative-ai/models`.
 in the repository; the Flake checks exact equality with the pinned Gufo release
 manifest. Together they require roughly 115 GB (107 GiB) of downloads during
 the ISO build, excluding games and system packages. All model downloads happen
-during the ISO build; copying itself requires no network. Verification of all
-six installed files remains a separate test.
+during the ISO build; copying itself requires no network. The accepted integrity
+strategy is pinned download checksums plus successful copying, without an
+additional checksum pass over installed files.
 Model use requires enough RAM or GPU memory and a backend supported by Gufo.
 Installation and `gufo --version` alone do not prove working GPU inference.
 GPU memory limits, context size and driver configuration must suit actual hardware.
@@ -297,7 +306,8 @@ configured Git checkout. Apply project changes separately through your own
 checkout, for example at `~/coding/nixos-setup`.
 
 **The checkout must contain the data for this exact target PC.** Our modules
-read `hardware-configuration.nix` and `installation.json` relative to the Flake.
+read local configuration files relative to the Flake. The checkout needs
+`configuration.nix`, `hardware-configuration.nix` and `installation.json`.
 Without these files, evaluation defaults replace actual disk UUIDs and user
 identity. Before the first rebuild from the checkout, copy the existing files
 (inspect any existing local files first):
@@ -306,13 +316,15 @@ identity. Before the first rebuild from the checkout, copy the existing files
 cd ~/coding/nixos-setup
 cp /etc/nixos/hardware-configuration.nix .
 cp /etc/nixos/installation.json .
+cp /etc/nixos/configuration.nix .
 sudo nixos-rebuild switch --flake "path:$HOME/coding/nixos-setup#desktop"
 ```
 
 Replace `#desktop` with the installed or deliberately chosen variant.
 The password hash remains on the target PC at
 `/var/lib/nixos-secrets/user-password.hash`; do not copy it into the repository.
-The two copied files are deliberately Git-ignored. Therefore **use `path:`**
+Hardware and installation metadata are deliberately Git-ignored. Keep local
+PC configuration out of shared project commits as well. Therefore **use `path:`**
 here: a checkout automatically treated as a Git Flake would omit ignored or
 untracked files from the source. Rebuilding without them is not the correct
 workflow for this setup.
@@ -547,14 +559,19 @@ For a manually started installer, save its terminal output.
 
 ### Changing configuration without updating packages
 
-The full configuration is copied to `/etc/nixos`, supplemented by
-`installation.json` (username, hostname and language settings) and
-`hardware-configuration.nix` (hardware, filesystems and LUKS UUIDs).
-These two files are not secrets, but contain device-specific data.
+The installer copies the setup to `/etc/nixos` and generates:
+
+- `configuration.nix`: editable local settings, including hostname, user and language.
+- `hardware-configuration.nix`: hardware, filesystems and LUKS UUIDs, imported by the local configuration.
+- `installation.json`: installation metadata and selected variant.
+
+These files are not secrets, but contain PC-specific data. On new installations,
+edit `configuration.nix` for local additions rather than modifying shared modules.
 A normal `nixos-rebuild` does not partition or format anything.
 
 ```bash
-sudo nixos-rebuild switch --flake path:/etc/nixos#desktop
+sudo nano /etc/nixos/configuration.nix
+sudo nixos-rebuild switch
 ```
 
 If this later becomes a Git repository, explicitly include generated files or

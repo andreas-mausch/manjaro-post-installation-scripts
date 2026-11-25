@@ -84,13 +84,19 @@ let
   targetFlake = pkgs.writeText "${name}-flake.nix" ''
     {
       inputs = ${lib.generators.toPretty { } sourceInputs};
-      outputs = { self, nixpkgs }: {
-        nixosConfigurations.${name} = nixpkgs.lib.nixosSystem {
+      outputs = { self, nixpkgs }: let
+        target = nixpkgs.lib.nixosSystem {
           system = "${system}";
           modules = [ ${
             lib.concatMapStringsSep " " (module: "./modules/${builtins.baseNameOf module}") targetModules
           }
-            { system.extraDependencies = [ nixpkgs.outPath ]; } ];
+            { system.extraDependencies = [ nixpkgs.outPath ]; } ]
+            ++ nixpkgs.lib.optional (builtins.pathExists ./configuration.nix) ./configuration.nix;
+        };
+      in {
+        nixosConfigurations = { ${name} = target; }
+        // nixpkgs.lib.optionalAttrs (builtins.pathExists ./configuration.nix) {
+          "''${target.config.networking.hostName}" = target;
         };
       };
     }

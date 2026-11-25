@@ -52,7 +52,10 @@
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = nixpkgs.lib.optionalAttrs variant.ai { inherit gufoPackage; };
-          modules = variant.modules ++ [ { system.extraDependencies = sources; } ];
+          modules =
+            variant.modules
+            ++ nixpkgs.lib.optional (builtins.pathExists ./configuration.nix) ./configuration.nix
+            ++ [ { system.extraDependencies = sources; } ];
         };
       mkVariant =
         name: variant:
@@ -460,7 +463,19 @@
         ) builds
         // {
           installer = builds.full.installer;
-        };
+        }
+        //
+          nixpkgs.lib.optionalAttrs
+            (builtins.pathExists ./configuration.nix && builtins.pathExists ./installation.json)
+            (
+              let
+                installed = builtins.fromJSON (builtins.readFile ./installation.json);
+                target = builds.${installed.variant}.target;
+              in
+              {
+                ${target.config.networking.hostName} = target;
+              }
+            );
       packages.${system} =
         (nixpkgs.lib.mapAttrs' (
           name: build: nixpkgs.lib.nameValuePair "iso-${name}" build.installer.config.system.build.isoImage
