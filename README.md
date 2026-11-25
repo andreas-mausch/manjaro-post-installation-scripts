@@ -148,6 +148,33 @@ Installation neu. Steam aktualisiert seinen Client und die Spiele unabhängig
 von Nix. Langfristige Wiederholbarkeit setzt weiterhin verfügbare Downloads
 oder ein eigenes Archiv der Pakete und Modelle voraus.
 
+## Installer-Auswahl: nixos-wizard vorerst nicht verwenden
+
+Geprüft am 2026-11-25: [km-clay/nixos-wizard](https://github.com/km-clay/nixos-wizard)
+hat eine passende TUI für SSD-Auswahl, Partitionierung und Benutzeranlage,
+installiert aber noch keine vorhandene Flake wie unsere M5-Konfiguration.
+Prüfstand: Commit `386def227ec27ea61bdfd9c3e7afeab7da39102a`.
+
+- Ein Menü „Source Flake“ fragt einen lokalen oder entfernten Flake-Pfad ab.
+- Der Pfad wird gespeichert, in der Konfigurationsvorschau aber lediglich im
+  ungenutzten Feld `_flake_path` gehalten.
+- Der tatsächliche Installationsablauf kopiert die selbst generierte
+  `configuration.nix` und ruft `nixos-install --root /mnt` **ohne `--flake`** auf.
+  Die Eingabe unserer Flake würde unsere Konfiguration daher nicht installieren.
+- Der letzte Commit auf `main` hat das Committer-Datum 2026-04-07, also zum
+  Prüfzeitpunkt gut sieben Monate zuvor. Das allein beweist keine Aufgabe des
+  Projekts; zusammen mit dem unvollständigen Flake-Pfad ist es jedoch ein Grund,
+  den Installer für unseren Anwendungsfall vorerst nicht einzusetzen.
+
+Quellen im geprüften Commit:
+[Source-Flake-Eingabe](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L799-L1023),
+[Konfigurationsvorschau](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4117-L4203),
+[Installationsbefehle](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4532-L4603)
+und [Commit](https://github.com/km-clay/nixos-wizard/commit/386def227ec27ea61bdfd9c3e7afeab7da39102a).
+
+Wir bleiben deshalb bei `disko-install` und einem kleinen interaktiven Wrapper.
+Diese Entscheidung kann bei funktionierendem Flake-Support neu geprüft werden.
+
 ## Aktuelle Bauumgebung
 
 Auf diesem Vorbereitungsrechner ist der normale daemonbasierte Nix Store
