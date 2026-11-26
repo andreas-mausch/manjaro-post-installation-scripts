@@ -28,6 +28,16 @@ It uses the standard XDG generator rather than adding a custom user service.
 The fresh-login evidence covers the user-local workaround; a new ISO test
 of the packaged correction is not recorded in the inspected history.
 
+On 2026-11-26, the user tested the newly built Desktop live ISO. A screenshot
+of `pgrep -af spice-vdagent` shows only `spice-vdagentd`, not the session agent.
+The shared correction was imported by the Desktop target profile but not by
+`build/live.nix`, so the live environment did not receive the corrected entry.
+
+`build/live.nix` now imports the same shared SPICE module; no second workaround
+implementation is introduced. Profile assertions require the daemon and the
+corrected autostart entry for every live profile. A rebuilt ISO still needs a
+fresh-login test confirming that the session agent starts without manual action.
+
 ## References
 
 - `ad7b1dc`: confirmed cause and fresh-login test.

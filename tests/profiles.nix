@@ -97,6 +97,9 @@ let
     assert live.services.desktopManager.plasma6.enable;
     assert live.console.keyMap == "us";
     assert live.time.timeZone == "UTC";
+    assert live.services.spice-vdagentd.enable;
+    assert live.environment.etc ? "xdg/autostart/spice-vdagent.desktop";
+    assert live.environment.etc."xdg/autostart/spice-vdagent.desktop".source != null;
     assert (live.environment.etc ? "desktop-installer/models") == ai;
     assert live.image.baseName == "nixos-${name}";
     assert live.image.fileName == "nixos-${name}.iso";

@@ -8,6 +8,8 @@
   ...
 }:
 {
+  imports = [ (import ../modules/spice.nix { inherit pkgs; }).nixosModule ];
+
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # The generic rescue ISO includes ZFS, which need not support this kernel.
   # These images only create btrfs and vfat filesystems.
