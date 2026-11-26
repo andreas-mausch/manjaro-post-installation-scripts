@@ -90,8 +90,8 @@ let
           modules = [ ${
             lib.concatMapStringsSep " " (module: "./modules/${builtins.baseNameOf module}") targetModules
           }
-            { system.extraDependencies = [ nixpkgs.outPath ]; } ]
-            ++ nixpkgs.lib.optional (builtins.pathExists ./configuration.nix) ./configuration.nix;
+            ./modules/target-configuration.nix
+            { system.extraDependencies = [ nixpkgs.outPath ]; } ];
         };
       in {
         nixosConfigurations = { ${name} = target; }

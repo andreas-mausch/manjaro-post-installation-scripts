@@ -39,7 +39,12 @@ have separate licenses.
 
 `desktop.nix` imports `base.nix`; `gaming.nix` imports `desktop.nix`.
 `generative-ai/default.nix` imports only `base.nix` and can be used without
-a desktop. The AI module defines `generative-ai.models.directory` (default:
+a desktop. Exported target modules do not import repository-local hardware or
+user configuration. Consumers provide their own filesystems and users; AI
+also requires the `gufoPackage` module argument. Repository targets use the
+separate `modules/target-configuration.nix` composition to load local settings
+or supply the pre-install reference layout and user.
+The AI module defines `generative-ai.models.directory` (default:
 `/var/lib/generative-ai/models`). Gufo, directory rules and installer copying
 use this same value. Changing it later does not automatically move existing
 weights; those must be relocated separately.

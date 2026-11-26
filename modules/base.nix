@@ -3,25 +3,7 @@
   pkgs,
   ...
 }:
-let
-  # Installed systems own local settings in configuration.nix.
-  localConfiguration = builtins.pathExists ../configuration.nix;
-  hardwareFile = ../hardware-configuration.nix;
-in
 {
-  imports = lib.optional (!localConfiguration && builtins.pathExists hardwareFile) hardwareFile;
-  # Only for evaluation before Calamares generates the real UUID-based layout.
-  fileSystems = lib.mkIf (!localConfiguration && !(builtins.pathExists hardwareFile)) {
-    "/" = {
-      device = "/dev/mapper/cryptroot";
-      fsType = "btrfs";
-    };
-    "/boot" = {
-      device = "/dev/disk/by-label/EFI";
-      fsType = "vfat";
-    };
-  };
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -53,17 +35,6 @@ in
   # Password hashes are only stored on the encrypted target, never in a flake.
   users.mutableUsers = false;
   users.users.root.hashedPassword = "!";
-  users.users.desktopuser = lib.mkIf (!localConfiguration) {
-    isNormalUser = true;
-    description = "";
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "render"
-    ];
-    hashedPasswordFile = "/var/lib/nixos-secrets/user-password.hash";
-  };
   environment.systemPackages = [ pkgs.curl ];
   systemd.tmpfiles.rules = [
     "d /var/lib/nixos-secrets 0700 root root -"

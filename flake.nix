@@ -54,7 +54,7 @@
           specialArgs = nixpkgs.lib.optionalAttrs variant.ai { inherit gufoPackage; };
           modules =
             variant.modules
-            ++ nixpkgs.lib.optional (builtins.pathExists ./configuration.nix) ./configuration.nix
+            ++ [ ./modules/target-configuration.nix ]
             ++ [ { system.extraDependencies = sources; } ];
         };
       mkVariant =
@@ -240,6 +240,10 @@
               touch "$out"
             '';
         variant-tests = import ./tests/variants.nix { inherit pkgs builds variants; };
+        reusable-module-tests = import ./tests/reusable-modules.nix {
+          inherit pkgs nixpkgs gufoPackage;
+          modules = self.nixosModules;
+        };
       };
       formatter.${system} = pkgs.nixfmt-tree;
     };
