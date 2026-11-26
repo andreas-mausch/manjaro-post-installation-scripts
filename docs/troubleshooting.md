@@ -26,13 +26,13 @@ Adapter command diagnostics omit arguments, passwords and hashes; secret/configu
 the UI log. Other inherited stdout/stderr is not necessarily visible there. Original subprocess output is not sanitized:
 inspect it for sensitive information before sharing. Nothing is uploaded automatically.
 
-Live logging is user-confirmed in Full; a real failure-dialog test of phase reporting, time filtering and partitioning
-warnings remains [pending](issues/2026-11-25_installer-failure-diagnostics.md).
+Live logging is user-confirmed in Full; the Desktop VM failure-dialog check of phase reporting, time filtering and
+partitioning warnings is [user-confirmed](issues/solved/2026-11-25_installer-failure-diagnostics.md).
 
 ## Boot and partitioning requirements
 
 Use UEFI/OVMF, not BIOS. The early welcome extension blocks Next without UEFI; the adapter checks again later.
-The early BIOS-rejection path still needs [VM verification](issues/2026-11-25_uefi-validation-too-late.md).
+The early BIOS-rejection path is [VM-verified](issues/solved/2026-11-25_uefi-validation-too-late.md).
 No BIOS fallback is planned. Secure Boot must be disabled.
 
 Manual partitioning is disabled: the pinned upstream `dont-allow-manual-luks.patch` removes LUKS/LUKS2 from manual

@@ -1,6 +1,6 @@
 ---
-status: verification-pending
-status-description: "Implemented and unit-tested; real failure-dialog verification pending"
+status: solved
+status-description: "Unit-tested; VM failure-diagnostics check confirmed by the user"
 ---
 
 # Installer errors obscure the failing phase and original Nix error
@@ -26,13 +26,19 @@ Commands are logged by program name, without arguments, passwords or hashes.
 Original subprocess output is retained, not heuristically sanitized or
 automatically uploaded. Inspect it before sharing and find the first error.
 
-## Verification and remaining work
+## Verification
 
 Adapter tests cover error details and sensitive-data handling. Full ISO live
 logging was later confirmed, but this does not prove failure-dialog behavior.
-`TODO.md` still requests a real VM installation failure to check diagnostic
-phases, the journal time filter, partitioning warning and first Nix error.
+
+On 2026-11-26, the user confirmed the Desktop VM failure-diagnostics check
+as successful. The requested check covered the failing phase, concrete error,
+journal command with time filter and warning about prior partitioning.
+This supplies the previously missing runtime confirmation. The exact induced
+failure and its output were not supplied; this does not establish individual
+runtime coverage of every failure path.
 
 ## Evidence
 
 - `c08c642`, `4b6ad8c`, `42f50f3`, current `TODO.md`.
+- User confirmation of VM checklist item 6 on 2026-11-26.

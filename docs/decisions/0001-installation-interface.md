@@ -50,7 +50,7 @@ Use the official C++ ViewStep interface for the early UEFI requirement.
 
 - Git `0fa1501`, `41ddfb2`, `d53dcc4`, `83db41d`, `7403bfd`.
 - [Manual LUKS limitation](../issues/2026-11-25_manual-luks-partitioning.md).
-- [Early UEFI verification](../issues/2026-11-25_uefi-validation-too-late.md).
+- [Early UEFI verification](../issues/solved/2026-11-25_uefi-validation-too-late.md).
 
 ## Candidate investigation: nixos-wizard
 

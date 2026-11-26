@@ -1,6 +1,6 @@
 ---
-status: verification-pending
-status-description: "Early check implemented; BIOS/UEFI runtime verification pending"
+status: solved
+status-description: "BIOS rejection confirmed on the welcome page in the Desktop VM; earlier UEFI installs succeeded"
 ---
 
 # BIOS boot is detected only after the installer has progressed too far
@@ -21,9 +21,20 @@ partitioning or adding another wizard page.
 ## Verification
 
 The plugin built; evaluation and formatting passed. Normal UEFI installs
-later succeeded, but that does not verify the BIOS rejection path. The
-current README still identifies early validation as needing VM confirmation.
+later succeeded.
+
+On 2026-11-26, the user tested the newly built Desktop ISO in a QEMU/KVM VM
+booted in BIOS mode and supplied a screenshot. Calamares displays the failure
+on the welcome page, states that installation cannot continue, requests a
+restart in UEFI mode (UEFI/OVMF for VMs), and disables Next. This confirms the
+previously unverified early BIOS-rejection path without entering deployment.
+
+The screenshot also shows the requirement message exceeding the visible width
+and a horizontal scrollbar. This is a presentation limitation, not a failure
+of the boot-mode check; no text-wrapping correction has been verified.
 
 ## Evidence
 
 - `7403bfd`, `modules/installer/calamares/welcome/`, historical README.
+- User-provided Desktop VM screenshot on 2026-11-26 showing BIOS rejection
+  on the welcome page and disabled Next.
