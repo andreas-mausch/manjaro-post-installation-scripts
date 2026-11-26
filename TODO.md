@@ -19,6 +19,7 @@ and repository updates. Existing section numbers remain stable for links.
 8. [Alternative model sources](#8-alternative-model-sources)
 9. [Favorite programs and configuration](#9-favorite-programs)
 10. [Manual partitioning](#10-manual-partitioning)
+11. [Time synchronization](#11-time-synchronization)
 
 Reusable libvirt images remain additional work after these priorities.
 
@@ -83,6 +84,10 @@ Reusable libvirt images remain additional work after these priorities.
 
 - [ ] Audit Calamares settings and native UI options currently hidden or disabled by our configuration. Identify which should be exposed to users and document why any remain unavailable.
 - [ ] Implement and validate safe manual partitioning, including LUKS layouts, before exposing it in Calamares. The pinned Nixpkgs package includes `dont-allow-manual-luks.patch`; review supported native settings and target hardware-configuration integration before changing it. Keep manual partitioning disabled until verified; automatic whole-drive LUKS2 installation remains supported.
+
+### 11. Time synchronization
+
+- [ ] Configure and verify automatic time synchronization in live media and installed systems. Evaluate using NTP servers supplied by DHCP, with a documented fallback when DHCP supplies none; check integration with NetworkManager and the chosen time-sync service.
 
 ### Additional work: reusable libvirt images
 
