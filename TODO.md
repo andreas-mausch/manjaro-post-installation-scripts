@@ -22,7 +22,7 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
   - Keep tool installation and preferred configuration together by topic, for example under `modules/git/`: `system.nix` installs Git/tig/lazygit/delta system-wide, while `home.nix` manages user configuration and aliases with Home Manager. Coordinate responsibilities and package versions for programs automatically installed by Home Manager. Do not blindly carry XFCE/X11-specific solutions over to KDE/Wayland; keep hardware workarounds with the respective PC.
   - Retain existing variants as presets; evaluate installer module selection later. Consider Desktop + Development + Virtualization as a workstation with optional Gaming and AI.
 
-- [ ] Update an installed PC from this repository without reinstalling or copying its hardware/user data into the development repository. Keep PC configuration under `/etc/nixos` and consume reusable setup modules as a pinned Flake input. Adjust the current relative hardware/identity imports; also support updates from a local checkout without `--impure`. Document and test the workflow.
+- [ ] Implement and validate the host-independent repository-update workflow described in [the repository-update issue](docs/issues/2026-11-25_installed-system-repository-updates.md).
 
 - [ ] Introduce joint releases of the Flake and its Base/Desktop/Gaming/AI modules using Git tags (for example `v0.1.0`); optionally use the same explicit release version in ISO filenames. Do not derive a build date automatically or change `system.stateVersion` for project versioning.
 
@@ -34,8 +34,8 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 - [ ] Prepare direct UKI boot for the installed system: UEFI starts the Unified Kernel Image without systemd-boot/GRUB. Implement and test UKI generation, installation on the EFI partition, UEFI boot entries and safe updates with fallback/recovery for previous generations. Integrate graphical LUKS password entry through Plymouth in the initrd; test the theme, early GPU drivers and password/text fallback on target hardware. Plymouth can be used independently of direct UKI boot. No automatic LUKS unlocking; Secure Boot signing is a separate task.
 
-- [ ] Test the new diagnostic phases, journal time filter and warning about an already partitioned target during a real VM installation failure; original output must include the first Nix error.
+- [ ] Complete the real VM failure checks in [the installer-diagnostics issue](docs/issues/2026-11-25_installer-failure-diagnostics.md).
 
-- [ ] Add swap support before release: `nixos-generate-config` detects only active swap partitions, not swap files; Calamares creates swap files in the fstab module, which is not executed here. Test target-device mapping and encrypted swap after reboot. Retain “no swap” until then.
+- [ ] Add and validate swap support before release as described in [the swap issue](docs/issues/2026-11-25_swap-installation.md). Retain “no swap” until then.
 
-- [ ] Test Gufo GPU inference and the model on suitable real hardware (not possible in a VM without GPU passthrough).
+- [ ] Complete real-hardware inference verification in [the Gufo backend issue](docs/issues/2026-11-25_gufo-hardware-backend-validation.md).

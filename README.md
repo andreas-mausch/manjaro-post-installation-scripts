@@ -405,142 +405,15 @@ After successful activation, use `sudo nixos-rebuild switch --rollback` to retur
 to the previous system generation if problems arise. This does not restore
 configuration files or the lock; use corresponding backups or Git versions.
 
-The online-update workflow for the earlier installed offline Flake was tested
-in the existing VM on 2026-11-25: GitHub inputs were fetched and
-`nixos-rebuild switch` succeeded (user confirmation). This evidence does not
-yet cover the subsequently generalized repository configuration. The command
-was run from `/etc/nixos` with `--flake .#m5`; the subsequent reboot also succeeded
-(user confirmation).
+Recorded offline installation and subsequent update/boot evidence is retained
+in [the offline installation issue](docs/issues/solved/2026-11-25_offline-installation.md).
+The [repository-update issue](docs/issues/2026-11-25_installed-system-repository-updates.md)
+tracks the separate, still unverified checkout workflow.
 
 ### Diagnosing installation failures
 
-#### Offline installation issue and attempted fixes (2026-11-25)
-
-- **Symptom:** A networkless UEFI installation failed after “Erase disk” during
-  the system build while downloading `https://ftpmirror.gnu.org/bash/bash-5.3.tar.gz`.
-  Partitioning worked; “unshare failed” was only an imprecise message about the
-  parent invocation, not the cause.
-- **First identified gap:** Runtime dependencies of the reference system were
-  insufficient to assemble changed identity, UUIDs and initrd; among other
-  things, Texinfo was missing for system-path construction.
-- **First attempted fix:** Add prebuilt system-path, Texinfo, XML and capability
-  tools, AMD microcode and firmware (`19833a5`). Do not bundle the complete
-  source/compiler build graph for kernel/ROCm.
-- **Partial evidence:** Isolated system builds with/without LUKS passed with
-  different identity, language, time zone, keyboard, UUIDs and VirtIO modules.
-  Only intended ISO dependencies and archived inputs were in the test store;
-  no host store or network. The LUKS variant used the same store and shared artifacts.
-- **Test setup:** Arch provided Nix and libraries. Failures at `setgroups`/`uid_map`
-  were harness issues, so the inner Nix sandbox was disabled while outer
-  store/network isolation remained active.
-- **Result with the new ISO:** Actual `nixos-install` still failed on Bash.
-  A passing system build was not installation or boot evidence.
-- **Further cause:** `nixos-install` first adds the local `auto` substituter;
-  our later `substituters = ""` overwrote it. Even existing ISO packages were
-  therefore not reused as substitutes. Option-order behavior was checked with
-  Nix 2.35.6.
-- **Why the test missed it:** Packages were directly in the build store;
-  transfer from the live store to a separate target store was not tested.
-- **Correction at that stage:** Remove network isolation and substituter,
-  builder and registry restrictions from normal installation. Allow the local
-  ISO store and configured online caches; without networking the ISO must still suffice.
-- **Validation at that stage:** 16 adapter tests and formatting passed. The
-  correction was not yet in the ISO; a complete networkless installation, boot
-  and subsequent online update remained unconfirmed.
-- **Live test of the correction:** Manual `nixos-install` on the still-mounted
-  target also failed without the original restrictions. Explicitly setting
-  only `auto?trusted=1` did not fix it. Option ordering therefore did not
-  explain the entire installation failure.
-- **Another invocation error:** A shortened manual command omitted `build-dir`
-  and failed on world-writable `/tmp`. With
-  `--option build-dir /nix/var/nix/builds`, it reached the package build.
-- **Direct store transfer:** Three prebuilt Bash paths were present in the VM.
-  `nix copy` into the target store initially failed on a `libgcc` dependency
-  without a trusted signature; copying with `--no-check-sigs` succeeded.
-  The next installation attempt failed on gnused/Python instead of Bash.
-- **Signature test:** Even `--option require-sigs false` during the networkless
-  installation was insufficient. First errors involved source downloads for
-  Python 3.14.6, ACL 2.4.0 and attr 2.6.0. Do not change persistent signature
-  checks; this test did not prove these packages were missing from the ISO.
-- **Investigation at that stage:** Reproduce a separate target store instead
-  of providing packages directly in the build store. A dry run with `--offline`
-  planned 13,460 builds including bootstrap tools; explicit `substitute = true`
-  reduced this to 313. The second run reported restricted settings and a
-  disallowed local substituter at the host daemon, so it was not clean
-  installation evidence. Nix's automatic disabling of substitution without
-  a network still needed investigation.
-- **Further work:** Reproducibly test the real installation path with a separate
-  target store and blocked network before ISO releases. Manual tool lists may
-  develop gaps after updates; improve derivation. Online success does not
-  prove offline completeness.
-- **Local reproduction attempt:** A real build with separate stores, only ISO
-  paths as a local package source and blocked networking also failed on the
-  Bash source download. Not yet clean evidence: subsequent direct copying
-  exposed dereferenced store symlinks in the harness (hash mismatch). Symlinks
-  were then reproduced unchanged and the comparison rerun. Signature checks
-  were disabled for that test. It was not a complete `nixos-install`/boot test:
-  the target store was at `/nix/store` inside an unprivileged namespace, with
-  a separate ISO store; the inner Nix sandbox was disabled due to host namespace limits.
-- **Specific missing output:** The log also requested Bash's `dev` output,
-  `/nix/store/02pyv1n66h4l27zv105gip35b99qrqam-bash-5.3p20-dev`, absent from the
-  ISO manifest although Bash's `out` was present. Trace the triggering parent
-  build branch instead of bundling the entire bootstrap.
-- **Audit gap:** The temporary graph comparison marked entire derivations as
-  visited and missed later requests for additional outputs of the same
-  derivation. Analysis then tracked individual outputs; a verified installer
-  fix was still outstanding.
-- **Confirmed substitution exclusion:** The ISO's activation-script Perl
-  environment (`7f11jkm…-perl-5.42.3-env.drv`) explicitly set
-  `allowSubstitutes = false` in `structuredAttrs`. Nix then required build
-  dependencies instead of reusing the finished output. The graph comparison
-  also missed this exclusion. A local comparison with
-  `always-allow-substitutes = true` successfully built the target offline.
-  The store initially contained directly copied ISO packages; repeating with
-  a fresh target store and no advance copying also passed, using only actual
-  ISO paths as the source and blocked networking. Signature checks were off;
-  the signature strategy, real installation and boot remained to be tested.
-- **Why this restriction exists:** Not Perl itself, but Nixpkgs' Perl-environment
-  builder sets `preferLocalBuild = true` and `allowSubstitutes = false`.
-  The environment combines finished packages and generates wrappers. Such
-  small assembly steps are usually intended to be cheaper locally than cache
-  queries and downloads; this is an optimization, not a security requirement.
-  In a separate offline target store it forces extra build tools even though
-  the finished result exists on the ISO. `always-allow-substitutes` overrides
-  the exclusion without disabling independent signature checks. Hashes and
-  trusted signatures protect integrity and signed provenance, but do not
-  independently prove build correctness.
-- **VM evidence:** Manual networkless `nixos-install` on Calamares-prepared
-  partitions passed with a local substituter, `substitute = true` and
-  `always-allow-substitutes = true`; `require-sigs = false` remained set only
-  for this diagnostic run. Roughly 12 GiB were transferred, systemd-boot and
-  UEFI entries installed, and `installation finished!` reported. Boot without
-  the ISO, LUKS unlocking and the KDE desktop then succeeded. Evidence covered
-  this encrypted VM variant, not arbitrary hardware.
-- **Still open after VM success:** Integrate options cleanly in the installer,
-  safely transfer unsigned ISO packages without globally disabling signature
-  checks, add an automated regression test, complete Calamares without manual
-  commands and test online updating. The existing ISO remained unchanged.
-- **Signature strategy:** Nix 2.35 permits unsigned substitutes from a specific
-  source through the store parameter `trusted=1`. `nixos-install` already sets
-  `auto?trusted=1` for the local live store. No global disabling of `require-sigs`
-  or extra adapter signature exception is needed; online caches retain normal
-  signature checks. This trust requires a trusted ISO and an untampered live store.
-- **Local signature test:** A fresh target store, ISO paths only, no network,
-  `require-sigs = true` and `local?root=/mnt&trusted=1`: system build passed.
-  The full sequence without `--no-check-sigs` also passed: first transfer the
-  Flake archive and inputs with `nix-store --realise` through that same trusted
-  local substituter, then build the target. Direct `nix copy` without a
-  signature exception instead failed on unsigned Flake inputs; source-specific
-  substituter trust does not automatically apply to direct copying. The test
-  used the local-store variant rather than `auto` and was not a complete
-  installation test. Source transfer in the actual `nixos-install` path still
-  required separate validation.
-- **Final VM test:** A newly built ISO was installed entirely offline through
-  Calamares without manual flags or global disabling of signatures. Subsequent
-  boot, KDE and `gufo --version` succeeded. Online input updates, rebuild and
-  reboot also succeeded (user confirmation). Generalization, live logging and
-  separate jobs changed afterward and required a new ISO test. Other hardware,
-  language and model variants and full verification of all six weights remained open.
+Installation failure history, attempted fixes and VM evidence are recorded in
+[the offline installation issue](docs/issues/solved/2026-11-25_offline-installation.md).
 
 #### Requirements and diagnostic output
 
@@ -604,33 +477,15 @@ generated per installation. Steam updates its client and games independently
 of Nix. Long-term repeatability still requires available downloads or your own
 archive of packages and models.
 
-## Installer choice: do not use nixos-wizard yet
+## Issue records
 
-Reviewed on 2026-11-25: [km-clay/nixos-wizard](https://github.com/km-clay/nixos-wizard)
-has a suitable TUI for SSD selection, partitioning and user creation, but does
-not yet install an existing Flake such as our desktop configuration.
-Reviewed commit: `386def227ec27ea61bdfd9c3e7afeab7da39102a`.
+Current problems and fixes awaiting runtime verification live under
+[`docs/issues/`](docs/issues/).
+Resolved problems, their diagnosis and verification live under
+[`docs/issues/solved/`](docs/issues/solved/). Planned features remain in [`TODO.md`](TODO.md).
 
-- A “Source Flake” menu requests a local or remote Flake path.
-- The path is saved but appears in the configuration preview only in the unused
-  `_flake_path` field.
-- Actual installation copies its own generated `configuration.nix` and invokes
-  `nixos-install --root /mnt` **without `--flake`**. Entering our Flake would
-  therefore not install our configuration.
-- The latest `main` commit had a committer date of 2026-04-07, over seven months
-  before review. That alone does not prove abandonment; combined with the
-  incomplete Flake path, however, it is a reason not to use this installer
-  for our use case yet.
-
-Sources at the reviewed commit:
-[Source Flake input](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L799-L1023),
-[configuration preview](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4117-L4203),
-[installation commands](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4532-L4603)
-and [commit](https://github.com/km-clay/nixos-wizard/commit/386def227ec27ea61bdfd9c3e7afeab7da39102a).
-
-At the time of review we therefore used `disko-install` with a wrapper.
-We now use Calamares with a Flake adapter. Reassess nixos-wizard once working
-Flake support is available.
+The [nixos-wizard evaluation](docs/issues/2026-11-25_nixos-wizard-ignores-source-flake.md)
+records why it was unsuitable at the reviewed revision.
 
 ## Current build environment
 
