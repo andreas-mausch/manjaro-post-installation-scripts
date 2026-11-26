@@ -107,7 +107,7 @@ let
     assert target.services.pipewire.enable;
     assert lib.all
       (package: lib.elem package target.environment.systemPackages)
-      (with build.target.pkgs; [ powertop powerstat lm_sensors ]);
+      (with build.target.pkgs; [ inxi powertop powerstat lm_sensors ]);
     assert target.services.printing.enable == desktop;
     assert target.hardware.sane.enable == desktop;
     assert !build.installer.pkgs.espeak.mbrolaSupport;

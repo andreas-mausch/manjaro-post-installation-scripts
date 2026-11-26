@@ -41,6 +41,7 @@
   users.users.root.hashedPassword = "!";
   environment.systemPackages = with pkgs; [
     curl
+    inxi
     powertop
     powerstat
     lm_sensors
