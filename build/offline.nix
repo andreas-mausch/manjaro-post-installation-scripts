@@ -67,6 +67,10 @@ let
       # buildEnv references these outside its declared nativeBuildInputs.
       texinfo
       libxslt
+      # nftables validates dynamically generated rules using these in checkPhase.
+      buildPackages.libredirect
+      buildPackages.lklWithFirewall.lib
+      buildPackages.nftables
       microcode-amd
       microcode-intel
       # Reuse the same compressed output as the system firmware bundle.
