@@ -1,7 +1,8 @@
-# Model copying obscures progress and couples retry to system installation
+---
+status: "Solved within the current installer scope; Full behavior confirmed"
+---
 
-- Status: Solved within the current installer scope; Full behavior confirmed
-- Recorded: 2026-11-25
+# Model copying obscures progress and couples retry to system installation
 - Resolved: 2026-11-25
 
 ## Problem

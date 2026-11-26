@@ -1,7 +1,8 @@
-# Gufo cache settings are ignored by the build-host Nix daemon
+---
+status: "Solved on the recorded build host; cache completeness not guaranteed"
+---
 
-- Status: Solved on the recorded build host; cache completeness not guaranteed
-- Recorded: 2026-11-25
+# Gufo cache settings are ignored by the build-host Nix daemon
 - Resolved: 2026-11-25
 
 ## Problem

@@ -1,7 +1,8 @@
-# Upstream Calamares patch prevents manual LUKS filesystem selection
+---
+status: "Open limitation; manual partitioning intentionally disabled"
+---
 
-- Status: Open limitation; manual partitioning intentionally disabled
-- Recorded: 2026-11-25
+# Upstream Calamares patch prevents manual LUKS filesystem selection
 
 ## Problem and current decision
 

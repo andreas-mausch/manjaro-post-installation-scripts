@@ -1,7 +1,8 @@
-# Installer file writes echo password hashes and local configuration
+---
+status: "Fixed; subprocess-boundary regression test added"
+---
 
-- Status: Fixed; subprocess-boundary regression test added
-- Recorded: 2026-11-26
+# Installer file writes echo password hashes and local configuration
 - Resolved: 2026-11-26
 
 ## Problem

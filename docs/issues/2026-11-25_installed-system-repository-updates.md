@@ -1,7 +1,8 @@
-# Repository updates require host files in the checkout and careful source selection
+---
+status: "Open; documented workaround, broader workflow pending"
+---
 
-- Status: Open; documented workaround, broader workflow pending
-- Recorded: 2026-11-25
+# Repository updates require host files in the checkout and careful source selection
 
 ## Problem
 

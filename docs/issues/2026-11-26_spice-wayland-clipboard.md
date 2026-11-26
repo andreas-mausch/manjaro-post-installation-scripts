@@ -1,7 +1,8 @@
-# SPICE clipboard only works from host to guest under Plasma/Wayland
+---
+status: "Open; upstream limitation, no validated local fix"
+---
 
-- Status: Open; upstream limitation, no validated local fix
-- Recorded: 2026-11-26
+# SPICE clipboard only works from host to guest under Plasma/Wayland
 
 ## Observation
 

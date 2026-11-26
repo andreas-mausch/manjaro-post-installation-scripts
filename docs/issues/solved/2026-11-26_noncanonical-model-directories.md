@@ -1,7 +1,8 @@
-# Model directory options accept unsafe or noncanonical paths
+---
+status: "Fixed; evaluation tests cover rejected paths"
+---
 
-- Status: Fixed; evaluation tests cover rejected paths
-- Recorded: 2026-11-26
+# Model directory options accept unsafe or noncanonical paths
 - Resolved: 2026-11-26
 
 ## Problem

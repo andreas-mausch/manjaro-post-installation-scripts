@@ -1,7 +1,8 @@
-# SPICE session agent does not start automatically
+---
+status: "Solved by a validated workaround; repository implementation added"
+---
 
-- Status: Solved by a validated workaround; repository implementation added
-- Recorded: 2026-11-26
+# SPICE session agent does not start automatically
 - Resolved: 2026-11-26
 
 ## Problem and diagnosis

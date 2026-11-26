@@ -1,7 +1,8 @@
-# Local offline Flake inputs change Gufo's revision-dependent package identity
+---
+status: "Solved; online/offline package-path comparison recorded"
+---
 
-- Status: Solved; online/offline package-path comparison recorded
-- Recorded: 2026-11-25
+# Local offline Flake inputs change Gufo's revision-dependent package identity
 - Resolved: 2026-11-25
 
 ## Problem

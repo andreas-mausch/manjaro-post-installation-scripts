@@ -1,7 +1,8 @@
-# Early installer excludes SATA and VirtIO target disks
+---
+status: "Fixed in the former installer; superseded by native Calamares selection"
+---
 
-- Status: Fixed in the former installer; superseded by native Calamares selection
-- Recorded: 2026-11-25
+# Early installer excludes SATA and VirtIO target disks
 - Resolved: 2026-11-25
 
 ## Problem and correction

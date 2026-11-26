@@ -1,7 +1,8 @@
-# Installer errors obscure the failing phase and original Nix error
+---
+status: "Implemented and unit-tested; real failure-dialog verification pending"
+---
 
-- Status: Implemented and unit-tested; real failure-dialog verification pending
-- Recorded: 2026-11-25
+# Installer errors obscure the failing phase and original Nix error
 
 ## Problem
 

@@ -1,7 +1,8 @@
-# Calamares truncates the model-selection step title
+---
+status: "Fixed; later Full model-selection UI confirmed"
+---
 
-- Status: Fixed; later Full model-selection UI confirmed
-- Recorded: 2026-11-25
+# Calamares truncates the model-selection step title
 - Resolved: 2026-11-25
 
 ## Problem and solution

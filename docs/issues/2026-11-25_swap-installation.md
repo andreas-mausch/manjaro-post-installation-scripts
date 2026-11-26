@@ -1,7 +1,8 @@
-# Calamares swap choices are not integrated with generated NixOS hardware settings
+---
+status: "Open; no-swap restriction retained as a safeguard"
+---
 
-- Status: Open; no-swap restriction retained as a safeguard
-- Recorded: 2026-11-25
+# Calamares swap choices are not integrated with generated NixOS hardware settings
 
 ## Problem
 

@@ -1,7 +1,8 @@
-# Adapter rejects encryption and password choices after native validation
+---
+status: "Fixed; encrypted Full installation confirmed, other paths unit-tested"
+---
 
-- Status: Fixed; encrypted Full installation confirmed, other paths unit-tested
-- Recorded: 2026-11-25
+# Adapter rejects encryption and password choices after native validation
 - Resolved: 2026-11-25
 
 ## Problem

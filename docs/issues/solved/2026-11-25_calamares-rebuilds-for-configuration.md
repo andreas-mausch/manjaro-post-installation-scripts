@@ -1,7 +1,8 @@
-# Installer configuration changes unnecessarily recompile Calamares
+---
+status: "Solved; shared-package checks and Full GUI verification recorded"
+---
 
-- Status: Solved; shared-package checks and Full GUI verification recorded
-- Recorded: 2026-11-25
+# Installer configuration changes unnecessarily recompile Calamares
 - Resolved: 2026-11-25
 
 ## Problem

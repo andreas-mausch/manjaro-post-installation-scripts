@@ -1,7 +1,8 @@
-# Adapter diagnostics remain German when the Calamares UI language changes
+---
+status: "Fixed and catalog-tested; runtime language-switch check unrecorded"
+---
 
-- Status: Fixed and catalog-tested; runtime language-switch check unrecorded
-- Recorded: 2026-11-25
+# Adapter diagnostics remain German when the Calamares UI language changes
 
 ## Problem and solution
 

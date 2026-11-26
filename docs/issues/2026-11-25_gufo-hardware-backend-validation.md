@@ -1,7 +1,8 @@
-# Generic installation does not establish Gufo GPU compatibility
+---
+status: "Open; hardcoded host assumptions removed, inference unverified"
+---
 
-- Status: Open; hardcoded host assumptions removed, inference unverified
-- Recorded: 2026-11-25
+# Generic installation does not establish Gufo GPU compatibility
 
 ## Problem and mitigation
 

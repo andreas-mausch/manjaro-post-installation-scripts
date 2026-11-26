@@ -1,7 +1,8 @@
-# Calamares hides the hostname field and the adapter substitutes a default
+---
+status: "Fixed; adapter regression tests added"
+---
 
-- Status: Fixed; adapter regression tests added
-- Recorded: 2026-11-25
+# Calamares hides the hostname field and the adapter substitutes a default
 - Resolved: 2026-11-25
 
 ## Problem

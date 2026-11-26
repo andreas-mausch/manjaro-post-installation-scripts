@@ -1,7 +1,8 @@
-# BIOS boot is detected only after the installer has progressed too far
+---
+status: "Early check implemented; BIOS/UEFI runtime verification pending"
+---
 
-- Status: Early check implemented; BIOS/UEFI runtime verification pending
-- Recorded: 2026-11-25
+# BIOS boot is detected only after the installer has progressed too far
 
 ## Problem and correction
 

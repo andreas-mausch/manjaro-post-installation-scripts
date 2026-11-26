@@ -1,7 +1,8 @@
-# Flake entry-point restrictions prevent directly importing shared definitions
+---
+status: "Fixed by supported entry-point shapes"
+---
 
-- Status: Fixed by supported entry-point shapes
-- Recorded: 2026-11-25
+# Flake entry-point restrictions prevent directly importing shared definitions
 - Resolved: 2026-11-25
 
 ## Problem

@@ -1,7 +1,8 @@
-# SquashFS compression spends excessive CPU on the bundled model payload
+---
+status: "Mitigated by disabling compression; no benchmark recorded"
+---
 
-- Status: Mitigated by disabling compression; no benchmark recorded
-- Recorded: 2026-11-25
+# SquashFS compression spends excessive CPU on the bundled model payload
 - Resolved: 2026-11-25
 
 ## Problem and trade-off

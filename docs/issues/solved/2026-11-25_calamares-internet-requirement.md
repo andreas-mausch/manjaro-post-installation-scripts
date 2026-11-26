@@ -1,7 +1,8 @@
-# Calamares blocks offline installation on its welcome page
+---
+status: "Solved; later offline Calamares installation confirmed"
+---
 
-- Status: Solved; later offline Calamares installation confirmed
-- Recorded: 2026-11-25
+# Calamares blocks offline installation on its welcome page
 - Resolved: 2026-11-25
 
 ## Problem and solution

@@ -1,7 +1,8 @@
-# Variant ISO filenames ignore image.fileName
+---
+status: "Solved; Desktop ISO rebuilt with corrected name"
+---
 
-- Status: Solved; Desktop ISO rebuilt with corrected name
-- Recorded: 2026-11-25
+# Variant ISO filenames ignore image.fileName
 - Resolved: 2026-11-25
 
 ## Problem and solution

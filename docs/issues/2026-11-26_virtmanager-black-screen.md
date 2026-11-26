@@ -1,7 +1,8 @@
-# Black screen after idle in the Plasma/Wayland VM
+---
+status: "Open"
+---
 
-- Status: Open
-- Recorded: 2026-11-26
+# Black screen after idle in the Plasma/Wayland VM
 
 ## Observation
 

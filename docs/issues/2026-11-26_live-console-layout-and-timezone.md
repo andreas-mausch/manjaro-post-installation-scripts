@@ -1,7 +1,8 @@
-# Live ISO console layout and time zone are not neutral defaults
+---
+status: "Fixed in configuration; new ISO runtime check pending"
+---
 
-- Status: Fixed in configuration; new ISO runtime check pending
-- Recorded: 2026-11-26
+# Live ISO console layout and time zone are not neutral defaults
 
 ## Problem and correction
 

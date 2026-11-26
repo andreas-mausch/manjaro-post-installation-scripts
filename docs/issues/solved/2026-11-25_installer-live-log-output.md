@@ -1,7 +1,8 @@
-# NixOS installation output is missing from Calamares Toggle log
+---
+status: "Solved; Full ISO live logging confirmed by the user"
+---
 
-- Status: Solved; Full ISO live logging confirmed by the user
-- Recorded: 2026-11-25
+# NixOS installation output is missing from Calamares Toggle log
 - Resolved: 2026-11-25
 
 ## Problem and investigation

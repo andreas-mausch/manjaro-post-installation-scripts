@@ -1,7 +1,8 @@
-# Offline installation triggers unavailable source builds
+---
+status: "Solved for the tested encrypted UEFI VM; broader coverage unproven"
+---
 
-- Status: Solved for the tested encrypted UEFI VM; broader coverage unproven
-- Recorded: 2026-11-25
+# Offline installation triggers unavailable source builds
 - Resolved: 2026-11-25
 
 ## Problem
