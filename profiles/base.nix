@@ -1,12 +1,12 @@
 { lib, pkgs, ... }:
 {
+  imports = [ ../modules/networking.nix ];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # Generated hardware configuration selects drivers and CPU microcode.
   hardware.enableRedistributableFirmware = true;
 
-  networking.networkmanager.enable = true;
   networking.firewall.enable = true;
   time.timeZone = lib.mkDefault "Europe/Berlin";
   i18n.defaultLocale = lib.mkDefault "de_DE.UTF-8";

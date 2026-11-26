@@ -1,7 +1,7 @@
 ---
 status: verification-pending
 status-description: >-
-  Removed the live override disabling NetworkManager's wpa_supplicant backend;
+  Shared NetworkManager/iwd policy replaces the disabled supplicant backend;
   rebuilt ISO Wi-Fi discovery and connection still need hardware verification.
 ---
 
@@ -30,6 +30,12 @@ assertions now require NetworkManager and its D-Bus-controlled wireless backend
 for every live profile. No MediaTek driver or firmware workaround is introduced.
 
 ## Remaining verification
+
+After the initial correction, neonew selected iwd as the backend for both live
+and installed systems; see [ADR 0011](../decisions/0011-wifi-backend.md).
+The current shared module intentionally disables wpa_supplicant while enabling
+iwd through NetworkManager. Regression assertions cover this new backend policy
+instead of requiring the formerly selected supplicant backend.
 
 Boot a rebuilt Desktop ISO on the M5. Confirm that `wlp195s0` is available,
 Wi-Fi networks are listed, and a connection succeeds without the D-Bus

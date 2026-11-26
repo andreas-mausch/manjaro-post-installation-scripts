@@ -8,14 +8,16 @@
   ...
 }:
 {
-  imports = [ (import ../modules/spice.nix { inherit pkgs; }).nixosModule ];
+  imports = [
+    ../modules/networking.nix
+    (import ../modules/spice.nix { inherit pkgs; }).nixosModule
+  ];
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # The generic rescue ISO includes ZFS, which need not support this kernel.
   # These images only create btrfs and vfat filesystems.
   boot.supportedFilesystems.zfs = lib.mkForce false;
   hardware.enableRedistributableFirmware = true;
-  networking.networkmanager.enable = true;
   services.openssh.enable = lib.mkForce false;
   console.keyMap = "us";
   time.timeZone = "UTC";

@@ -97,10 +97,21 @@ let
     assert live.services.desktopManager.plasma6.enable;
     assert live.console.keyMap == "us";
     assert live.time.timeZone == "UTC";
-    assert live.networking.networkmanager.enable;
-    assert live.networking.wireless.enable;
-    assert live.networking.wireless.dbusControlled;
-    assert !live.networking.wireless.autoDetectInterfaces;
+    assert lib.all
+      (
+        system:
+        system.networking.networkmanager.enable
+        && system.networking.networkmanager.wifi.backend == "iwd"
+        && system.networking.wireless.iwd.enable
+        && !system.networking.wireless.enable
+        && !system.networking.wireless.iwd.settings.General.EnableNetworkConfiguration
+        && !(system.systemd.services ? wpa_supplicant)
+        && !(lib.any (package: lib.getName package == "wpa_supplicant") system.environment.systemPackages)
+      )
+      [
+        live
+        target
+      ];
     assert live.services.spice-vdagentd.enable;
     assert live.environment.etc ? "xdg/autostart/spice-vdagent.desktop";
     assert live.environment.etc."xdg/autostart/spice-vdagent.desktop".source != null;

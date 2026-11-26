@@ -24,6 +24,8 @@ root [README](../../README.md); diagnosis and verification belong in
 | 0009 | [Package license policy](0009-package-license-policy.md)                       | Scoped Steam exception, separate firmware policy      | ✅ `accepted` | 2026-11-25 | none       |
 | 0010 | [Validation and evidence](0010-validation-and-evidence.md)                     | Scoped checks with explicit unverified coverage       | ✅ `accepted` | 2026-11-25 | none       |
 
+| 0011 | [Wi-Fi backend](0011-wifi-backend.md)                                           | NetworkManager with iwd, no supplicant service         | ✅ `accepted` | 2026-11-26 | none       |
+
 The initial records were reconstructed on 2026-11-26 from current files and
 Git history. Dates identify the implementation or explicit policy evidence
 described in each record, not an invented approval date. Empty `deciders`
