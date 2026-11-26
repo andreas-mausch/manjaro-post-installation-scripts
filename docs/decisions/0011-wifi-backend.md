@@ -16,7 +16,7 @@ desktop integration, VPN support and command-line administration. Its Wi-Fi
 authentication backend is a separate choice.
 
 The live ISO previously disabled the default wpa_supplicant backend by mistake;
-the [Wi-Fi investigation](../issues/2026-11-26_live-wifi-backend-unavailable.md)
+the [Wi-Fi investigation](../issues/solved/2026-11-26_live-wifi-backend-unavailable.md)
 records that failure. It is not evidence that wpa_supplicant is inherently unreliable.
 
 neonew explicitly requested iwd for the new setup on 2026-11-26. This is an

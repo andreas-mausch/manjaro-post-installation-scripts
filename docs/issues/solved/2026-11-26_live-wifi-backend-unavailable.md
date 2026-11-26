@@ -1,8 +1,8 @@
 ---
-status: verification-pending
+status: solved
 status-description: >-
-  Shared NetworkManager/iwd policy replaces the disabled supplicant backend;
-  rebuilt ISO Wi-Fi discovery and connection still need hardware verification.
+  Wi-Fi discovery, connection and web access confirmed on the M5 with the
+  rebuilt Desktop live ISO using NetworkManager and iwd.
 ---
 
 # Live Wi-Fi is unavailable because the supplicant backend cannot start
@@ -25,24 +25,29 @@ wpa_supplicant backend requires `networking.wireless.enable = true`, with
 disabled the backend needed for NetworkManager-managed Wi-Fi, not merely an
 independent competing wireless manager.
 
-Remove that override and let NetworkManager configure its backend. Profile
-assertions now require NetworkManager and its D-Bus-controlled wireless backend
-for every live profile. No MediaTek driver or firmware workaround is introduced.
+The initial correction removed that override and let NetworkManager configure
+its backend. Its profile assertions required the D-Bus-controlled wireless
+backend. No MediaTek driver or firmware workaround was introduced.
 
-## Remaining verification
+## Backend decision and verification
 
 After the initial correction, neonew selected iwd as the backend for both live
-and installed systems; see [ADR 0011](../decisions/0011-wifi-backend.md).
+and installed systems; see [ADR 0011](../../decisions/0011-wifi-backend.md).
 The current shared module intentionally disables wpa_supplicant while enabling
 iwd through NetworkManager. Regression assertions cover this new backend policy
 instead of requiring the formerly selected supplicant backend.
 
-Boot a rebuilt Desktop ISO on the M5. Confirm that `wlp195s0` is available,
-Wi-Fi networks are listed, and a connection succeeds without the D-Bus
-activation error. Evaluation and profile tests do not replace this hardware check.
+On 2026-11-26, the user confirmed that the rebuilt Desktop live ISO lists
+Wi-Fi networks on the M5, connects successfully and can open a webpage.
+This verifies discovery, authentication and usable network access for the tested
+hardware/network combination. No post-fix journal was supplied, and reconnect,
+suspend/resume, enterprise networks and installed-target behavior remain outside
+this confirmation. The ISO predates the pending firmware/MBROLA size reductions.
 
 ## Evidence
 
 - User-reported device state, rfkill/radio checks and NetworkManager error on 2026-11-26.
 - Pinned Nixpkgs `nixos/modules/services/networking/networkmanager.nix` backend configuration.
 - `build/live.nix`, `tests/profiles.nix`.
+- `204af73`: shared NetworkManager/iwd backend policy.
+- User-confirmed M5 live Wi-Fi discovery, connection and web access on 2026-11-26.
