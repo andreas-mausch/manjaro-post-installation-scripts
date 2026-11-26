@@ -1,6 +1,9 @@
 ---
-status: open
-status-description: "Upstream limitation, no validated local fix; current upstream status not rechecked"
+status: blocked
+status-description: >-
+  Blocked by upstream Wayland clipboard support
+  (https://gitlab.freedesktop.org/spice/linux/vd_agent/-/merge_requests/57).
+  No validated local fix; current upstream status not rechecked.
 ---
 
 # SPICE clipboard only works from host to guest under Plasma/Wayland
