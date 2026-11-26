@@ -41,6 +41,7 @@ let
   };
   calamares = import ../modules/installer/calamares.nix {
     inherit pkgs lib offlineSource;
+    sshKeysFile = ssh-keys + "/authorized_keys";
     variantName = name;
     withModels = profileSpec.ai;
     modelFiles = if profileSpec.ai then modelFiles else null;

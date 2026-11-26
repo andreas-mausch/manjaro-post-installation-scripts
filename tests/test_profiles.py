@@ -52,6 +52,10 @@ for index in range(1, len(sys.argv), 4):
     assert "packagechooser@ssh" in shown, name
     assert ssh["mode"] == "optional", name
     assert [item["id"] for item in ssh["items"]] == ["", "ssh"], name
+    key_file = (Path(source) / "ssh-authorized-keys").read_text()
+    if not any(line.strip() and not line.lstrip().startswith("#") for line in key_file.splitlines()):
+        assert "No public keys supplied" in ssh["items"][1]["description"], name
+        assert "Keine öffentlichen Schlüssel" in ssh["items"][1]["description[de]"], name
     assert "nixConfig" not in flake, name
     assert "extra-substituters" not in flake, name
     assert "extra-trusted-public-keys" not in flake, name

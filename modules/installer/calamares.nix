@@ -6,6 +6,7 @@
   offlineSource,
   modelFiles,
   modelsDirectory,
+  sshKeysFile,
 }:
 let
   # Reuse NixOS' Calamares configuration and native view/storage modules.
@@ -89,6 +90,33 @@ let
     quit-at-end = false;
   };
   calamaresSettings = yaml "settings.conf" calamaresConfig;
+  escapeHTML = lib.replaceStrings [ "&" "<" ">" "\"" ] [ "&amp;" "&lt;" "&gt;" "&quot;" ];
+  keyLines = lib.filter (line: builtins.match "[[:space:]]*(#.*)?" line == null) (
+    lib.splitString "\n" (builtins.readFile sshKeysFile)
+  );
+  keyPreview =
+    unnamed: line:
+    let
+      parsed = builtins.match "[[:space:]]*((ssh-|ecdsa-|sk-)[^[:space:]]+)[[:space:]]+([A-Za-z0-9+/=]+)([[:space:]]+(.*))?" line;
+    in
+    if parsed == null then
+      "${unnamed} · (key preview unavailable)"
+    else
+      let
+        key = builtins.elemAt parsed 2;
+        comment = builtins.elemAt parsed 4;
+        name = if comment == null || comment == "" then unnamed else comment;
+        length = builtins.stringLength key;
+      in
+      "${escapeHTML (builtins.elemAt parsed 0)} …${
+        builtins.substring (lib.max 0 (length - 16)) 16 key
+      } · ${escapeHTML name}";
+  keyList =
+    unnamed: empty:
+    if keyLines == [ ] then
+      "<br/><b>${empty}</b>"
+    else
+      "<br/><br/><b>Keys:</b><br/>" + lib.concatMapStringsSep "<br/>" (keyPreview unnamed) keyLines;
   sshSettings = yaml "desktop-ssh.conf" {
     mode = "optional";
     method = "legacy";
@@ -107,9 +135,12 @@ let
         id = "ssh";
         name = "Enable SSH server";
         "name[de]" = "SSH-Server aktivieren";
-        description = "Allow login as the installed user with the image's provisioned public keys. Password and root login are disabled. Opens TCP port 22.";
+        description =
+          "Allow login as the installed user with the image's provisioned public keys. Password and root login are disabled. Opens TCP port 22."
+          + keyList "Unnamed" "No public keys supplied: no initial key login is configured.";
         "description[de]" =
-          "Anmeldung als angelegter Benutzer mit den öffentlichen Schlüsseln des Images. Kein Passwort- oder Root-Login. Öffnet TCP-Port 22.";
+          "Anmeldung als angelegter Benutzer mit den öffentlichen Schlüsseln des Images. Kein Passwort- oder Root-Login. Öffnet TCP-Port 22."
+          + keyList "Ohne Namen" "Keine öffentlichen Schlüssel angegeben: kein anfänglicher Schlüsselzugang eingerichtet.";
         screenshot = "";
       }
     ];
