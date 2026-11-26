@@ -16,6 +16,5 @@
     pulse.enable = true;
   };
   security.rtkit.enable = true;
-  hardware.bluetooth.enable = true;
   programs.firefox.enable = true;
 }

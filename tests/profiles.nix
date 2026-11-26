@@ -97,6 +97,8 @@ let
     assert live.services.desktopManager.plasma6.enable;
     assert live.console.keyMap == "us";
     assert live.time.timeZone == "UTC";
+    assert live.hardware.bluetooth.enable;
+    assert target.hardware.bluetooth.enable;
     assert !build.installer.pkgs.espeak.mbrolaSupport;
     assert !build.target.pkgs.espeak.mbrolaSupport;
     assert live.services.speechd.enable;

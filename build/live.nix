@@ -19,6 +19,7 @@
   # These images only create btrfs and vfat filesystems.
   boot.supportedFilesystems.zfs = lib.mkForce false;
   hardware.enableRedistributableFirmware = true;
+  hardware.bluetooth.enable = true;
   services.openssh.enable = lib.mkForce false;
   console.keyMap = "us";
   time.timeZone = "UTC";
