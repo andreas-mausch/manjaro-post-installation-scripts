@@ -25,26 +25,29 @@ build. KDE and the installer are not tied to this GPU model.
 
 The Flake provides five predefined system profiles under `profiles/`:
 
-| Profile | Target modules                      | ISO output    | Free application packages |
+| Profile | Composition                         | ISO output    | Free application packages |
 | ------- | ----------------------------------- | ------------- | ------------------------- |
 | Base    | `base.nix`                          | `iso-base`    | ✅                        |
 | Desktop | `desktop.nix`                       | `iso-desktop` | ✅                        |
 | Gaming  | `gaming.nix`                        | `iso-gaming`  | ❌ Steam                  |
-| AI      | `desktop.nix` + `generative-ai/`    | `iso-ai`      | ✅                        |
-| Full    | `gaming.nix` + `generative-ai/`     | `iso-full`    | ❌ Steam                  |
+| AI      | `desktop.nix` + `generative-ai/`     | `iso-ai`      | ✅                        |
+| Full    | `gaming.nix` + `generative-ai/`      | `iso-full`    | ❌ Steam                  |
 
 The last column describes Nixpkgs package permissions, not a complete license
 audit: redistributable firmware is enabled in every variant; model weights
 have separate licenses.
 
-`profiles/desktop.nix` extends Base with the Desktop module;
+`profiles/base.nix` owns the common system policy and
+`profiles/desktop.nix` extends Base with KDE, audio and Firefox;
 `profiles/gaming.nix` extends Desktop with Gaming. AI extends Desktop with
 the AI module, and Full extends Gaming with AI.
-The building blocks under `modules/` do not import Base or one another;
-the NixOS modules in `profiles/` own their composition without defining
-hardware or individual user settings. The AI module can also be used without
-a desktop. Exported target modules do not import repository-local hardware or
-user configuration. Consumers provide their own filesystems and users; AI
+Base, Desktop and Gaming settings live directly in their profiles, without
+separate feature-module wrappers. `modules/generative-ai/` remains independent
+of Base and Desktop so it can also be used on a headless system.
+The existing `nixosModules.base`, `.desktop` and `.gaming` exports refer to
+the corresponding profiles. Exported profiles and the AI module do not import
+repository-local hardware or user configuration. Consumers provide their
+own filesystems and users; AI
 also requires the `gufoPackage` module argument. Repository targets use the
 separate `modules/target-configuration.nix` composition to load local settings
 or supply the pre-install reference layout and user.

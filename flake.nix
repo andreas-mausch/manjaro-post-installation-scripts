@@ -182,9 +182,9 @@
     in
     {
       nixosModules = {
-        base = import ./modules/base.nix;
-        desktop = import ./modules/desktop.nix;
-        gaming = import ./modules/gaming.nix;
+        base = import ./profiles/base.nix;
+        desktop = import ./profiles/desktop.nix;
+        gaming = import ./profiles/gaming.nix;
         generative-ai = import ./modules/generative-ai;
         installer = import ./modules/installer;
       };

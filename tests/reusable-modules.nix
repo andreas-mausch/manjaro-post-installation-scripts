@@ -35,9 +35,13 @@ let
         assert config.fileSystems."/boot".device == "/dev/disk/by-uuid/consumer-efi";
         assert config.users.users.consumer.isNormalUser;
         assert !(config.users.users ? desktopuser);
-        # Only Base owns the shared system policy; other modules must not pull it in.
-        assert config.programs.git.enable == (name == "base");
-        assert config.services.desktopManager.plasma6.enable == (name == "desktop");
+        # Profile exports include their prerequisites; AI stays independent.
+        assert config.programs.git.enable == (name != "generative-ai");
+        assert
+          config.services.desktopManager.plasma6.enable == builtins.elem name [
+            "desktop"
+            "gaming"
+          ];
         true
       )
       [
