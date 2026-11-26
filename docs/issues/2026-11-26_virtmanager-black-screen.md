@@ -1,8 +1,24 @@
 ---
-status: workaround
+status: closed
+status-description: "Closed with accepted VirtIO-GPU workaround; QXL root cause unconfirmed."
 ---
 
 # Black screen after idle in the Plasma/Wayland VM
+
+## Closure, 2026-11-26
+
+Closed at the user's request with an accepted workaround, **not a confirmed
+QXL root-cause fix**. Use **VirtIO-GPU without 3D**, retaining SPICE, for the
+user's Linux VMs. Wake with VirtIO was confirmed, including after screen lock.
+
+For QXL, disabling automatic guest resizing in Virt-Manager also allowed
+**two successful shutdown/wake cycles with both guest agents running**.
+This implicates the automatic monitor-management path, but does not prove
+whether spice-gtk, QXL, or their interaction is faulty.
+
+Further investigation is paused. Historical next steps below are retained
+for a possible reopening, not active work. The upstream issue draft at
+[`spice-gtk-issue-draft.md`](../../spice-gtk-issue-draft.md) has not been submitted.
 
 ## Observation
 
@@ -22,7 +38,7 @@ qualified by the user: the M5 responds again, and the earlier wake attempt
 may have been incomplete. A reproducible M5 failure is not established; see
 [no image after automatic screen shutdown on the M5](2026-11-26_m5-black-screen-after-idle.md).
 
-## Next verification
+## Historical verification
 
 Automatic screen shutdown was changed to `Never` in the guest's Plasma
 power settings; automatic screen locking was left unchanged. Leave the
@@ -148,6 +164,42 @@ workaround. No root-cause repair is confirmed.
 sources, trace the monitor-configuration propagation during display shutdown,
 and test a narrowly scoped fix with guest integration enabled. Do not equate
 this VM finding with the unconfirmed Bosgame report.
+
+### Source investigation: automatic client display management
+
+- Inspected the released `spice-vdagent` **0.23.0** source:
+  `src/vdagent/display.c:vdagent_display_send_daemon_guest_res()` reports
+  guest resolutions to the daemon. However,
+  `src/vdagentd/vdagentd.c:do_agent_xorg_resolution()` explicitly ignores
+  messages whose total width and height are both zero. A simple direct
+  forwarding of a zero-size guest resolution is therefore not established.
+- `check_xorg_resolution()` opens the guest VirtIO agent channel when an
+  active session agent has reported usable screen information. Removing
+  the session agent can thus also disable the client-side agent connection;
+  our counterchecks do not uniquely identify a bug inside the session agent.
+- Host `pkg-config --modversion spice-client-gtk-3.0` reports **0.43**.
+  Inspected Nixpkgs' `spice-gtk` 0.43 source:
+  `src/spice-widget.c:update_ready()` updates the display's enabled state
+  from its readiness when `resize-guest` is enabled.
+  `src/channel-main.c:spice_main_channel_send_monitor_config()` emits
+  zero-filled entries for disabled displays when sparse monitor
+  configuration is supported, and requires an agent connection.
+- Current upstream Virt-Manager's `SpiceViewer._set_resizeguest()` sets
+  precisely this `resize-guest` property. QEMU's current upstream
+  `interface_client_monitors_config()` copies incoming client monitor
+  geometry into QXL ROM and raises the client-monitor interrupt on changes.
+  These two upstream inspections are not verification of the exact host
+  builds or the actual messages exchanged during our reproduction.
+- **Concrete hypothesis:** display shutdown changes client readiness;
+  automatic guest resizing treats that as a disabled monitor and sends a
+  zero-size configuration. QXL then disconnects the output, preventing
+  normal DPMS wake. The session agent enables the communication path rather
+  than necessarily generating the bad configuration itself.
+- **Next targeted check:** retain both guest agents and QXL, but disable
+  automatic guest resizing in the Virt-Manager console before shutdown.
+  This is distinct from display scaling. A successful repeated wake would
+  support a narrower workaround preserving guest clipboard integration.
+  Client debug logs are still needed to prove the outgoing configuration.
 
 ### Upstream leads (not confirmed causes)
 
