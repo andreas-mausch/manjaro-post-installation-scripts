@@ -1,6 +1,9 @@
-{ ... }:
+{ pkgs, ... }:
 {
-  imports = [ ./base.nix ];
+  imports = [
+    ./base.nix
+    (import ./spice.nix { inherit pkgs; }).nixosModule
+  ];
   hardware.graphics.enable = true;
   services.displayManager.sddm = {
     enable = true;

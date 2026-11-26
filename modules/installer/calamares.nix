@@ -81,7 +81,7 @@ let
     quit-at-end = false;
   };
   calamaresSettings = yaml "settings.conf" calamaresConfig;
-  spice = import ./spice.nix {
+  spice = import ../spice.nix {
     inherit pkgs;
     settings = calamaresConfig;
   };

@@ -1,5 +1,19 @@
-{ pkgs, settings }:
+# SPICE provides remote display and guest integration for virtual machines.
+{
+  pkgs,
+  settings ? null,
+}:
 let
+  autostart = pkgs.runCommand "spice-vdagent-autostart.desktop" { } ''
+    # Plasma's systemd autostart skips this entry without a replacement user service.
+    # https://github.com/NixOS/nixpkgs/issues/239490#issuecomment-1795843923
+    # https://github.com/NixOS/nixpkgs/pull/266080
+    sed '/^X-systemd-skip=/d' \
+      ${pkgs.spice-vdagent}/etc/xdg/autostart/spice-vdagent.desktop > "$out"
+    ! grep -q '^X-systemd-skip=' "$out"
+    grep -q '^Exec=${pkgs.spice-vdagent}/bin/spice-vdagent$' "$out"
+    grep -q '^X-GNOME-Autostart-Phase=WindowManager$' "$out"
+  '';
   chooser = pkgs.writeText "desktop-spice.conf" (
     builtins.toJSON {
       mode = "optional";
@@ -57,7 +71,17 @@ let
   );
 in
 {
-  offlinePackages = [ pkgs.spice-vdagent ];
+  offlinePackages = [
+    pkgs.spice-vdagent
+    autostart
+  ];
+  nixosModule = { config, lib, ... }: {
+    environment.etc."xdg/autostart/spice-vdagent.desktop" =
+      lib.mkIf config.services.spice-vdagentd.enable
+        {
+          source = autostart;
+        };
+  };
   install = ''
     mkdir -p $out/etc-spice/calamares
     ln -s $out/etc/calamares/modules $out/etc-spice/calamares/modules
