@@ -32,23 +32,25 @@ version; the DMUB/DC firmware comes from the same pinned nixpkgs.
 
 ## Hypotheses
 
-1. amdgpu HDMI DPMS wake regression on Strix. Upstream reports an external
-   HDMI output failing to wake from DPMS/consoleblank since kernel 6.18
-   (Strix, kernel 6.18.3, reported January 2026; internal eDP unaffected,
-   no dmesg messages, no fix recorded on the list). A second report on Strix
-   Halo hardware shows HDMI cycling or never waking after DPMS off, needing
-   a reboot, also without dmesg errors, with HDMI link retraining suspected.
-   Kernel 7.3.5 is far past the 6.18 regression start. TV-specific standby
-   behavior (deep power save, HPD/link retraining quirks) may contribute.
-   eDP-only mechanisms (Panel Replay/PSR) do not apply to this setup.
-2. Plasma/KWin DPMS restore failure. Wake-after-screen-off bugs with the
-   session alive persist beyond the Plasma 6.6 DPMS rewrite (KDE bugs
-   501207, 519218, 523511). The VM journal
-   (`There are no outputs - creating placeholder screen`) fits KWin/kscreen
-   losing outputs, and it would explain the same symptom on unrelated
-   virtual drivers.
-3. Combined trigger: Plasma's DPMS off exposes the driver wake bug; both
-   environments blank via the same PowerDevil/KWin path.
+Given the VM uses QXL, no driver bug can explain both environments; a
+shared cause must live in the layer they share, the Plasma stack from the
+same image.
+
+1. Plasma/KWin DPMS restore failure (shared layer, favored). Wake-after-
+   screen-off bugs with the session alive persist beyond the Plasma 6.6
+   DPMS rewrite and are reported across vendors (NVIDIA 523511, Intel
+   Arc 519218, earlier 513040/515550) — a compositor fault independent of
+   the driver, matching M5 plus VM showing one symptom on two unrelated
+   drivers. The VM journal (`There are no outputs - creating placeholder
+   screen`) points into this layer.
+2. amdgpu HDMI DPMS wake regression on Strix, M5-specific and able to
+   coexist with 1. Upstream reports an external HDMI output failing to
+   wake from DPMS/consoleblank since kernel 6.18 (Strix, January 2026, no
+   dmesg messages, no fix recorded on the list) and a Strix Halo case
+   needing a reboot. Kernel 7.3.5 is far past 6.18. TV standby behavior
+   may contribute. eDP-only mechanisms do not apply to this setup.
+3. Combined trigger: Plasma's DPMS off exposes a driver-side wake bug on
+   the M5 while the VM variant fails purely in the compositor.
 
 ## Next verification
 
@@ -96,3 +98,7 @@ console path.
 - 2026-11-26: User correction: the M5 drives a TV over HDMI and has no
   internal eDP panel, ruling out eDP-only mechanisms such as Panel Replay
   or PSR and pointing to the HDMI DPMS wake regression reports instead.
+- 2026-11-26: User reasoning recorded: the VM runs QXL rather than amdgpu,
+  so a driver bug cannot be the shared cause; the common Plasma stack
+  became the favored hypothesis. The `consoleblank` text-console test on
+  the M5 is the discriminator between the two layers.
