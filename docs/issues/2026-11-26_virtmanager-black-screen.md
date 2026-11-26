@@ -17,8 +17,9 @@ and PowerDevil: `There are no outputs - creating placeholder screen`.
 No kernel entries were recorded in the inspected 00:55–00:57 interval.
 The cause and any relation to SPICE remain unconfirmed.
 
-On 2026-11-26 the same symptom was reproduced on the Bosgame M5 hardware, so
-it is not VM- or SPICE-specific; see
+An earlier report of the same symptom on the Bosgame M5 was subsequently
+qualified by the user: the M5 responds again, and the earlier wake attempt
+may have been incomplete. A reproducible M5 failure is not established; see
 [no image after automatic screen shutdown on the M5](2026-11-26_m5-black-screen-after-idle.md).
 
 ## Next verification
@@ -42,6 +43,61 @@ locking. Keep VirtIO-GPU as the VM workaround. The QXL root cause remains
 unconfirmed; the similar M5 symptom still requires independent investigation.
 
 ## Evidence
+
+### Installed QXL test with DRM debugging, 2026-11-26
+
+- SSH login worked immediately after installation as the selected user
+  `test`. The VM used QXL; `uname -r` reported **7.3.5**.
+- DRM debugging was enabled before reproduction with
+  `echo 0x06 | sudo tee /sys/module/drm/parameters/debug`.
+- At **21:05:28 +01:00**, `card1-Virtual-1` was `connected`; Virtual-2,
+  Virtual-3 and Virtual-4 were `disconnected`.
+- With the one-minute screen-shutdown test, the image went black and did
+  not return on the user's wake attempt. SSH remained usable. At
+  **21:09:50 +01:00**, all four connectors were `disconnected`.
+- The supplied kernel-journal excerpt records this sequence:
+
+  ```text
+  21:06:58 drm_atomic_helper_commit_crtc_disable: inactive head 0, skip (disable)
+  21:06:58 qxl_crtc_atomic_flush: no primary surface, skip (flush)
+  21:06:59 qxl_display_read_client_monitors_config: read 0x0+0+0
+  21:06:59 Virtual-1: status updated from connected to disconnected
+  21:06:59 Virtual-1: generating connector hotplug event
+  ```
+
+  QXL reads a zero-size client monitor configuration immediately before
+  disconnecting the only connected output. This is direct evidence of the
+  disconnect sequence, not proof of which component supplied that
+  configuration or why it was not restored. The allocation/free debug
+  messages alone do not establish a release-fence hang. Exact matching
+  kernel-source inspection remains pending.
+- At failure, both guest integration processes were running:
+  root's `spice-vdagentd` and user `test`'s `spice-vdagent`, version **0.23.0**.
+  `spice-vdagentd.service` was active/running.
+
+### QXL countercheck without guest SPICE agents
+
+- The user followed the reboot-and-stop countercheck, retaining QXL and
+  host SPICE. Guest integration was stopped with:
+
+  ```bash
+  sudo systemctl stop spice-vdagentd.service
+  pkill -x spice-vdagent
+  ps -eo pid,user,args | grep '[s]pice-vdagent'
+  ```
+
+- The supplied process check returned no process lines. The user confirmed
+  DRM debugging was enabled for the new test.
+- **One screen-shutdown/wake cycle succeeded:** the screen went black and
+  then returned. This contrasts with the failure while agents were running.
+  Host SPICE was not removed; this tests guest integration, not all SPICE.
+- Guest integration is now a concrete suspect, but one successful cycle
+  does not establish causality. No successful-cycle kernel log has yet been
+  supplied. Restarting the VM also changed state between the two trials.
+- **Next:** repeat shutdown/wake with agents absent, then re-enable both
+  agents and repeat with the same display settings. Capture connector state
+  and DRM logs in each case. Only then narrow down daemon versus session
+  agent and the monitor-configuration sender. No QXL fix is confirmed yet.
 
 ### Upstream leads (not confirmed causes)
 

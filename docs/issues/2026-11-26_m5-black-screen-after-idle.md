@@ -6,6 +6,15 @@ status: open
 
 ## Observation
 
+### Later user correction, 2026-11-26
+
+The user subsequently reported that the M5 responds again and that the
+earlier wake attempt may not have been performed correctly. The original
+report below is retained as history, not a confirmed reproducible failure.
+Neither a shared cause with QXL nor a distinct M5 bug is established.
+The QXL investigation takes priority; the M5 hypotheses below remain
+unverified and must not be treated as conclusions.
+
 On the Bosgame M5 with the Plasma/Wayland desktop, the display turned off
 after 10 minutes of idle and no image returned afterwards. This is the same
 symptom previously observed only in the Desktop VM (see
