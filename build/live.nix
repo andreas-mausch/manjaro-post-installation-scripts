@@ -16,7 +16,6 @@
   boot.supportedFilesystems.zfs = lib.mkForce false;
   hardware.enableRedistributableFirmware = true;
   networking.networkmanager.enable = true;
-  networking.wireless.enable = lib.mkForce false;
   services.openssh.enable = lib.mkForce false;
   console.keyMap = "us";
   time.timeZone = "UTC";
