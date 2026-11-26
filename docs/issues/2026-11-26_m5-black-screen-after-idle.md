@@ -22,10 +22,14 @@ narrows the failure to the display path (KWin DPMS handling or the driver
 output pipeline).
 
 Versions in the tested image: nixpkgs pinned 2026-10-22
-(`3ec636362e18`), KWin/Plasma 6.8.3, kernel `linuxPackages_latest`
-(`uname -r` to be recorded on the M5). The Bosgame M5 is an AMD Strix Halo
-device; the VM used QXL/SPICE, so the common software layer is Plasma/KWin
-while the driver layer differs.
+(`3ec636362e18`), KWin/Plasma 6.8.3, kernel linux 7.3.5
+(`linuxPackages_latest`, read from the Full ISO). The Bosgame M5 is an AMD
+Strix Halo device; the VM used QXL/SPICE, so the common software layer is
+Plasma/KWin while the driver layer differs. Kernel 7.3.5 falls inside the
+upstream amdgpu eDP Panel Replay regression window (reports span 7.0 to
+7.3.x; no fix in 7.3.x as of 2026-11-19). amdgpu ships with the kernel, so
+the driver version follows the kernel version; the DMUB/DC firmware comes
+from the same pinned nixpkgs.
 
 ## Hypotheses
 
@@ -47,7 +51,17 @@ while the driver layer differs.
 
 ## Next verification
 
-- While black, over SSH: record the kernel version (`uname -r`) and check
+The installed systems do not enable SSH yet (planned separately as TODO
+task 4), so evidence during a future blank needs an attached display or
+temporary SSH.
+
+- Attach an external monitor when the internal panel stays black: an image
+  on the external output isolates the fault to the eDP path and provides a
+  local console without SSH.
+- After rebooting, temporarily enable SSH on the M5 and shorten the blank
+  timeout (for example one minute) to reproduce and investigate the state
+  while it is still frozen.
+- While black, over SSH or the console: check
   `journalctl -b 0 | grep -iE 'kwin|amdgpu|drm|dpms|psr|replay'` around the
   blanking event. KWin lines like `Setting dpms mode failed` or
   `Atomic modeset test failed` point to hypothesis 2; amdgpu/DMUB errors
