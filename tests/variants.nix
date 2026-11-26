@@ -95,6 +95,8 @@ let
       || lib.hasInfix "--mtp-model /srv/ai/models/text-generation/Qwen3.8-Flash-Next/MTP/" customAI.config.systemd.services.gufo.serviceConfig.ExecStart;
     assert !(target.nix.settings ? always-allow-substitutes);
     assert live.services.desktopManager.plasma6.enable;
+    assert live.console.keyMap == "us";
+    assert live.time.timeZone == "UTC";
     assert (live.environment.etc ? "desktop-installer/models") == ai;
     assert live.image.baseName == "nixos-${name}";
     assert live.image.fileName == "nixos-${name}.iso";
