@@ -23,6 +23,12 @@ build. KDE and the installer are not tied to this GPU model.
 
 ## Requirements and reproducible builds
 
+Build definitions live under `build/`: `iso.nix` composes the live image,
+`live.nix` configures its environment, `offline.nix` prepares the reference
+system and assembly tools, and `offline-source.nix` archives locked inputs.
+Generated build artifacts are exposed through `result/`, not stored in `build/`.
+`modules/installer/` contains only the Calamares integration.
+
 The Flake provides five predefined system profiles under `profiles/`:
 
 | Profile | Composition                         | ISO output    | Free application packages |

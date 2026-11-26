@@ -54,129 +54,17 @@
         };
       mkVariant =
         name: variant:
-        let
-          archive = import ./modules/installer/offline-source.nix {
-            inherit
-              pkgs
-              self
-              nixpkgs
-              system
-              name
-              ;
-            rootInputs = {
-              inherit nixpkgs;
-            }
-            // nixpkgs.lib.optionalAttrs variant.ai { inherit gufo; };
-            targetProfile = variant.profile;
-            reuseSetupOutputs = variant.ai;
-          };
-          inherit (archive) inputSources offlineSource;
-          # Prebuild the fixed package set and encryption-related initrd components.
-          # Do not include the complete .drv/source graph (Kernel/ROCm toolchains).
-          target = mkTarget name variant inputSources;
-          offlineSeed = target.extendModules {
-            modules = [
-              {
-                boot.initrd.luks.devices.cryptroot.device =
-                  "/dev/disk/by-uuid/00000000-0000-0000-0000-000000000000";
-              }
-            ];
-          };
-          offlineSystem = offlineSeed.config.system.build.toplevel;
-          offlineAssembly = with offlineSeed.config.system.build; [
-            toplevel
-            initialRamdisk
-            initialRamdiskSecretAppender
-            etc
-            bootStage2
-            modulesClosure
-            # Include buildEnv's declared assembly dependencies as well.
-            (offlineSeed.config.system.path)
-          ];
-          assemblyTools = nixpkgs.lib.unique (
-            nixpkgs.lib.concatMap (
-              drv:
-              builtins.filter nixpkgs.lib.isDerivation (
-                nixpkgs.lib.flatten [
-                  (drv.drvAttrs.nativeBuildInputs or [ ])
-                  (drv.drvAttrs.buildInputs or [ ])
-                  (drv.drvAttrs.stdenv or [ ])
-                ]
-              )
-            ) offlineAssembly
-          );
-          # Dynamic settings assemble config files, units and an initrd. Reuse
-          # prebuilt Kernel/desktop/ROCm packages instead of recompiling them.
-          offlineTools =
-            assemblyTools
-            ++ (with pkgs; [
-              stdenvNoCC
-              bash
-              coreutils
-              findutils
-              gnugrep
-              gnused
-              gawk
-              diffutils
-              perl
-              jq
-              cpio
-              gzip
-              zstd
-              xz
-              kmod
-              kbd
-              systemd
-              makeWrapper
-              lndir
-              # Activation and hardware-dependent initrd assembly need these
-              # finished outputs, not their compiler/source dependency graphs.
-              libcap-text-verifier
-              # buildEnv's generated builder also references these tools outside
-              # the nativeBuildInputs inspected above (Info and MIME/XML indexes).
-              texinfo
-              libxslt
-              microcode-amd
-              microcode-intel
-              linux-firmware
-            ])
-            ++ calamares.offlinePackages;
-          modelFiles = import ./modules/generative-ai/model-files.nix {
-            inherit pkgs gufo;
-            models = offlineSeed.config.generative-ai.models;
-          };
-          calamares = import ./modules/installer/calamares.nix {
-            inherit pkgs offlineSource;
-            lib = nixpkgs.lib;
-            variantName = name;
-            withModels = variant.ai;
-            modelFiles = if variant.ai then modelFiles else null;
-            modelsDirectory = if variant.ai then offlineSeed.config.generative-ai.models.directory else null;
-          };
-          inherit (calamares) calamaresExtensions welcomeModule;
-          installer = nixpkgs.lib.nixosSystem {
-            inherit system;
-            specialArgs = {
-              inherit calamaresExtensions offlineSystem offlineTools;
-              modelFiles = if variant.ai then modelFiles else null;
-              variantName = name;
-            };
-            modules = [
-              (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix")
-              ./modules/installer
-            ];
-          };
-        in
-        {
+        import ./build/iso.nix {
           inherit
-            target
-            installer
-            calamaresExtensions
-            welcomeModule
-            modelFiles
-            offlineSource
-            offlineSystem
+            pkgs
+            self
+            nixpkgs
+            gufo
+            system
+            name
+            variant
             ;
+          mkTarget = mkTarget name variant;
         };
       builds = builtins.mapAttrs mkVariant variants;
     in
