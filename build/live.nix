@@ -8,6 +8,11 @@
   sshKeysFile,
   ...
 }:
+let
+  hasSSHKeys = lib.any (line: builtins.match "[[:space:]]*(#.*)?" line == null) (
+    lib.splitString "\n" (builtins.readFile sshKeysFile)
+  );
+in
 {
   imports = [
     ../modules/networking.nix
@@ -24,7 +29,7 @@
   hardware.bluetooth.enable = true;
   hardware.cpu.amd.updateMicrocode = true;
   hardware.cpu.intel.updateMicrocode = true;
-  services.openssh.enable = true;
+  services.openssh.enable = hasSSHKeys;
   users.users.nixos.openssh.authorizedKeys.keyFiles = [ sshKeysFile ];
   console.keyMap = "us";
   time.timeZone = "UTC";

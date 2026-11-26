@@ -99,7 +99,13 @@ let
     assert live.time.timeZone == "UTC";
     assert live.hardware.bluetooth.enable;
     assert live.networking.nftables.enable;
-    assert live.services.openssh.enable;
+    assert
+      live.services.openssh.enable == lib.any (
+        file:
+        lib.any (line: builtins.match "[[:space:]]*(#.*)?" line == null) (
+          lib.splitString "\n" (builtins.readFile file)
+        )
+      ) live.users.users.nixos.openssh.authorizedKeys.keyFiles;
     assert !target.services.openssh.enable;
     assert live.services.openssh.settings.PasswordAuthentication == false;
     assert live.services.openssh.settings.KbdInteractiveAuthentication == false;

@@ -43,7 +43,7 @@ Reusable libvirt images remain additional work after these priorities.
   authentication instead. Decide installed-system and live-installer behavior
   separately before implementation.
 
-- [ ] Verify always-on live SSH and optional installed-system SSH in Calamares.
+- [ ] Verify key-gated live SSH and optional installed-system SSH in Calamares.
   Use build-supplied public keys through the `ssh-keys` Flake input; verify
   key login, rejection of password/root login, offline installation with SSH
   enabled, reboot persistence, and the disabled target selection.

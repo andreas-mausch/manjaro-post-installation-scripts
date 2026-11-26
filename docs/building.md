@@ -28,7 +28,8 @@ See [validation policy](decisions/0010-validation-and-evidence.md) and
 
 ## Build-supplied SSH access keys
 
-The live installer always runs SSH on TCP port 22. Password, keyboard-interactive
+The live installer runs SSH on TCP port 22 only when public keys are supplied.
+Empty files and comment-only files leave the service disabled. Password, keyboard-interactive
 and root login are disabled. Supply public keys explicitly through the `ssh-keys`
 Flake input; no personal keys are read from the build host automatically.
 
@@ -45,8 +46,8 @@ nix build .#iso-desktop --out-link result-desktop \
 
 Use the same override for other ISO variants. Never place private keys in that
 directory: the input and public-key file become part of the ISO/Nix Store.
-The default input contains no keys; SSH still runs, but no initial key login is
-authorized. Rebuilding without the override does not retain previously supplied
+The default input contains no keys; live SSH remains disabled.
+Rebuilding without the override does not retain previously supplied
 keys. Keep the public-key input directory to reproduce personalized images.
 
 Connect to live media as `nixos`: `ssh nixos@<guest-ip>`. In Calamares, opt in to
