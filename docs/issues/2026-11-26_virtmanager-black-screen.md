@@ -17,6 +17,10 @@ and PowerDevil: `There are no outputs - creating placeholder screen`.
 No kernel entries were recorded in the inspected 00:55–00:57 interval.
 The cause and any relation to SPICE remain unconfirmed.
 
+On 2026-11-26 the same symptom was reproduced on the Bosgame M5 hardware, so
+it is not VM- or SPICE-specific; see
+[no image after automatic screen shutdown on the M5](2026-11-26_m5-black-screen-after-idle.md).
+
 ## Next verification
 
 Automatic screen shutdown was changed to `Never` in the guest's Plasma
