@@ -370,6 +370,13 @@ class AdapterTests(unittest.TestCase):
         self.assertNotIn("stderr", run.call_args.kwargs)
         self.assertNotIn("secret-argument", str(logs.output))
 
+    def test_write_file_captures_echoed_contents(self):
+        with patch.object(adapter.subprocess, "run") as run:
+            adapter.write_file("/target/user-password.hash", "$y$secret\n", "0600")
+        self.assertEqual(run.call_args.args[0], ["pkexec", "tee", "/target/user-password.hash"])
+        self.assertEqual(run.call_args.kwargs["input"], "$y$secret\n")
+        self.assertEqual(run.call_args.kwargs["stdout"], subprocess.PIPE)
+
     def test_host_streams_through_calamares_without_timeout(self):
         with patch.object(calamares.utils, "host_env_process_output") as process, \
                 patch.object(adapter.subprocess, "run") as run:

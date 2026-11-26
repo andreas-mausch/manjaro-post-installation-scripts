@@ -43,7 +43,8 @@ def host(*args, input=None, capture=False, stream=False):
 
 def write_file(path, contents, mode="0644"):
     host("install", "-m", mode, "/dev/null", path)
-    host("tee", path, input=contents)
+    # tee echoes its input; never expose configuration or password hashes.
+    host("tee", path, input=contents, capture=True)
 
 
 def validate_selection(gs, with_models=True):
