@@ -15,19 +15,55 @@ The reproduction on real hardware shows the failure is not specific to the
 VM, QXL or SPICE. A shared cause in Plasma/Wayland display power management,
 possibly interacting with the GPU driver, is plausible but unconfirmed.
 Mouse/keyboard activity and Ctrl+Alt+F3 produced no response and no image,
-matching the VM observation where Ctrl+Alt+F3 also did not recover. Whether
-the system itself stayed running (beyond the display) is not established.
+matching the VM observation where Ctrl+Alt+F3 also did not recover. During
+the frozen display the system stayed fully reachable: network and Gufo
+inference kept running. This rules out a kernel or GPU-compute freeze and
+narrows the failure to the display path (KWin DPMS handling or the driver
+output pipeline).
+
+Versions in the tested image: nixpkgs pinned 2026-10-22
+(`3ec636362e18`), KWin/Plasma 6.8.3, kernel `linuxPackages_latest`
+(`uname -r` to be recorded on the M5). The Bosgame M5 is an AMD Strix Halo
+device; the VM used QXL/SPICE, so the common software layer is Plasma/KWin
+while the driver layer differs.
+
+## Hypotheses
+
+1. amdgpu eDP power-saving bug (Panel Replay/PSR) on Strix Halo. Upstream
+   reports match the pattern: system alive over SSH, panel never returns
+   after blank, VT switch shows no image. One November 2026 report fixes an
+   eDP freeze with kernel parameter `amdgpu.dcdebugmask=0x400` (disables
+   Panel Replay, falls back to PSR); kernel 6.18–7.3-era amdgpu display
+   regressions on Strix boards are reported upstream
+   (gitlab.freedesktop.org/drm/amd issues).
+2. Plasma/KWin DPMS restore failure. Wake-after-screen-off bugs with the
+   session alive persist beyond the Plasma 6.6 DPMS rewrite (KDE bugs
+   501207, 519218, 523511). The VM journal
+   (`There are no outputs - creating placeholder screen`) fits KWin/kscreen
+   losing outputs, and it would explain the same symptom on unrelated
+   virtual drivers.
+3. Combined trigger: Plasma's DPMS off exposes the driver wake bug; both
+   environments blank via the same PowerDevil/KWin path.
 
 ## Next verification
 
-- SSH into the M5 after the blank to determine whether the system is still
-  running and only the display path failed, or whether input and session
-  handling are also stuck.
-- Check the journal around the blanking event on the M5 for DRM/KMS,
-  lock screen and PowerDevil messages; compare with the VM journal
-  (`There are no outputs - creating placeholder screen`).
+- While black, over SSH: record the kernel version (`uname -r`) and check
+  `journalctl -b 0 | grep -iE 'kwin|amdgpu|drm|dpms|psr|replay'` around the
+  blanking event. KWin lines like `Setting dpms mode failed` or
+  `Atomic modeset test failed` point to hypothesis 2; amdgpu/DMUB errors
+  or `replay_state`/`psr_state` anomalies point to hypothesis 1.
+- While black: `cat /sys/class/drm/card*/card-*/status` to see whether the
+  panel still reports `connected`.
+- Test recovery without reboot from SSH (each result localizes the fault):
+  `kscreen-doctor output.eDP-1.on`, an explicit `dpms on` via sysfs, then
+  `systemctl restart sddm`. Recovery via `sddm` restart implicates KWin;
+  no recovery through any userspace path implicates the driver pipeline.
+- With `amdgpu.dcdebugmask=0x400` (and short 1-minute blank timeout), test
+  whether the failure disappears on the M5.
 - Test whether disabling automatic screen shutdown in Plasma prevents the
   failure on the M5, mirroring the pending VM countercheck.
+- Compare kernel versions: if a previous `linuxPackages_*` worked, pin it
+  while upstream triage runs.
 
 ## Evidence
 
@@ -35,3 +71,6 @@ the system itself stayed running (beyond the display) is not established.
   10 minutes of idle, ruling out a purely VM-specific cause.
 - 2026-11-26: User report confirming that neither mouse/keyboard activity
   nor Ctrl+Alt+F3 restored an image or showed any response.
+- 2026-11-26: During the black screen the system remained reachable; the
+  network and Gufo inference kept serving requests, confirming the fault
+  is limited to the display path.
