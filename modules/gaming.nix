@@ -1,6 +1,5 @@
 { lib, ... }:
 {
-  imports = [ ./desktop.nix ];
   hardware.graphics.enable32Bit = true;
   services.pipewire.alsa.support32Bit = true;
   programs.steam.enable = true;

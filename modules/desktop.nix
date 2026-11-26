@@ -1,7 +1,6 @@
 { pkgs, ... }:
 {
   imports = [
-    ./base.nix
     (import ./spice.nix { inherit pkgs; }).nixosModule
   ];
   hardware.graphics.enable = true;

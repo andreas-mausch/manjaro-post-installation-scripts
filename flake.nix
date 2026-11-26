@@ -21,29 +21,23 @@
       };
       variants = {
         base = {
-          modules = [ ./modules/base.nix ];
+          profile = ./profiles/base.nix;
           ai = false;
         };
         desktop = {
-          modules = [ ./modules/desktop.nix ];
+          profile = ./profiles/desktop.nix;
           ai = false;
         };
         gaming = {
-          modules = [ ./modules/gaming.nix ];
+          profile = ./profiles/gaming.nix;
           ai = false;
         };
         ai = {
-          modules = [
-            ./modules/desktop.nix
-            ./modules/generative-ai
-          ];
+          profile = ./profiles/ai.nix;
           ai = true;
         };
         full = {
-          modules = [
-            ./modules/gaming.nix
-            ./modules/generative-ai
-          ];
+          profile = ./profiles/full.nix;
           ai = true;
         };
       };
@@ -52,10 +46,11 @@
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = nixpkgs.lib.optionalAttrs variant.ai { inherit gufoPackage; };
-          modules =
-            variant.modules
-            ++ [ ./modules/target-configuration.nix ]
-            ++ [ { system.extraDependencies = sources; } ];
+          modules = [
+            variant.profile
+            ./modules/target-configuration.nix
+          ]
+          ++ [ { system.extraDependencies = sources; } ];
         };
       mkVariant =
         name: variant:
@@ -72,7 +67,7 @@
               inherit nixpkgs;
             }
             // nixpkgs.lib.optionalAttrs variant.ai { inherit gufo; };
-            targetModules = variant.modules;
+            targetProfile = variant.profile;
             reuseSetupOutputs = variant.ai;
           };
           inherit (archive) inputSources offlineSource;

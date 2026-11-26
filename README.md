@@ -23,9 +23,9 @@ build. KDE and the installer are not tied to this GPU model.
 
 ## Requirements and reproducible builds
 
-The Flake provides five fixed target compositions:
+The Flake provides five predefined system profiles under `profiles/`:
 
-| Variant | Target modules                      | ISO output    | Free application packages |
+| Profile | Target modules                      | ISO output    | Free application packages |
 | ------- | ----------------------------------- | ------------- | ------------------------- |
 | Base    | `base.nix`                          | `iso-base`    | ✅                        |
 | Desktop | `desktop.nix`                       | `iso-desktop` | ✅                        |
@@ -37,8 +37,12 @@ The last column describes Nixpkgs package permissions, not a complete license
 audit: redistributable firmware is enabled in every variant; model weights
 have separate licenses.
 
-`desktop.nix` imports `base.nix`; `gaming.nix` imports `desktop.nix`.
-`generative-ai/default.nix` imports only `base.nix` and can be used without
+`profiles/desktop.nix` extends Base with the Desktop module;
+`profiles/gaming.nix` extends Desktop with Gaming. AI extends Desktop with
+the AI module, and Full extends Gaming with AI.
+The building blocks under `modules/` do not import Base or one another;
+the NixOS modules in `profiles/` own their composition without defining
+hardware or individual user settings. The AI module can also be used without
 a desktop. Exported target modules do not import repository-local hardware or
 user configuration. Consumers provide their own filesystems and users; AI
 also requires the `gufoPackage` module argument. Repository targets use the

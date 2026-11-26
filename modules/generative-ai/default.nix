@@ -17,7 +17,6 @@ let
   qwen38FlashNextDirectory = config.generative-ai.models.text-generation.qwen38FlashNext.directory;
 in
 {
-  imports = [ ../base.nix ];
   options.generative-ai.models.directory = lib.mkOption {
     type = modelDirectoryType;
     default = "/var/lib/generative-ai/models";

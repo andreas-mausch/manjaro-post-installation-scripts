@@ -55,5 +55,6 @@ for index in range(1, len(sys.argv), 4):
     else:
         assert "gufo" not in flake, name
         assert f"nixosConfigurations = {{ {name} = target; }}" in flake, name
-        assert "./configuration.nix" in flake, name
+        assert f"./profiles/{name}.nix" in flake, name
+        assert "./modules/target-configuration.nix" in flake, name
         assert '"${target.config.networking.hostName}" = target;' in flake, name

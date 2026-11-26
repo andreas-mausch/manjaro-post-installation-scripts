@@ -35,6 +35,9 @@ let
         assert config.fileSystems."/boot".device == "/dev/disk/by-uuid/consumer-efi";
         assert config.users.users.consumer.isNormalUser;
         assert !(config.users.users ? desktopuser);
+        # Only Base owns the shared system policy; other modules must not pull it in.
+        assert config.programs.git.enable == (name == "base");
+        assert config.services.desktopManager.plasma6.enable == (name == "desktop");
         true
       )
       [

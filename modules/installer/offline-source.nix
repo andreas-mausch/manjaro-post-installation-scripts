@@ -5,7 +5,7 @@
   system,
   name,
   rootInputs,
-  targetModules,
+  targetProfile,
   reuseSetupOutputs,
 }:
 let
@@ -87,9 +87,7 @@ let
       outputs = { self, nixpkgs }: let
         target = nixpkgs.lib.nixosSystem {
           system = "${system}";
-          modules = [ ${
-            lib.concatMapStringsSep " " (module: "./modules/${builtins.baseNameOf module}") targetModules
-          }
+          modules = [ ./profiles/${builtins.baseNameOf targetProfile}
             ./modules/target-configuration.nix
             { system.extraDependencies = [ nixpkgs.outPath ]; } ];
         };
