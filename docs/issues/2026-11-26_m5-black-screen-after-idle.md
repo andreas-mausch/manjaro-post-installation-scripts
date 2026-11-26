@@ -14,13 +14,15 @@ symptom previously observed only in the Desktop VM (see
 The reproduction on real hardware shows the failure is not specific to the
 VM, QXL or SPICE. A shared cause in Plasma/Wayland display power management,
 possibly interacting with the GPU driver, is plausible but unconfirmed.
-Recovery attempts on the M5 (input activity, virtual consoles) were not
-recorded.
+Mouse/keyboard activity and Ctrl+Alt+F3 produced no response and no image,
+matching the VM observation where Ctrl+Alt+F3 also did not recover. Whether
+the system itself stayed running (beyond the display) is not established.
 
 ## Next verification
 
-- Document which recovery attempts were made on the M5 and whether any
-  restored an image (mouse/keyboard, brightness keys, Ctrl+Alt+F3, reboot).
+- SSH into the M5 after the blank to determine whether the system is still
+  running and only the display path failed, or whether input and session
+  handling are also stuck.
 - Check the journal around the blanking event on the M5 for DRM/KMS,
   lock screen and PowerDevil messages; compare with the VM journal
   (`There are no outputs - creating placeholder screen`).
@@ -31,3 +33,5 @@ recorded.
 
 - 2026-11-26: User report confirming the failure on the Bosgame M5 after
   10 minutes of idle, ruling out a purely VM-specific cause.
+- 2026-11-26: User report confirming that neither mouse/keyboard activity
+  nor Ctrl+Alt+F3 restored an image or showed any response.
