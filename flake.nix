@@ -102,28 +102,14 @@
           iso = self.nixosConfigurations.installer.config.system.build.isoImage;
           default = self.packages.${system}.iso;
         };
-      checks.${system} = {
-        installer-tests =
-          pkgs.runCommand "desktop-installer-tests"
-            {
-              nativeBuildInputs = [
-                pkgs.python3
-              ];
-            }
-            ''
-              export PYTHONDONTWRITEBYTECODE=1
-              python3 ${./tests/test_calamares.py} ${./modules/installer/calamares/main.py}
-              touch "$out"
-            '';
-        variant-tests = import ./tests/variants.nix { inherit pkgs builds profiles; };
-        reusable-module-tests = import ./tests/reusable-modules.nix {
-          inherit
-            pkgs
-            nixpkgs
-            gufoPackage
-            profiles
-            ;
-        };
+      checks.${system} = import ./tests {
+        inherit
+          pkgs
+          nixpkgs
+          gufoPackage
+          builds
+          profiles
+          ;
       };
       formatter.${system} = pkgs.nixfmt-tree;
     };

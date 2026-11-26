@@ -107,8 +107,8 @@ in
 assert valid;
 assert modelPathsValid;
 assert !((import ../flake.nix) ? nixConfig);
-pkgs.runCommand "installer-variant-tests" { nativeBuildInputs = [ pkgs.python3 ]; } ''
-  python3 ${./test_variants.py} ${
+pkgs.runCommand "installer-profile-tests" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+  python3 ${./test_profiles.py} ${
     lib.concatMapStringsSep " " (
       name:
       "${name} ${builds.${name}.calamaresExtensions} ${builds.${name}.offlineSource} ${

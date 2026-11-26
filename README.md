@@ -97,7 +97,7 @@ nix flake lock
 nix fmt
 nix flake check --no-build
 nix build .#checks.x86_64-linux.installer-tests
-nix build .#checks.x86_64-linux.variant-tests
+nix build .#checks.x86_64-linux.profile-tests
 nix build .#iso-full
 ```
 
