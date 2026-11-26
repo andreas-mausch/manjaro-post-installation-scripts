@@ -7,7 +7,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 calamares = SimpleNamespace(
     utils=SimpleNamespace(obscure=lambda text: text, gettext_languages=lambda: ["en"],
@@ -233,7 +233,7 @@ class AdapterTests(unittest.TestCase):
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             copy.assert_called_once_with(models / "flash-next-q4/weights.gguf",
                                          Path("/tmp/calamares-root-test/var/lib/generative-ai/models/flash-next-q4/weights.gguf"),
-                                         0, 7)
+                                 0, 7, ANY)
             messages = [call.args[0] for call in debug.call_args_list]
             self.assertIn("1 model files: 7 bytes", messages[0])
             self.assertIn("flash-next-q4/weights.gguf", messages[1])
@@ -264,6 +264,29 @@ class AdapterTests(unittest.TestCase):
                     else:
                         adapter.copy_model_file(source, target, 8, 16)
                     progress.assert_called_once_with(0.75)
+
+    def test_model_copy_speed_reports_every_three_seconds_across_files(self):
+        mib = 1024**2
+        with patch.object(adapter.time, "monotonic", side_effect=[10, 12.9, 13, 15.9, 16]), \
+                patch.object(calamares.utils, "debug") as debug:
+            report = adapter.model_copy_reporter(1024 * mib)
+            report(2 * mib)
+            debug.assert_not_called()
+            report(6 * mib)
+            self.assertIn("2.0 MiB/s", debug.call_args.args[0])
+            report(9 * mib)
+            self.assertEqual(debug.call_count, 1)
+            report(9 * mib)
+            self.assertEqual(debug.call_count, 2)
+            self.assertIn("1.0 MiB/s", debug.call_args.args[0])
+
+    def test_model_copy_speed_reports_stalls(self):
+        with patch.object(adapter.time, "monotonic", side_effect=[0, 3, 6]), \
+                patch.object(calamares.utils, "debug") as debug:
+            report = adapter.model_copy_reporter(1024**3)
+            report(3 * 1024**2)
+            report(3 * 1024**2)
+            self.assertIn("0.0 MiB/s", debug.call_args.args[0])
 
     def test_model_directory_controls_copy_target_logs_and_ownership(self):
         with tempfile.TemporaryDirectory() as temporary:

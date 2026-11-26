@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+import time
 
 import libcalamares
 
@@ -188,7 +189,7 @@ def deploy(gs, config, context=None):
     libcalamares.job.setprogress(1.0)
 
 
-def copy_model_file(source, target, completed, total):
+def copy_model_file(source, target, completed, total, report=None):
     # Reset an existing file so its old size cannot inflate retry progress.
     host("install", "-m", "0644", "/dev/null", target)
     command = ["pkexec", "cp", "--reflink=never", "-L", str(source), str(target)]
@@ -199,10 +200,32 @@ def copy_model_file(source, target, completed, total):
             except subprocess.TimeoutExpired:
                 copied = min(target.stat().st_size, source.stat().st_size)
                 libcalamares.job.setprogress(min(0.99, (completed + copied) / total))
+                if report is not None:
+                    report(completed + copied)
                 continue
             if code:
                 raise subprocess.CalledProcessError(code, command)
             break
+    if report is not None:
+        report(completed + source.stat().st_size)
+
+
+def model_copy_reporter(total):
+    last_time = time.monotonic()
+    last_bytes = 0
+
+    def report(copied):
+        nonlocal last_time, last_bytes
+        now = time.monotonic()
+        elapsed = now - last_time
+        if elapsed < 3:
+            return
+        rate = max(0, copied - last_bytes) / elapsed / 1024**2
+        libcalamares.utils.debug(_("Model copy: {copied:.2f} / {total:.2f} GiB ({rate:.1f} MiB/s)").format(
+            rate=rate, copied=copied / 1024**3, total=total / 1024**3))
+        last_time, last_bytes = now, copied
+
+    return report
 
 
 def copy_models(gs, config, context):
@@ -230,6 +253,7 @@ def copy_models(gs, config, context):
     libcalamares.job.setprogress(0.0)
     host("mkdir", "-p", target_models)
     completed = 0
+    report = model_copy_reporter(total)
     for source in files:
         relative = source.relative_to(models)
         target = target_models / relative
@@ -238,7 +262,7 @@ def copy_models(gs, config, context):
             name=str(relative), bytes=size, gib=size / 1024**3,
             target=str(models_directory / relative)))
         host("mkdir", "-p", target.parent)
-        copy_model_file(source, target, completed, total)
+        copy_model_file(source, target, completed, total, report)
         completed += size
         libcalamares.job.setprogress(min(0.99, completed / total))
     host("chmod", "-R", "u+rwX,go+rX,go-w", target_models)
