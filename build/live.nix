@@ -20,6 +20,8 @@
   boot.supportedFilesystems.zfs = lib.mkForce false;
   hardware.enableRedistributableFirmware = true;
   hardware.bluetooth.enable = true;
+  hardware.cpu.amd.updateMicrocode = true;
+  hardware.cpu.intel.updateMicrocode = true;
   services.openssh.enable = lib.mkForce false;
   console.keyMap = "us";
   time.timeZone = "UTC";

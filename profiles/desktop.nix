@@ -10,11 +10,7 @@
     wayland.enable = true;
   };
   services.desktopManager.plasma6.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-  };
-  security.rtkit.enable = true;
+  services.printing.enable = true;
+  hardware.sane.enable = true;
   programs.firefox.enable = true;
 }

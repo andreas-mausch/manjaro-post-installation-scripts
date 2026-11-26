@@ -99,6 +99,14 @@ let
     assert live.time.timeZone == "UTC";
     assert live.hardware.bluetooth.enable;
     assert target.hardware.bluetooth.enable;
+    assert live.hardware.cpu.amd.updateMicrocode;
+    assert live.hardware.cpu.intel.updateMicrocode;
+    assert target.hardware.cpu.amd.updateMicrocode;
+    assert target.hardware.cpu.intel.updateMicrocode;
+    assert live.services.pipewire.enable;
+    assert target.services.pipewire.enable;
+    assert target.services.printing.enable == desktop;
+    assert target.hardware.sane.enable == desktop;
     assert !build.installer.pkgs.espeak.mbrolaSupport;
     assert !build.target.pkgs.espeak.mbrolaSupport;
     assert live.services.speechd.enable;
