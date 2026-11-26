@@ -5,6 +5,13 @@
   ...
 }:
 let
+  modelDirectoryType = lib.types.addCheck (lib.types.strMatching "/[a-zA-Z0-9/_.-]+") (
+    path:
+    let
+      subpath = lib.removePrefix "/" path;
+    in
+    lib.path.subpath.isValid subpath && lib.path.subpath.normalise subpath == "./${subpath}"
+  );
   modelsDirectory = config.generative-ai.models.directory;
   textGenerationDirectory = config.generative-ai.models.text-generation.directory;
   qwen38FlashNextDirectory = config.generative-ai.models.text-generation.qwen38FlashNext.directory;
@@ -12,17 +19,17 @@ in
 {
   imports = [ ../base.nix ];
   options.generative-ai.models.directory = lib.mkOption {
-    type = lib.types.strMatching "/[a-zA-Z0-9/_.-]+";
+    type = modelDirectoryType;
     default = "/var/lib/generative-ai/models";
     description = "Shared absolute directory for AI model weights (without spaces).";
   };
   options.generative-ai.models.text-generation.directory = lib.mkOption {
-    type = lib.types.strMatching "/[a-zA-Z0-9/_.-]+";
+    type = modelDirectoryType;
     default = "${modelsDirectory}/text-generation";
     description = "Directory for text-generation models.";
   };
   options.generative-ai.models.text-generation.qwen38FlashNext.directory = lib.mkOption {
-    type = lib.types.strMatching "/[a-zA-Z0-9/_.-]+";
+    type = modelDirectoryType;
     default = "${textGenerationDirectory}/Qwen3.8-Flash-Next";
     description = "Directory for Qwen3.8-Flash-Next weights and sidecars.";
   };

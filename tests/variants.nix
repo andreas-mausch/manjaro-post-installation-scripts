@@ -6,6 +6,50 @@
 let
   lib = pkgs.lib;
   cache = import ../modules/generative-ai/cache.nix;
+  modelDirectoryOptions = [
+    [ "directory" ]
+    [
+      "text-generation"
+      "directory"
+    ]
+    [
+      "text-generation"
+      "qwen38FlashNext"
+      "directory"
+    ]
+  ];
+  modelPathsValid = lib.all (
+    option:
+    lib.all
+      (
+        path:
+        let
+          modified = builds.ai.target.extendModules {
+            modules = [
+              (lib.setAttrByPath (
+                [
+                  "generative-ai"
+                  "models"
+                ]
+                ++ option
+              ) path)
+            ];
+          };
+          result = builtins.tryEval (
+            builtins.deepSeq (lib.getAttrFromPath option modified.config.generative-ai.models) true
+          );
+        in
+        !result.success
+      )
+      [
+        "/"
+        "relative/models"
+        "/srv/models/../etc"
+        "/srv/models/."
+        "/srv//models"
+        "/srv/models/"
+      ]
+  ) modelDirectoryOptions;
   valid = lib.all (
     name:
     let
@@ -59,6 +103,7 @@ let
   ) (builtins.attrNames variants);
 in
 assert valid;
+assert modelPathsValid;
 assert !((import ../flake.nix) ? nixConfig);
 pkgs.runCommand "installer-variant-tests" { nativeBuildInputs = [ pkgs.python3 ]; } ''
   python3 ${./test_variants.py} ${
