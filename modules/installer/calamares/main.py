@@ -302,6 +302,35 @@ def pretty_name():
     return _("Install NixOS")
 
 
+def diagnostic_excerpt(path):
+    """Best-effort display aid, never a replacement for original output."""
+    if not path:
+        return ""
+    first_error = []
+    tail = []
+    remaining = 0
+    try:
+        with open(path, encoding="utf-8", errors="replace") as log:
+            for raw in log:
+                line = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", raw).rstrip()
+                # Bound both individual lines and the displayed context.
+                line = line[:500]
+                tail = (tail + [line])[-8:]
+                if remaining:
+                    first_error.append(line)
+                    remaining -= 1
+                elif not first_error and "error:" in line.lower() and "cannot build" not in line.lower():
+                    first_error = [line]
+                    remaining = 7
+                # Prefer an explicit download error over dependency cascades.
+                # This selects text; it does not infer why the download failed.
+                if "error:" in line.lower() and "unable to download" in line.lower():
+                    return "\n".join(tail[-3:])
+    except OSError:
+        return ""
+    return "\n".join(first_error or tail).strip()
+
+
 def run():
     context = {"phase": _("Preflight checks")}
     started = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
@@ -354,13 +383,19 @@ def run():
         )
         title = _("Model copying failed") if stage == "models" else _("NixOS installation failed")
         diagnostics_path = getattr(error, "diagnostics_path", None)
+        excerpt = diagnostic_excerpt(diagnostics_path)
+        original_error = (
+            _("Original error excerpt (full output in the log):") + "\n" + excerpt + "\n\n"
+            if excerpt else ""
+        )
         diagnostics = (
             f"less {shlex.quote(diagnostics_path)}"
             if diagnostics_path else
             f"sudo journalctl -b --since '{started}' --no-pager"
         )
         return (title,
-                _("Phase: {phase}. {detail}").format(phase=phase, detail=detail) + f"\n\n{state}\n\n" +
+                 _("Phase: {phase}. {detail}").format(phase=phase, detail=detail) + f"\n\n{state}\n\n" +
+                 original_error +
                 _("Original diagnostics: Calamares output or in the live terminal:") + "\n" +
                 diagnostics + "\n\n" +
                 _("Check the first error before subsequent errors. Review logs for sensitive data before sharing; no automatic upload."))

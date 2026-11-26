@@ -452,6 +452,27 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("less /tmp/desktop-install-test.log", detail)
         self.assertNotIn("sudo journalctl", detail)
 
+    def test_excerpt_prefers_download_error_without_changing_log(self):
+        text = "error: Cannot build dependency\nLast log lines:\n> error:\n> error: unable to download 'https://example.org': Could not resolve host\nReason: 1 dependency failed\n"
+        with tempfile.TemporaryDirectory() as folder:
+            log = Path(folder) / "install.log"
+            log.write_text(text)
+            excerpt = adapter.diagnostic_excerpt(log)
+            self.assertIn("Could not resolve host", excerpt)
+            self.assertNotIn("1 dependency failed", excerpt)
+            self.assertEqual(log.read_text(), text)
+
+    def test_excerpt_is_bounded_and_missing_logs_are_safe(self):
+        self.assertEqual(adapter.diagnostic_excerpt(None), "")
+        self.assertEqual(adapter.diagnostic_excerpt("/nonexistent/install.log"), "")
+        with tempfile.TemporaryDirectory() as folder:
+            log = Path(folder) / "install.log"
+            log.write_text("\x1b[31merror: original failure\x1b[0m\n" + ("x" * 1000 + "\n") * 100)
+            excerpt = adapter.diagnostic_excerpt(log)
+            self.assertNotIn("\x1b", excerpt)
+            self.assertLessEqual(len(excerpt.splitlines()), 8)
+            self.assertLessEqual(max(map(len, excerpt.splitlines())), 500)
+
     def test_streaming_rejects_input_and_capture(self):
         for options in ({"input": "secret"}, {"capture": True}):
             with self.subTest(options=options), \
