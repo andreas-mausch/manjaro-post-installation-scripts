@@ -39,7 +39,12 @@
   # Persistent hashes live on the target, never in a flake or the Nix store.
   users.mutableUsers = false;
   users.users.root.hashedPassword = "!";
-  environment.systemPackages = [ pkgs.curl ];
+  environment.systemPackages = with pkgs; [
+    curl
+    powertop
+    powerstat
+    lm_sensors
+  ];
   systemd.tmpfiles.rules = [ "d /var/lib/nixos-secrets 0700 root root -" ];
   system.stateVersion = lib.mkDefault "26.05";
 }
