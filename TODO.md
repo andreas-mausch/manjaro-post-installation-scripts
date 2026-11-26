@@ -40,4 +40,6 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 ## Completed
 
+- [x] 2026-11-26: Verify the [SPICE autostart workaround](docs/issues/2026-11-26_spice-session-autostart.md) in the rebuilt Desktop live ISO; both agents run without manual startup. The underlying issue remains open with status `workaround`.
+
 - [x] 2026-11-26: Complete the real VM failure checks in [the installer-diagnostics issue](docs/issues/solved/2026-11-25_installer-failure-diagnostics.md), confirmed by the user.
