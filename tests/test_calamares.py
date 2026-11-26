@@ -49,6 +49,28 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("services.spice-vdagentd.enable = true;",
                       adapter.local_configuration(installation, spice=True))
 
+    def test_ssh_is_opt_in_and_uses_build_supplied_key_file(self):
+        installation = adapter.identity(self.storage())
+        self.assertNotIn("openssh", adapter.local_configuration(installation))
+        enabled = adapter.local_configuration(installation, ssh=True)
+        self.assertIn("services.openssh.enable = true;", enabled)
+        self.assertIn('users.users."testuser".openssh.authorizedKeys.keyFiles', enabled)
+        self.assertIn("./ssh-authorized-keys", enabled)
+        self.assertNotIn("PasswordAuthentication = true", enabled)
+
+    def test_deployment_honors_ssh_selection(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder)
+            (source / "flake.lock").write_text("{}")
+            for choice in [None, "", "ssh"]:
+                with self.subTest(choice=choice), \
+                        patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host, \
+                        patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")):
+                    adapter.deploy(self.storage(packagechooser_ssh=choice), {"source": folder})
+                    configuration = next(call.kwargs["input"] for call in host.call_args_list
+                                         if call.args[0] == "tee" and str(call.args[1]).endswith("/configuration.nix"))
+                    self.assertEqual("services.openssh.enable = true;" in configuration, choice == "ssh")
+
     def test_non_ai_preflight_needs_no_model_selection(self):
         calamares.globalstorage = self.storage(packagechooser_models=None)
         calamares.job.configuration = {"stage": "validate", "withModels": False}

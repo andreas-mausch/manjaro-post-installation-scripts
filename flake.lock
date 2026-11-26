@@ -94,7 +94,8 @@
     "root": {
       "inputs": {
         "gufo": "gufo",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "ssh-keys": "ssh-keys"
       }
     },
     "rust-overlay": {
@@ -117,6 +118,18 @@
         "repo": "rust-overlay",
         "type": "github"
       }
+    },
+    "ssh-keys": {
+      "flake": false,
+      "locked": {
+        "path": "./build/ssh-keys",
+        "type": "path"
+      },
+      "original": {
+        "path": "./build/ssh-keys",
+        "type": "path"
+      },
+      "parent": []
     }
   },
   "root": "root",

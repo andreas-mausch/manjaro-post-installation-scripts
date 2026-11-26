@@ -18,6 +18,11 @@ let
     ];
     instances = [
       {
+        module = "packagechooser";
+        id = "ssh";
+        config = "desktop-ssh.conf";
+      }
+      {
         module = "uefiwelcome";
         id = "uefiwelcome";
         config = "welcome.conf";
@@ -57,7 +62,10 @@ let
           "partition"
         ]
         ++ lib.optional withModels "packagechooser@models"
-        ++ [ "summary" ];
+        ++ [
+          "packagechooser@ssh"
+          "summary"
+        ];
       }
       {
         exec = [
@@ -81,6 +89,31 @@ let
     quit-at-end = false;
   };
   calamaresSettings = yaml "settings.conf" calamaresConfig;
+  sshSettings = yaml "desktop-ssh.conf" {
+    mode = "optional";
+    method = "legacy";
+    labels.step = "SSH Access";
+    labels."step[de]" = "SSH-Zugang";
+    items = [
+      {
+        id = "";
+        name = "Without SSH server";
+        "name[de]" = "Ohne SSH-Server";
+        description = "Disable remote SSH access on the installed system.";
+        "description[de]" = "SSH-Zugang im installierten System deaktivieren.";
+        screenshot = "";
+      }
+      {
+        id = "ssh";
+        name = "Enable SSH server";
+        "name[de]" = "SSH-Server aktivieren";
+        description = "Allow login as the installed user with the image's provisioned public keys. Password and root login are disabled. Opens TCP port 22.";
+        "description[de]" =
+          "Anmeldung als angelegter Benutzer mit den öffentlichen Schlüsseln des Images. Kein Passwort- oder Root-Login. Öffnet TCP-Port 22.";
+        screenshot = "";
+      }
+    ];
+  };
   spice = import ../spice.nix {
     inherit pkgs;
     settings = calamaresConfig;
@@ -223,6 +256,7 @@ let
         "nixos"
         "nobody"
         "daemon"
+        "sshd"
       ];
     };
     hostname = {
@@ -276,6 +310,7 @@ let
       ${spice.install}
       cp ${partitionSettings} $out/etc/calamares/modules/partition.conf
       cp ${userSettings} $out/etc/calamares/modules/users.conf
+      cp ${sshSettings} $out/etc/calamares/modules/desktop-ssh.conf
       cp ${mountSettings} $out/etc/calamares/modules/mount.conf
       ${lib.optionalString withModels ''
         cp ${modelSettings} $out/etc/calamares/modules/desktop-models.conf

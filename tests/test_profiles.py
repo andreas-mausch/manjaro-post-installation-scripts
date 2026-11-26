@@ -43,14 +43,20 @@ for index in range(1, len(sys.argv), 4):
         lock = json.loads((Path(source) / filename).read_text())
         inputs = lock["nodes"][lock["root"]]["inputs"]
         assert ("gufo" in inputs) == ai, (name, filename)
+        assert "ssh-keys" in inputs, (name, filename)
         if not ai:
-            assert set(lock["nodes"]) == {lock["root"], inputs["nixpkgs"]}, (name, filename)
+            assert set(lock["nodes"]) == {lock["root"], inputs["nixpkgs"], inputs["ssh-keys"]}, (name, filename)
     flake = (Path(source) / "flake.nix").read_text()
+    assert (Path(source) / "ssh-authorized-keys").is_file(), name
+    ssh = json.loads((modules / "desktop-ssh.conf").read_text())
+    assert "packagechooser@ssh" in shown, name
+    assert ssh["mode"] == "optional", name
+    assert [item["id"] for item in ssh["items"]] == ["", "ssh"], name
     assert "nixConfig" not in flake, name
     assert "extra-substituters" not in flake, name
     assert "extra-trusted-public-keys" not in flake, name
     if ai:
-        assert "outputs = inputs@{ self, gufo, nixpkgs }: (import ./setup-flake.nix).outputs inputs;" in flake, name
+        assert "outputs = inputs@{ self, gufo, nixpkgs, ssh-keys }: (import ./setup-flake.nix).outputs inputs;" in flake, name
         assert (Path(source) / "setup-flake.nix").is_file(), name
     else:
         assert "gufo" not in flake, name

@@ -6,6 +6,7 @@
   system,
   name,
   profileSpec,
+  ssh-keys,
   mkTarget,
 }:
 let
@@ -18,8 +19,9 @@ let
       system
       name
       ;
+    sshKeysFile = ssh-keys + "/authorized_keys";
     rootInputs = {
-      inherit nixpkgs;
+      inherit nixpkgs ssh-keys;
     }
     // lib.optionalAttrs profileSpec.ai { inherit gufo; };
     targetProfile = profileSpec.profile;
@@ -27,7 +29,10 @@ let
   };
   inherit (archive) inputSources offlineSource;
   target = mkTarget inputSources;
-  offline = import ./offline.nix { inherit pkgs lib target; };
+  offline = import ./offline.nix {
+    inherit pkgs lib target;
+    sshKeysFile = ssh-keys + "/authorized_keys";
+  };
   inherit (offline) offlineSeed offlineSystem;
   offlineTools = offline.offlineTools ++ calamares.offlinePackages;
   modelFiles = import ../modules/generative-ai/model-files.nix {
@@ -47,6 +52,7 @@ let
     inherit system;
     specialArgs = {
       inherit calamaresExtensions offlineSystem offlineTools;
+      sshKeysFile = ssh-keys + "/authorized_keys";
       modelFiles = if profileSpec.ai then modelFiles else null;
       variantName = name;
     };

@@ -7,6 +7,7 @@
   rootInputs,
   targetProfile,
   reuseSetupOutputs,
+  sshKeysFile,
 }:
 let
   lib = nixpkgs.lib;
@@ -58,11 +59,13 @@ let
     nodes = builtins.mapAttrs (
       nodeName: node:
       if node ? locked then
-        node
+        (builtins.removeAttrs node [ "parent" ])
         // {
           locked = {
             type = "path";
             path = inputNodes.${nodeName};
+          }
+          // lib.optionalAttrs (node.locked ? narHash) {
             narHash = node.locked.narHash;
           };
         }
@@ -84,7 +87,7 @@ let
   targetFlake = pkgs.writeText "${name}-flake.nix" ''
     {
       inputs = ${lib.generators.toPretty { } sourceInputs};
-      outputs = { self, nixpkgs }: let
+      outputs = { self, nixpkgs, ... }: let
         target = nixpkgs.lib.nixosSystem {
           system = "${system}";
           modules = [ ./profiles/${builtins.baseNameOf targetProfile}
@@ -117,6 +120,7 @@ let
     ${lib.optionalString (!reuseSetupOutputs) "cp ${targetFlake} \"$out/flake.nix\""}
     cp ${onlineLockFile} "$out/flake.online.lock"
     cp ${localLockFile} "$out/flake.lock"
+    cp ${sshKeysFile} "$out/ssh-authorized-keys"
   '';
 in
 {

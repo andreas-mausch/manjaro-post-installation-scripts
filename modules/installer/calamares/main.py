@@ -80,7 +80,7 @@ def validate_selection(gs, with_models=True):
     # in the partition UI. Do not impose a different policy during installation.
     username = gs.value("username") or ""
     if not re.fullmatch(r"[a-z][a-z0-9_-]{0,30}", username) or username in {
-        "root", "gufo", "nixos", "nobody", "daemon",
+        "root", "gufo", "nixos", "nobody", "daemon", "sshd",
     }:
         raise ValueError(_("Invalid or reserved username."))
     # The native users module enforces the configured password requirements.
@@ -128,9 +128,14 @@ def nix_string(value):
     return json.dumps(value, ensure_ascii=False).replace("${", "\\${")
 
 
-def local_configuration(installation, spice=False):
+def local_configuration(installation, spice=False, ssh=False):
     quoted = {key: nix_string(value) for key, value in installation.items()}
     guest_integration = "  services.spice-vdagentd.enable = true;\n\n" if spice else ""
+    ssh_access = (
+        "  services.openssh.enable = true;\n"
+        f'  users.users.{quoted["username"]}.openssh.authorizedKeys.keyFiles = [ ./ssh-authorized-keys ];\n\n'
+        if ssh else ""
+    )
     return f'''# Local settings for this PC. Rebuild with: sudo nixos-rebuild switch
 {{ ... }}:
 {{
@@ -152,7 +157,7 @@ def local_configuration(installation, spice=False):
     hashedPasswordFile = "/var/lib/nixos-secrets/user-password.hash";
   }};
 
-{guest_integration}  # Compatibility baseline, not the current release version.
+{guest_integration}{ssh_access}  # Compatibility baseline, not the current release version.
   system.stateVersion = "26.05";
 }}
 '''
@@ -178,7 +183,8 @@ def deploy(gs, config, context=None):
     spice = gs.value("packagechooser_spice") == "spice"
     if spice and not Path("/dev/virtio-ports/com.redhat.spice.0").exists():
         raise ValueError(_("The SPICE guest channel is missing."))
-    write_file(destination / "configuration.nix", local_configuration(installation, spice=spice))
+    write_file(destination / "configuration.nix", local_configuration(
+        installation, spice=spice, ssh=gs.value("packagechooser_ssh") == "ssh"))
     context["phase"] = _("Preparing user access")
     secrets = root / "var/lib/nixos-secrets"
     host("install", "-d", "-m", "0700", secrets)

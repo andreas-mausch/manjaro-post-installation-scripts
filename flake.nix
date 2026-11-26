@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     gufo.url = "github:gufo-org/gufo/v0.36.0";
+    ssh-keys = {
+      url = "path:./build/ssh-keys";
+      flake = false;
+    };
   };
 
   outputs =
@@ -11,6 +15,7 @@
       self,
       nixpkgs,
       gufo,
+      ssh-keys,
     }:
     let
       system = "x86_64-linux";
@@ -63,6 +68,7 @@
             system
             name
             profileSpec
+            ssh-keys
             ;
           mkTarget = mkTarget name profileSpec;
         };

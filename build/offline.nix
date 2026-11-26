@@ -2,6 +2,7 @@
   pkgs,
   lib,
   target,
+  sshKeysFile,
 }:
 let
   # Prepare fixed packages and LUKS initrd components, not the full compiler
@@ -9,6 +10,11 @@ let
   offlineSeed = target.extendModules {
     modules = [
       {
+        # Seed the opt-in service as well; installing SSH must work offline.
+        services.openssh.enable = true;
+        users.users.desktopuser.openssh.authorizedKeys.keyFiles = [
+          sshKeysFile
+        ];
         boot.initrd.luks.devices.cryptroot.device =
           "/dev/disk/by-uuid/00000000-0000-0000-0000-000000000000";
       }

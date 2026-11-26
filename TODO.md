@@ -6,10 +6,13 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 Priority order:
 
+SSH provisioning is the current first priority, ahead of hardware verification
+and repository updates. Existing section numbers remain stable for links.
+
+4. [Secure SSH provisioning access](#4-ssh-provisioning)
 1. [Full ISO verification on real hardware](#1-full-iso-verification)
 2. [Repository-update workflow implementation and testing](#2-repository-updates)
 3. [Release version tags](#3-release-version-tags)
-4. [Secure SSH provisioning access](#4-ssh-provisioning)
 5. [TUI installer](#5-tui-installer)
 6. [UKI boot](#6-uki-boot)
 7. [SBOM outputs](#7-sboms)
@@ -33,9 +36,20 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 4. SSH provisioning
 
-- [ ] Evaluate enabling SSH in the USB-booted live installer to provision servers remotely. Define secure initial authentication, network/address discovery and whether access should require explicit opt-in; keep live-installer SSH access separate from the installed system's configuration.
+- [ ] Define supported SSH diagnostics access for installed systems as well as
+  live media. The black-screen investigation required repeated manual daemon,
+  account and firewall setup; provide declarative opt-in access with public-key
+  authentication instead. Decide installed-system and live-installer behavior
+  separately before implementation.
 
-- [ ] Support pre-provisioned public SSH keys for initial access to the live installer. Define how keys are supplied when building the image; never bundle private keys or implicitly copy installer access keys into the installed system.
+- [ ] Verify always-on live SSH and optional installed-system SSH in Calamares.
+  Use build-supplied public keys through the `ssh-keys` Flake input; verify
+  key login, rejection of password/root login, offline installation with SSH
+  enabled, reboot persistence, and the disabled target selection.
+
+- [ ] Validate the documented `--override-input ssh-keys` build workflow with
+  OpenPGP-exported public keys. Target keys are used only on explicit installer
+  opt-in; no personal or private keys are auto-discovered on the build host.
 
 ### 5. TUI installer
 

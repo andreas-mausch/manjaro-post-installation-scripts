@@ -26,6 +26,40 @@ removing the ISO. This describes the evidence needed for an offline claim, not a
 See [validation policy](decisions/0010-validation-and-evidence.md) and
 [recorded limitations](issues/solved/2026-11-25_offline-installation.md).
 
+## Build-supplied SSH access keys
+
+The live installer always runs SSH on TCP port 22. Password, keyboard-interactive
+and root login are disabled. Supply public keys explicitly through the `ssh-keys`
+Flake input; no personal keys are read from the build host automatically.
+
+Create a directory outside this repository containing an `authorized_keys` file,
+with one public SSH key per line. For an OpenPGP authentication key:
+
+```bash
+mkdir -p ~/.config/nixos-spike/ssh-keys
+gpg --export-ssh-key <KEY-ID> > ~/.config/nixos-spike/ssh-keys/authorized_keys
+nix build .#iso-desktop --out-link result-desktop \
+  --override-input ssh-keys "path:$HOME/.config/nixos-spike/ssh-keys" \
+  --no-write-lock-file
+```
+
+Use the same override for other ISO variants. Never place private keys in that
+directory: the input and public-key file become part of the ISO/Nix Store.
+The default input contains no keys; SSH still runs, but no initial key login is
+authorized. Rebuilding without the override does not retain previously supplied
+keys. Keep the public-key input directory to reproduce personalized images.
+
+Connect to live media as `nixos`: `ssh nixos@<guest-ip>`. In Calamares, opt in to
+**SSH Access** to enable SSH on the installed system. The supplied keys authorize
+the newly created user, not root. Without that selection, target SSH remains
+disabled. The installed key file is retained under `/etc/nixos/ssh-authorized-keys`
+and can be edited explicitly before a rebuild.
+
+Initial SSH access in live media also grants the live user's existing sudo
+privileges. Only authorize trusted keys. Server host keys are generated at boot,
+not shared across images. Find the address with `ip -br addr` locally; host-side
+libvirt DHCP lease discovery is another option.
+
 ## Outputs
 
 Names below are for `x86_64-linux`; `<profile>` is `base`, `desktop`, `gaming`, `ai` or `full`.

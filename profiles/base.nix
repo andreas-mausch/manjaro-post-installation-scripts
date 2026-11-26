@@ -3,6 +3,7 @@
   imports = [
     ../modules/networking.nix
     ../modules/speech.nix
+    ../modules/ssh
   ];
   hardware.bluetooth.enable = true;
   hardware.cpu.amd.updateMicrocode = true;

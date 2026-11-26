@@ -99,6 +99,13 @@ let
     assert live.time.timeZone == "UTC";
     assert live.hardware.bluetooth.enable;
     assert live.networking.nftables.enable;
+    assert live.services.openssh.enable;
+    assert !target.services.openssh.enable;
+    assert live.services.openssh.settings.PasswordAuthentication == false;
+    assert live.services.openssh.settings.KbdInteractiveAuthentication == false;
+    assert live.services.openssh.settings.PermitRootLogin == "no";
+    assert target.services.openssh.settings.PasswordAuthentication == false;
+    assert target.services.openssh.settings.PermitRootLogin == "no";
     assert target.networking.nftables.enable;
     assert target.networking.firewall.enable;
     assert target.hardware.bluetooth.enable;
@@ -108,9 +115,15 @@ let
     assert target.hardware.cpu.intel.updateMicrocode;
     assert live.services.pipewire.enable;
     assert target.services.pipewire.enable;
-    assert lib.all
-      (package: lib.elem package target.environment.systemPackages)
-      (with build.target.pkgs; [ inxi powertop powerstat lm_sensors ]);
+    assert lib.all (package: lib.elem package target.environment.systemPackages) (
+      with build.target.pkgs;
+      [
+        inxi
+        powertop
+        powerstat
+        lm_sensors
+      ]
+    );
     assert target.services.printing.enable == desktop;
     assert target.hardware.sane.enable == desktop;
     assert !build.installer.pkgs.espeak.mbrolaSupport;

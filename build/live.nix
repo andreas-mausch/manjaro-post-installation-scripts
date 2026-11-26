@@ -5,12 +5,14 @@
   offlineSystem,
   offlineTools,
   variantName,
+  sshKeysFile,
   ...
 }:
 {
   imports = [
     ../modules/networking.nix
     ../modules/speech.nix
+    ../modules/ssh
     (import ../modules/spice.nix { inherit pkgs; }).nixosModule
   ];
 
@@ -22,7 +24,8 @@
   hardware.bluetooth.enable = true;
   hardware.cpu.amd.updateMicrocode = true;
   hardware.cpu.intel.updateMicrocode = true;
-  services.openssh.enable = lib.mkForce false;
+  services.openssh.enable = true;
+  users.users.nixos.openssh.authorizedKeys.keyFiles = [ sshKeysFile ];
   console.keyMap = "us";
   time.timeZone = "UTC";
   environment.etc = lib.optionalAttrs (modelFiles != null) {
