@@ -42,6 +42,11 @@ for index in range(1, len(sys.argv), 4):
     for filename in ["flake.lock", "flake.online.lock"]:
         lock = json.loads((Path(source) / filename).read_text())
         inputs = lock["nodes"][lock["root"]]["inputs"]
+        if filename == "flake.lock":
+            for node in lock["nodes"].values():
+                if "locked" in node:
+                    assert node["locked"]["type"] == "path", (name, node)
+                    assert node["locked"]["narHash"].startswith("sha256-"), (name, node)
         assert ("gufo" in inputs) == ai, (name, filename)
         assert "ssh-keys" in inputs, (name, filename)
         if not ai:

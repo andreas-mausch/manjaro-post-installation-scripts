@@ -73,7 +73,39 @@ let
         node
     ) originalLock.nodes;
   };
-  localLockFile = pkgs.writeText "desktop-offline-flake.lock" (builtins.toJSON localLock);
+  localLockTemplate = pkgs.writeText "desktop-offline-flake-template.json" (
+    builtins.toJSON localLock
+  );
+  # Hash relative inputs during the build, not with an unlocked fetchTree in
+  # pure evaluation. Referencing inputSources also retains sandbox access.
+  localLockFile =
+    pkgs.runCommand "desktop-offline-flake.lock"
+      {
+        nativeBuildInputs = [
+          pkgs.nix
+          pkgs.python3
+        ];
+        inherit inputSources;
+      }
+      ''
+        python3 - ${localLockTemplate} "$out" <<'PY'
+        import json
+        import subprocess
+        import sys
+
+        with open(sys.argv[1]) as source:
+            lock = json.load(source)
+        for node in lock["nodes"].values():
+            locked = node.get("locked", {})
+            if locked.get("type") == "path" and "narHash" not in locked:
+                locked["narHash"] = subprocess.check_output(
+                    ["nix", "--extra-experimental-features", "nix-command",
+                     "hash", "path", "--sri", locked["path"]], text=True
+                ).strip()
+        with open(sys.argv[2], "w") as destination:
+            json.dump(lock, destination)
+        PY
+      '';
   onlineLockFile = pkgs.writeText "${name}-online-flake.lock" (builtins.toJSON originalLock);
   # Reuse the original entry point even when rebuilding an installed archive.
   setupFlakePath =
