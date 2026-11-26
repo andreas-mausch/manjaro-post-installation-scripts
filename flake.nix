@@ -69,10 +69,6 @@
       builds = builtins.mapAttrs mkProfile profiles;
     in
     {
-      nixosModules = builtins.mapAttrs (_: spec: import spec.profile) profiles // {
-        generative-ai = import ./modules/generative-ai;
-        installer = import ./modules/installer;
-      };
       nixosConfigurations =
         builtins.mapAttrs (_: build: build.target) builds
         // nixpkgs.lib.mapAttrs' (
@@ -121,8 +117,12 @@
             '';
         variant-tests = import ./tests/variants.nix { inherit pkgs builds profiles; };
         reusable-module-tests = import ./tests/reusable-modules.nix {
-          inherit pkgs nixpkgs gufoPackage;
-          modules = self.nixosModules;
+          inherit
+            pkgs
+            nixpkgs
+            gufoPackage
+            profiles
+            ;
         };
       };
       formatter.${system} = pkgs.nixfmt-tree;
