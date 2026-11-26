@@ -98,6 +98,9 @@ let
     assert live.console.keyMap == "us";
     assert live.time.timeZone == "UTC";
     assert live.hardware.bluetooth.enable;
+    assert live.networking.nftables.enable;
+    assert target.networking.nftables.enable;
+    assert target.networking.firewall.enable;
     assert target.hardware.bluetooth.enable;
     assert live.hardware.cpu.amd.updateMicrocode;
     assert live.hardware.cpu.intel.updateMicrocode;

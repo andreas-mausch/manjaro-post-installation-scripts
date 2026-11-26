@@ -1,5 +1,6 @@
 { ... }:
 {
+  networking.nftables.enable = true;
   networking.networkmanager = {
     enable = true;
     wifi.backend = "iwd";

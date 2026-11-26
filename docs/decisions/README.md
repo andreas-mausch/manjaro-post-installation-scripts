@@ -25,6 +25,7 @@ root [README](../../README.md); diagnosis and verification belong in
 | 0010 | [Validation and evidence](0010-validation-and-evidence.md)                     | Scoped checks with explicit unverified coverage       | ✅ `accepted` | 2026-11-25 | none       |
 
 | 0011 | [Wi-Fi backend](0011-wifi-backend.md)                                           | NetworkManager with iwd, no supplicant service         | ✅ `accepted` | 2026-11-26 | none       |
+| 0012 | [Firewall backend](0012-firewall-backend.md)                                   | NixOS firewall with nftables, host-local port policy   | ✅ `accepted` | 2026-11-26 | none       |
 
 The initial records were reconstructed on 2026-11-26 from current files and
 Git history. Dates identify the implementation or explicit policy evidence
