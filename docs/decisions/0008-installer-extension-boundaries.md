@@ -51,5 +51,5 @@ streaming path. When users select SPICE integration, correct only the
 - Git `c1a767f`, `a9ebb56`, `42f50f3`, `ad7b1dc`, `9fff037`.
 - [Package/wrapper issue](../issues/solved/2026-11-25_calamares-rebuilds-for-configuration.md).
 - [Live logging](../issues/solved/2026-11-25_installer-live-log-output.md).
-- [SPICE startup](../issues/solved/2026-11-26_spice-session-autostart.md).
+- [SPICE startup](../issues/2026-11-26_spice-session-autostart.md).
 - [Wayland clipboard](../issues/2026-11-26_spice-wayland-clipboard.md).

@@ -1,5 +1,6 @@
 ---
-status: "Fixed; encrypted Full installation confirmed, other paths unit-tested"
+status: solved
+status-description: "Encrypted Full installation confirmed, other paths unit-tested"
 ---
 
 # Adapter rejects encryption and password choices after native validation

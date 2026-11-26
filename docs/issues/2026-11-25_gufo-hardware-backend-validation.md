@@ -1,5 +1,6 @@
 ---
-status: "Open; hardcoded host assumptions removed, inference unverified"
+status: open
+status-description: "Hardcoded host assumptions removed, inference unverified"
 ---
 
 # Generic installation does not establish Gufo GPU compatibility

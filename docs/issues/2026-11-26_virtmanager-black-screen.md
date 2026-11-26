@@ -1,5 +1,5 @@
 ---
-status: "Open"
+status: open
 ---
 
 # Black screen after idle in the Plasma/Wayland VM

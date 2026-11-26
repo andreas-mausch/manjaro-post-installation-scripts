@@ -1,5 +1,6 @@
 ---
-status: "Mitigated by disabling compression; no benchmark recorded"
+status: solved
+status-description: "Compression disabled by design; no before/after benchmark recorded"
 ---
 
 # SquashFS compression spends excessive CPU on the bundled model payload

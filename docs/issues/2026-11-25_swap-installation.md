@@ -1,5 +1,6 @@
 ---
-status: "Open; no-swap restriction retained as a safeguard"
+status: open
+status-description: "No-swap restriction retained as a safeguard"
 ---
 
 # Calamares swap choices are not integrated with generated NixOS hardware settings

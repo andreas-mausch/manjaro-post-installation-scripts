@@ -1,5 +1,6 @@
 ---
-status: "Open; upstream limitation, no validated local fix"
+status: open
+status-description: "Upstream limitation, no validated local fix; current upstream status not rechecked"
 ---
 
 # SPICE clipboard only works from host to guest under Plasma/Wayland
@@ -10,7 +11,7 @@ Confirmed in the Desktop VM with spice-vdagent 0.23.0: starting
 `spice-vdagent -x` manually enables host → guest copying only. Guest → host
 still fails; no clipboard restriction was found in Virt-Manager.
 
-This is separate from the [session-agent autostart problem](solved/2026-11-26_spice-session-autostart.md).
+This is separate from the [session-agent autostart problem](2026-11-26_spice-session-autostart.md).
 Restoring autostart does not establish bidirectional clipboard support.
 
 ## Investigation and remaining work

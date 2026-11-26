@@ -1,5 +1,6 @@
 ---
-status: "Solved for the tested encrypted UEFI VM; broader coverage unproven"
+status: solved
+status-description: "Solved for the tested encrypted UEFI VM; broader coverage unproven"
 ---
 
 # Offline installation triggers unavailable source builds

@@ -1,5 +1,6 @@
 ---
-status: "Solved; online/offline package-path comparison recorded"
+status: solved
+status-description: "Online/offline package-path comparison recorded"
 ---
 
 # Local offline Flake inputs change Gufo's revision-dependent package identity

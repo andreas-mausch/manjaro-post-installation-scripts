@@ -1,5 +1,6 @@
 ---
-status: "Solved; shared-package checks and Full GUI verification recorded"
+status: solved
+status-description: "Shared-package checks and Full GUI verification recorded"
 ---
 
 # Installer configuration changes unnecessarily recompile Calamares

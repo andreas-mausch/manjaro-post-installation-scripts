@@ -1,5 +1,6 @@
 ---
-status: "Fixed and catalog-tested; runtime language-switch check unrecorded"
+status: verification-pending
+status-description: "Fixed and catalog-tested; runtime language-switch check unrecorded"
 ---
 
 # Adapter diagnostics remain German when the Calamares UI language changes

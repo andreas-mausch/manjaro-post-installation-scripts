@@ -61,5 +61,5 @@ place them in the same layout. Gufo's alias-based model installer is not a drop-
   cause unconfirmed, screen-shutdown countercheck pending.
 - [Wayland clipboard](issues/2026-11-26_spice-wayland-clipboard.md): host → guest works with the session agent, but
   guest → host still fails in the recorded VM. The separate
-  [autostart workaround](issues/solved/2026-11-26_spice-session-autostart.md)
+  [autostart workaround](issues/2026-11-26_spice-session-autostart.md)
   does not fix that directional limitation.

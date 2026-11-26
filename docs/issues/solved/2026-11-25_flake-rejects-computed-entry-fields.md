@@ -1,5 +1,6 @@
 ---
-status: "Fixed by supported entry-point shapes"
+status: solved
+status-description: "Fixed by supported entry-point shapes"
 ---
 
 # Flake entry-point restrictions prevent directly importing shared definitions

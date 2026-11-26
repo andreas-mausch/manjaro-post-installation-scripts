@@ -1,5 +1,6 @@
 ---
-status: "Fixed in the former installer; superseded by native Calamares selection"
+status: solved
+status-description: "Fixed in the former installer; superseded by native Calamares selection"
 ---
 
 # Early installer excludes SATA and VirtIO target disks

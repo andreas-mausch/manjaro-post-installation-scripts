@@ -1,5 +1,6 @@
 ---
-status: "Fixed; subprocess-boundary regression test added"
+status: solved
+status-description: "Subprocess-boundary regression test added"
 ---
 
 # Installer file writes echo password hashes and local configuration

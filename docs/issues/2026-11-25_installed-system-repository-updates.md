@@ -1,5 +1,6 @@
 ---
-status: "Open; documented workaround, broader workflow pending"
+status: open
+status-description: "Documented workaround not yet VM-validated; broader workflow pending"
 ---
 
 # Repository updates require host files in the checkout and careful source selection

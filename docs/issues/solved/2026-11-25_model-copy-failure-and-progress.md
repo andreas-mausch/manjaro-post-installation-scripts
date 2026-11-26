@@ -1,5 +1,6 @@
 ---
-status: "Solved within the current installer scope; Full behavior confirmed"
+status: solved
+status-description: "Solved within the current installer scope; Full behavior confirmed"
 ---
 
 # Model copying obscures progress and couples retry to system installation

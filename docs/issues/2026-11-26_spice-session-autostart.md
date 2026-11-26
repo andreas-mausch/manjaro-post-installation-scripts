@@ -1,9 +1,12 @@
 ---
-status: "Solved by a validated workaround; repository implementation added"
+status: workaround
+status-description: >-
+  Validated user-local autostart workaround; removal requires an upstream fix
+  ([Nixpkgs #239490](https://github.com/NixOS/nixpkgs/issues/239490));
+  packaged correction awaits ISO verification.
 ---
 
 # SPICE session agent does not start automatically
-- Resolved: 2026-11-26
 
 ## Problem and diagnosis
 
@@ -32,4 +35,4 @@ of the packaged correction is not recorded in the inspected history.
 - [Nixpkgs issue #239490](https://github.com/NixOS/nixpkgs/issues/239490#issuecomment-1795843923)
 - [Nixpkgs PR #266080](https://github.com/NixOS/nixpkgs/pull/266080): proposed
   user-service integration, unavailable in the pinned revision at diagnosis.
-- [Separate Wayland clipboard issue](../2026-11-26_spice-wayland-clipboard.md).
+- [Separate Wayland clipboard issue](2026-11-26_spice-wayland-clipboard.md).

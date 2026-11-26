@@ -1,5 +1,6 @@
 ---
-status: "Early check implemented; BIOS/UEFI runtime verification pending"
+status: verification-pending
+status-description: "Early check implemented; BIOS/UEFI runtime verification pending"
 ---
 
 # BIOS boot is detected only after the installer has progressed too far

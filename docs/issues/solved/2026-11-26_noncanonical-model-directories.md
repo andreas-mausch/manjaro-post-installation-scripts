@@ -1,5 +1,6 @@
 ---
-status: "Fixed; evaluation tests cover rejected paths"
+status: solved
+status-description: "Evaluation tests cover rejected paths"
 ---
 
 # Model directory options accept unsafe or noncanonical paths

@@ -1,5 +1,6 @@
 ---
-status: "Implemented and unit-tested; real failure-dialog verification pending"
+status: verification-pending
+status-description: "Implemented and unit-tested; real failure-dialog verification pending"
 ---
 
 # Installer errors obscure the failing phase and original Nix error

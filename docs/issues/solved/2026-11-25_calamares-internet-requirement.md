@@ -1,5 +1,6 @@
 ---
-status: "Solved; later offline Calamares installation confirmed"
+status: solved
+status-description: "Later offline Calamares installation confirmed"
 ---
 
 # Calamares blocks offline installation on its welcome page

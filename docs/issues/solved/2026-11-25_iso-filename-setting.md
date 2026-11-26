@@ -1,5 +1,6 @@
 ---
-status: "Solved; Desktop ISO rebuilt with corrected name"
+status: solved
+status-description: "Desktop ISO rebuilt with corrected name"
 ---
 
 # Variant ISO filenames ignore image.fileName

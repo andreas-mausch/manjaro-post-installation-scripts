@@ -1,5 +1,6 @@
 ---
-status: "Fixed; adapter regression tests added"
+status: solved
+status-description: "Adapter regression tests added"
 ---
 
 # Calamares hides the hostname field and the adapter substitutes a default

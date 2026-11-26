@@ -1,5 +1,6 @@
 ---
-status: "Solved on the recorded build host; cache completeness not guaranteed"
+status: solved
+status-description: "Solved on the recorded build host; cache completeness not guaranteed"
 ---
 
 # Gufo cache settings are ignored by the build-host Nix daemon

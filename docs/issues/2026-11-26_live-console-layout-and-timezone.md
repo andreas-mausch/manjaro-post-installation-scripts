@@ -1,5 +1,6 @@
 ---
-status: "Fixed in configuration; new ISO runtime check pending"
+status: verification-pending
+status-description: "Fixed in configuration; new ISO runtime check pending"
 ---
 
 # Live ISO console layout and time zone are not neutral defaults

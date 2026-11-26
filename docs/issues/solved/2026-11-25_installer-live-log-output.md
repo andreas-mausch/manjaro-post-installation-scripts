@@ -1,5 +1,6 @@
 ---
-status: "Solved; Full ISO live logging confirmed by the user"
+status: solved
+status-description: "Full ISO live logging confirmed by the user"
 ---
 
 # NixOS installation output is missing from Calamares Toggle log

@@ -1,5 +1,6 @@
 ---
-status: "Fixed; later Full model-selection UI confirmed"
+status: solved
+status-description: "Later Full model-selection UI confirmed"
 ---
 
 # Calamares truncates the model-selection step title

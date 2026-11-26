@@ -1,5 +1,6 @@
 ---
-status: "Open limitation; manual partitioning intentionally disabled"
+status: open
+status-description: "Manual partitioning intentionally disabled; safe manual LUKS support unverified"
 ---
 
 # Upstream Calamares patch prevents manual LUKS filesystem selection
