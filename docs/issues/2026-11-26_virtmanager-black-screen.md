@@ -18,7 +18,8 @@ whether spice-gtk, QXL, or their interaction is faulty.
 
 Further investigation is paused. Historical next steps below are retained
 for a possible reopening, not active work. The upstream issue draft at
-[`spice-gtk-issue-draft.md`](../../spice-gtk-issue-draft.md) has not been submitted.
+`spice-gtk-issue-draft.md` was not submitted and is retained only in Git
+history (commit `84ffed9`).
 
 ## Observation
 
