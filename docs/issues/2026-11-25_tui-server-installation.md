@@ -1,9 +1,19 @@
-# nixos-wizard does not install the selected source Flake
+# Find a suitable TUI installer for server provisioning over SSH
 
-- Status: Open upstream capability gap; avoided locally by using Calamares
+- Status: Open; suitable TUI installer not yet selected
 - Recorded: 2026-11-25
 
-## Observation
+## Goal
+
+Provide a TUI installation path for provisioning servers over SSH, deploying
+this project's Flake with user-selected identity and disk settings. Calamares
+provides the graphical path but does not replace this requirement. Keep target
+modules independent of the installation interface.
+
+Live-installer SSH access requires a separate secure authentication and
+network-discovery design; it is currently disabled.
+
+## Candidate investigation: nixos-wizard
 
 Reviewed on 2026-11-25: [km-clay/nixos-wizard](https://github.com/km-clay/nixos-wizard)
 has a suitable TUI for SSD selection, partitioning and user creation, but the
@@ -22,9 +32,15 @@ Reviewed commit: `386def227ec27ea61bdfd9c3e7afeab7da39102a`.
 ## Decision and remaining work
 
 `d53dcc4` records the evaluation. Disko with a wrapper was retained at that
-stage; `83db41d` later adopted Calamares. Reassess nixos-wizard when existing
-Flake installation works. No later upstream recheck is established here;
-the observations apply to the reviewed commit, not necessarily current main.
+stage; `83db41d` later adopted Calamares for graphical installation.
+[ADR 0001](../decisions/0001-installation-interface.md) records that choice and
+why the reviewed nixos-wizard was not selected; the TUI requirement remains open.
+
+Evaluate suitable TUI tools, including whether nixos-wizard now supports
+existing Flake installation. Validate the chosen path over SSH, including
+target-disk confirmation and deployment of this project's configuration.
+No later upstream recheck is established here; the observations apply to
+the reviewed commit, not necessarily current main.
 
 ## Sources at the reviewed commit
 

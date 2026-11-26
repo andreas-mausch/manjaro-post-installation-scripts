@@ -19,6 +19,9 @@ identity and disk settings. Custom disk provisioning duplicates established
 installation logic. The reviewed nixos-wizard did not actually install its
 selected source Flake.
 
+A separate TUI installation path is wanted for provisioning servers over SSH.
+The graphical installer choice does not satisfy or supersede that requirement.
+
 ## Decision
 
 Use the Nixpkgs graphical Calamares Plasma installer with native user,
@@ -46,6 +49,6 @@ Use the official C++ ViewStep interface for the early UEFI requirement.
 ## References
 
 - Git `0fa1501`, `41ddfb2`, `d53dcc4`, `83db41d`, `7403bfd`.
-- [nixos-wizard investigation](../issues/2026-11-25_nixos-wizard-ignores-source-flake.md).
+- [TUI server installation and nixos-wizard investigation](../issues/2026-11-25_tui-server-installation.md).
 - [Manual LUKS limitation](../issues/2026-11-25_manual-luks-partitioning.md).
 - [Early UEFI verification](../issues/2026-11-25_uefi-validation-too-late.md).

@@ -26,7 +26,7 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 - [ ] Introduce joint releases of the Flake and its Base/Desktop/Gaming/AI modules using Git tags (for example `v0.1.0`); optionally use the same explicit release version in ISO filenames. Do not derive a build date automatically or change `system.stateVersion` for project versioning.
 
-- [ ] Evaluate a suitable TUI installer as an alternative to the graphical live environment later; keep target modules independent of the installation UI.
+- [ ] Evaluate a suitable TUI installer for server provisioning over SSH as described in [the TUI installation issue](docs/issues/2026-11-25_tui-server-installation.md); keep target modules independent of the installation UI.
 
 - [ ] Evaluate enabling SSH in the USB-booted live installer to provision servers remotely. Define secure initial authentication, network/address discovery and whether access should require explicit opt-in; keep live-installer SSH access separate from the installed system's configuration.
 
