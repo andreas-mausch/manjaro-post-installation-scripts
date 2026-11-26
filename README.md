@@ -6,6 +6,14 @@ local AI inference through Gufo. Install the selected profile offline with user-
 > **Installation erases the entire selected drive, including Windows and all existing data.**
 > No dual boot or manual partitioning. Back up your data and verify the target device before confirming.
 
+> [!WARNING]
+> **SUPPLYING SSH KEYS AT BUILD TIME AUTOMATICALLY STARTS AN SSH SERVER IN THE LIVE ISO.**
+> On boot, SSH listens on TCP port **22**, without asking for confirmation. Anyone holding a matching private key
+> can connect as **`nixos`** over a reachable network and use the live user's passwordless `sudo` privileges.
+> Password and root SSH login are disabled. Without supplied keys (or with an empty/comment-only key file),
+> live SSH stays disabled. Only supply keys if you intend to enable remote access; see [SSH access](docs/building.md).
+> SSH on the installed system is a separate, optional installer choice.
+
 ## Choose a profile
 
 | Profile | Installed system             | ISO output     | Free application packages |
@@ -55,7 +63,8 @@ Configure it on the build host **before** starting the build; never restart the 
 
 1. Write the ISO to the **correct USB drive**, for example with KDE ISO Image Writer. This erases that USB drive too.
 2. Disable Secure Boot and boot the USB in **UEFI mode** (OVMF for VMs). The KDE live desktop logs in as `nixos`;
-   no network is required for the intended offline installation. The live image provides no SSH access.
+   no network is required for the intended offline installation. **Live SSH starts automatically if keys were
+   supplied when building the ISO**, as warned above; otherwise it stays disabled.
 3. Open Calamares through autostart or the desktop shortcut. Choose language, time zone, keyboard, hostname, user
    and password. The ISO fixes the profile; there is no desktop-selection step. If a SPICE channel is detected,
    an optional guest-integration choice is offered; it stays disabled unless selected.
