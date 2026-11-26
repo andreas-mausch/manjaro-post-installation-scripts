@@ -5,7 +5,7 @@
   gufo,
   system,
   name,
-  variant,
+  profileSpec,
   mkTarget,
 }:
 let
@@ -21,9 +21,9 @@ let
     rootInputs = {
       inherit nixpkgs;
     }
-    // lib.optionalAttrs variant.ai { inherit gufo; };
-    targetProfile = variant.profile;
-    reuseSetupOutputs = variant.ai;
+    // lib.optionalAttrs profileSpec.ai { inherit gufo; };
+    targetProfile = profileSpec.profile;
+    reuseSetupOutputs = profileSpec.ai;
   };
   inherit (archive) inputSources offlineSource;
   target = mkTarget inputSources;
@@ -37,16 +37,17 @@ let
   calamares = import ../modules/installer/calamares.nix {
     inherit pkgs lib offlineSource;
     variantName = name;
-    withModels = variant.ai;
-    modelFiles = if variant.ai then modelFiles else null;
-    modelsDirectory = if variant.ai then offlineSeed.config.generative-ai.models.directory else null;
+    withModels = profileSpec.ai;
+    modelFiles = if profileSpec.ai then modelFiles else null;
+    modelsDirectory =
+      if profileSpec.ai then offlineSeed.config.generative-ai.models.directory else null;
   };
   inherit (calamares) calamaresExtensions welcomeModule;
   installer = lib.nixosSystem {
     inherit system;
     specialArgs = {
       inherit calamaresExtensions offlineSystem offlineTools;
-      modelFiles = if variant.ai then modelFiles else null;
+      modelFiles = if profileSpec.ai then modelFiles else null;
       variantName = name;
     };
     modules = [

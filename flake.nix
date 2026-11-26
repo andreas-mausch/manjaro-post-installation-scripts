@@ -19,7 +19,7 @@
         inherit pkgs gufo;
         source = self;
       };
-      variants = {
+      profiles = {
         base = {
           profile = ./profiles/base.nix;
           ai = false;
@@ -42,18 +42,18 @@
         };
       };
       mkTarget =
-        name: variant: sources:
+        name: profileSpec: sources:
         nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = nixpkgs.lib.optionalAttrs variant.ai { inherit gufoPackage; };
+          specialArgs = nixpkgs.lib.optionalAttrs profileSpec.ai { inherit gufoPackage; };
           modules = [
-            variant.profile
+            profileSpec.profile
             ./modules/target-configuration.nix
           ]
           ++ [ { system.extraDependencies = sources; } ];
         };
-      mkVariant =
-        name: variant:
+      mkProfile =
+        name: profileSpec:
         import ./build/iso.nix {
           inherit
             pkgs
@@ -62,11 +62,11 @@
             gufo
             system
             name
-            variant
+            profileSpec
             ;
-          mkTarget = mkTarget name variant;
+          mkTarget = mkTarget name profileSpec;
         };
-      builds = builtins.mapAttrs mkVariant variants;
+      builds = builtins.mapAttrs mkProfile profiles;
     in
     {
       nixosModules = {
@@ -122,7 +122,7 @@
               python3 ${./tests/test_calamares.py} ${./modules/installer/calamares/main.py}
               touch "$out"
             '';
-        variant-tests = import ./tests/variants.nix { inherit pkgs builds variants; };
+        variant-tests = import ./tests/variants.nix { inherit pkgs builds profiles; };
         reusable-module-tests = import ./tests/reusable-modules.nix {
           inherit pkgs nixpkgs gufoPackage;
           modules = self.nixosModules;

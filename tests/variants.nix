@@ -1,7 +1,7 @@
 {
   pkgs,
   builds,
-  variants,
+  profiles,
 }:
 let
   lib = pkgs.lib;
@@ -57,7 +57,7 @@ let
       target = build.target.config;
       live = build.installer.config;
       wrappedCalamares = build.installer.pkgs.calamares-nixos;
-      ai = variants.${name}.ai;
+      ai = profiles.${name}.ai;
       customAI = build.target.extendModules {
         modules = [ { generative-ai.models.directory = "/srv/ai/models"; } ];
       };
@@ -102,7 +102,7 @@ let
     assert live.image.fileName == "nixos-${name}.iso";
     assert wrappedCalamares.unwrapped.drvPath == pkgs.calamares.drvPath;
     true
-  ) (builtins.attrNames variants);
+  ) (builtins.attrNames profiles);
 in
 assert valid;
 assert modelPathsValid;
@@ -114,7 +114,7 @@ pkgs.runCommand "installer-variant-tests" { nativeBuildInputs = [ pkgs.python3 ]
       "${name} ${builds.${name}.calamaresExtensions} ${builds.${name}.offlineSource} ${
         builds.${name}.installer.pkgs.calamares-nixos
       }"
-    ) (builtins.attrNames variants)
+    ) (builtins.attrNames profiles)
   }
   touch "$out"
 ''
