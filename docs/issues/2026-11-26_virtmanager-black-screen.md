@@ -99,6 +99,56 @@ unconfirmed; the similar M5 symptom still requires independent investigation.
   and DRM logs in each case. Only then narrow down daemon versus session
   agent and the monitor-configuration sender. No QXL fix is confirmed yet.
 
+### Repeated counterchecks and session-agent isolation
+
+- With both guest agents stopped, the user confirmed a **second successful**
+  screen-shutdown/wake cycle.
+- Without rebooting, the user restarted `spice-vdagentd.service` and then
+  the session agent. Starting `spice-vdagent` over SSH silently exited with
+  code 1; at that point only the root daemon was running. Starting it from
+  the KDE desktop terminal succeeded, and the user confirmed both processes
+  were running before the next test.
+- With both agents restored and display settings unchanged, shutdown/wake
+  failed again. All four DRM connectors were `disconnected`. The supplied
+  filtered kernel journal showed:
+
+  ```text
+  21:24:11 drm_atomic_helper_commit_crtc_disable: inactive head 0, skip (disable)
+  21:24:11 qxl_crtc_atomic_flush: no primary surface, skip (flush)
+  21:24:12 qxl_display_read_client_monitors_config: read 0x0+0+0
+  21:24:12 Virtual-1: status updated from connected to disconnected
+  21:24:12 Virtual-1: generating connector hotplug event
+  ```
+
+- For the next countercheck, the user followed the reboot-and-session-agent-
+  stop procedure, leaving `spice-vdagentd` running. The user reported that
+  the screen went black and **returned on wake**. No separate process listing
+  or successful-cycle kernel log was supplied for this trial.
+
+| Guest integration | Observed wake result |
+| ----------------- | -------------------- |
+| Both agents stopped | Two successful cycles |
+| Both agents running again, without reboot | Failure; zero-size monitor configuration and connector loss |
+| Only root daemon, session agent stopped (reported test setup) | One successful cycle |
+
+These counterchecks strongly implicate the **user-session `spice-vdagent`**
+in the trigger under this QXL configuration, rather than requiring removal
+of host SPICE or the root daemon. They do not yet prove that the session
+agent itself originates the zero-size client monitor configuration; the
+daemon, host and client interactions still need tracing.
+
+**Targeted QXL workaround candidate:** keep the user-session agent disabled
+while retaining QXL, host SPICE and `spice-vdagentd`. This was tested by
+temporarily stopping the agent; a persistent configuration change and its
+effects on clipboard, resizing and other guest integration have not been
+implemented or verified. VirtIO-GPU remains the previously confirmed VM
+workaround. No root-cause repair is confirmed.
+
+**Next investigation:** inspect the matching session-agent/daemon and QXL
+sources, trace the monitor-configuration propagation during display shutdown,
+and test a narrowly scoped fix with guest integration enabled. Do not equate
+this VM finding with the unconfirmed Bosgame report.
+
 ### Upstream leads (not confirmed causes)
 
 - [QXL suspend/resume patch, September 2022](https://lkml.iu.edu/hypermail/linux/kernel/2209.0/08069.html):
