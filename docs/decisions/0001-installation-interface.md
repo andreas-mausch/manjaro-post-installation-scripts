@@ -29,10 +29,17 @@ partitioning, mounting and confirmation pages. Keep a focused Python adapter
 for Flake-specific validation, configuration, `nixos-install` and model copying.
 Use the official C++ ViewStep interface for the early UEFI requirement.
 
+Do not configure swap or hibernation. This scope restriction was explicitly
+accepted on 2026-11-26 and is not a release blocker or planned implementation task.
+Hardware generation detects active swap partitions, not swap files, and this
+workflow does not run Calamares' fstab job that creates swap files; exposing those
+choices would require additional integration.
+
 ## Consequences
 
 - **Positive:** Native installation workflows replace custom disk orchestration.
 - **Negative:** Every live ISO includes a graphical desktop, even for Base targets.
+- **Negative:** No swap-backed memory overflow or hibernation is provided.
 - **Risks / neutral:** Installation erases the selected whole drive. The former
   wrapper's transport filter and typed wipe phrase no longer apply. Manual
   partitioning stays disabled; UEFI is required. A TUI alternative is future work.

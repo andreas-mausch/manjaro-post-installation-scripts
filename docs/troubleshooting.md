@@ -37,8 +37,8 @@ No BIOS fallback is planned. Secure Boot must be disabled.
 
 Manual partitioning is disabled: the pinned upstream `dont-allow-manual-luks.patch` removes LUKS/LUKS2 from manual
 filesystem dialogs; removing the patch without testing is not a supported workaround. Automatic LUKS2 remains supported.
-[Swap integration](issues/2026-11-25_swap-installation.md) is also incomplete: hardware generation detects active swap
-partitions, not swap files, and this workflow omits Calamares' fstab job that creates swap files. Keep no swap selected.
+Swap and hibernation are intentionally unsupported; this is an accepted scope decision, not a pending defect.
+Keep no swap selected. See [the installation-interface decision](decisions/0001-installation-interface.md).
 
 ## Retry model copying without reinstalling
 

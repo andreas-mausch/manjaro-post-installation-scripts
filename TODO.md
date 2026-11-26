@@ -35,7 +35,6 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 - [ ] Prepare direct UKI boot for the installed system: UEFI starts the Unified Kernel Image without systemd-boot/GRUB. Implement and test UKI generation, installation on the EFI partition, UEFI boot entries and safe updates with fallback/recovery for previous generations. Integrate graphical LUKS password entry through Plymouth in the initrd; test the theme, early GPU drivers and password/text fallback on target hardware. Plymouth can be used independently of direct UKI boot. No automatic LUKS unlocking; Secure Boot signing is a separate task.
 
-- [ ] Add and validate swap support before release as described in [the swap issue](docs/issues/2026-11-25_swap-installation.md). Retain “no swap” until then.
 
 - [ ] Complete real-hardware inference verification in [the Gufo backend issue](docs/issues/2026-11-25_gufo-hardware-backend-validation.md).
 

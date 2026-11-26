@@ -21,7 +21,8 @@ the configured default. Tests cover optional encryption, other root
 filesystems and native validation. Later Full VM installation confirms the
 encrypted path, not every filesystem or unencrypted configuration.
 
-The [swap restriction](../2026-11-25_swap-installation.md) remains intentional.
+The no-swap restriction remains intentional and is accepted in the
+[installation-interface decision](../../decisions/0001-installation-interface.md).
 
 ## Evidence
 
