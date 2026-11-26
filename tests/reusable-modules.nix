@@ -41,6 +41,8 @@ let
           config.services.desktopManager.plasma6.enable == builtins.elem name [
             "desktop"
             "gaming"
+            "ai"
+            "full"
           ];
         true
       )
@@ -48,6 +50,8 @@ let
         "base"
         "desktop"
         "gaming"
+        "ai"
+        "full"
         "generative-ai"
       ];
 in

@@ -50,8 +50,9 @@ the AI module, and Full extends Gaming with AI.
 Base, Desktop and Gaming settings live directly in their profiles, without
 separate feature-module wrappers. `modules/generative-ai/` remains independent
 of Base and Desktop so it can also be used on a headless system.
-The existing `nixosModules.base`, `.desktop` and `.gaming` exports refer to
-the corresponding profiles. Exported profiles and the AI module do not import
+All five profiles are exported under `nixosModules` using their profile names;
+`nixosModules.generative-ai` exports the independent AI module.
+Exported profiles and the AI module do not import
 repository-local hardware or user configuration. Consumers provide their
 own filesystems and users; AI
 also requires the `gufoPackage` module argument. Repository targets use the

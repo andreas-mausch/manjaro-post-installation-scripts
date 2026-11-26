@@ -69,10 +69,7 @@
       builds = builtins.mapAttrs mkProfile profiles;
     in
     {
-      nixosModules = {
-        base = import ./profiles/base.nix;
-        desktop = import ./profiles/desktop.nix;
-        gaming = import ./profiles/gaming.nix;
+      nixosModules = builtins.mapAttrs (_: spec: import spec.profile) profiles // {
         generative-ai = import ./modules/generative-ai;
         installer = import ./modules/installer;
       };
