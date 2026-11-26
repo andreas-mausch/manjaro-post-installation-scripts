@@ -97,6 +97,17 @@ let
     assert live.services.desktopManager.plasma6.enable;
     assert live.console.keyMap == "us";
     assert live.time.timeZone == "UTC";
+    assert !build.installer.pkgs.espeak.mbrolaSupport;
+    assert !build.target.pkgs.espeak.mbrolaSupport;
+    assert live.services.speechd.enable;
+    assert !desktop || target.services.speechd.enable;
+    assert lib.elem
+      (build.installer.pkgs.compressFirmwareZstd build.installer.pkgs.linux-firmware).outPath
+      (map toString live.system.extraDependencies);
+    assert
+      !(lib.elem build.installer.pkgs.linux-firmware.outPath (
+        map toString live.system.extraDependencies
+      ));
     assert lib.all
       (
         system:

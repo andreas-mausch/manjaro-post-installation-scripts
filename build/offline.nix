@@ -69,7 +69,8 @@ let
       libxslt
       microcode-amd
       microcode-intel
-      linux-firmware
+      # Reuse the same compressed output as the system firmware bundle.
+      (compressFirmwareZstd linux-firmware)
     ]);
 in
 {

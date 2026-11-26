@@ -10,6 +10,7 @@
 {
   imports = [
     ../modules/networking.nix
+    ../modules/speech.nix
     (import ../modules/spice.nix { inherit pkgs; }).nixosModule
   ];
 

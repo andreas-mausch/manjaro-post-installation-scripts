@@ -1,6 +1,9 @@
 { lib, pkgs, ... }:
 {
-  imports = [ ../modules/networking.nix ];
+  imports = [
+    ../modules/networking.nix
+    ../modules/speech.nix
+  ];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
