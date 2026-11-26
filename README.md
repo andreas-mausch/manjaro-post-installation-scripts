@@ -477,7 +477,11 @@ generated per installation. Steam updates its client and games independently
 of Nix. Long-term repeatability still requires available downloads or your own
 archive of packages and models.
 
-## Issue records
+## Project records
+
+[Architecture Decision Records](docs/decisions/README.md) explain significant
+choices, alternatives and consequences. Implementation dates and retrospective
+evidence are distinguished from approval dates.
 
 Current problems and fixes awaiting runtime verification live under
 [`docs/issues/`](docs/issues/).
