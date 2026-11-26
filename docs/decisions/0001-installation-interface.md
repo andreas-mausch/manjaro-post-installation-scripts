@@ -49,6 +49,29 @@ Use the official C++ ViewStep interface for the early UEFI requirement.
 ## References
 
 - Git `0fa1501`, `41ddfb2`, `d53dcc4`, `83db41d`, `7403bfd`.
-- [TUI server installation and nixos-wizard investigation](../issues/2026-11-25_tui-server-installation.md).
 - [Manual LUKS limitation](../issues/2026-11-25_manual-luks-partitioning.md).
 - [Early UEFI verification](../issues/2026-11-25_uefi-validation-too-late.md).
+
+## Candidate investigation: nixos-wizard
+
+Reviewed on 2026-11-25: [km-clay/nixos-wizard](https://github.com/km-clay/nixos-wizard), commit
+`386def227ec27ea61bdfd9c3e7afeab7da39102a`, provides a TUI for disk selection, partitioning and user creation,
+but does not deploy the selected source Flake:
+
+- The Source Flake menu accepts a local or remote path, but the preview only stores it in unused `_flake_path`.
+- Installation copies its generated `configuration.nix` and runs `nixos-install --root /mnt` without `--flake`.
+  Entering this project's Flake therefore would not install this configuration.
+- The latest main commit at review had a committer date of 2026-04-07. This does not establish abandonment;
+  the missing deployment capability, not repository age, is the decisive limitation.
+
+`d53dcc4` records the evaluation, initially retaining Disko with a wrapper; `83db41d` later adopts Calamares
+for graphical installation. These observations apply only to the reviewed revision; no later upstream recheck
+is recorded. Finding and validating a suitable TUI installer over SSH remains planned work in [TODO.md](../../TODO.md),
+not a defect in the current graphical installer.
+
+Sources at the reviewed commit:
+
+- [Source Flake input](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L799-L1023)
+- [Configuration preview](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4117-L4203)
+- [Installation commands](https://github.com/km-clay/nixos-wizard/blob/386def227ec27ea61bdfd9c3e7afeab7da39102a/src/installer/mod.rs#L4532-L4603)
+- [Reviewed commit](https://github.com/km-clay/nixos-wizard/commit/386def227ec27ea61bdfd9c3e7afeab7da39102a)
