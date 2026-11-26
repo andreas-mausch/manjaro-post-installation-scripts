@@ -404,9 +404,9 @@ class AdapterTests(unittest.TestCase):
         with patch.object(calamares.utils, "host_env_process_output") as process, \
                 patch.object(adapter.subprocess, "run") as run:
             adapter.host("nixos-install", "--root", Path("/mnt"), stream=True)
-        process.assert_called_once_with(
-            ["pkexec", "nixos-install", "--root", "/mnt"], calamares.utils.debug, "", 0,
-        )
+        self.assertEqual(process.call_args.args[0], ["pkexec", "nixos-install", "--root", "/mnt"])
+        self.assertTrue(callable(process.call_args.args[1]))
+        self.assertEqual(process.call_args.args[2:], ("", 0))
         run.assert_not_called()
 
     def test_streamed_output_reaches_calamares_logger_during_execution(self):
@@ -427,6 +427,30 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError) as raised:
                 adapter.host("nixos-install", stream=True)
         self.assertEqual(raised.exception.returncode, 17)
+        self.assertEqual(raised.exception.cmd, ["pkexec", "nixos-install"])
+        self.assertTrue(Path(raised.exception.diagnostics_path).is_file())
+
+    def test_stream_failure_retains_original_output_in_private_log(self):
+        def fail(command, callback, stdin, timeout):
+            callback("error: unable to download source")
+            raise subprocess.CalledProcessError(1, [])
+
+        with patch.object(calamares.utils, "host_env_process_output", side_effect=fail):
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                adapter.host("nixos-install", stream=True)
+        log = Path(raised.exception.diagnostics_path)
+        self.assertEqual(log.read_text(), "error: unable to download source\n")
+        self.assertEqual(log.stat().st_mode & 0o777, 0o600)
+
+    def test_failure_dialog_points_to_saved_output(self):
+        calamares.globalstorage = self.storage()
+        calamares.job.configuration = {"stage": "install"}
+        error = subprocess.CalledProcessError(1, ["pkexec", "nixos-install"])
+        error.diagnostics_path = "/tmp/desktop-install-test.log"
+        with patch.object(adapter, "deploy", side_effect=error):
+            title, detail = adapter.run()
+        self.assertIn("less /tmp/desktop-install-test.log", detail)
+        self.assertNotIn("sudo journalctl", detail)
 
     def test_streaming_rejects_input_and_capture(self):
         for options in ({"input": "secret"}, {"capture": True}):

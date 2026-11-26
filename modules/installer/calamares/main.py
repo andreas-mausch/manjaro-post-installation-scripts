@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+import tempfile
 import time
 
 import libcalamares
@@ -32,9 +33,28 @@ def host(*args, input=None, capture=False, stream=False):
             raise ValueError("Streaming commands must not receive input or capture output")
         # A callback is required to enable Calamares' live output processing.
         # Only opt in for commands without secret input or echoed configuration.
-        return libcalamares.utils.host_env_process_output(
-            ["pkexec", *map(str, args)], libcalamares.utils.debug, "", 0,
-        )
+        command = ["pkexec", *map(str, args)]
+        # Retain complete output independently of Calamares/journal verbosity
+        # and rate limiting. mkstemp creates a private (0600) log file.
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                         prefix="desktop-install-", suffix=".log",
+                                         delete=False) as log:
+            logger.warning("Desktop installer: diagnostics saved to %s", log.name)
+
+            def report_output(line):
+                log.write(str(line) + "\n")
+                log.flush()
+                libcalamares.utils.debug(line)
+
+            try:
+                return libcalamares.utils.host_env_process_output(
+                    command, report_output, "", 0,
+                )
+            except subprocess.CalledProcessError as error:
+                # Calamares may omit the command in its exception.
+                error.cmd = command
+                error.diagnostics_path = log.name
+                raise
     return subprocess.run(
         ["pkexec", *map(str, args)], input=input, text=True, check=True,
         # Inherited streams retain diagnostics, but do not feed the UI log.
@@ -333,8 +353,14 @@ def run():
             _("Preflight checks failed before partitioning.")
         )
         title = _("Model copying failed") if stage == "models" else _("NixOS installation failed")
+        diagnostics_path = getattr(error, "diagnostics_path", None)
+        diagnostics = (
+            f"less {shlex.quote(diagnostics_path)}"
+            if diagnostics_path else
+            f"sudo journalctl -b --since '{started}' --no-pager"
+        )
         return (title,
                 _("Phase: {phase}. {detail}").format(phase=phase, detail=detail) + f"\n\n{state}\n\n" +
                 _("Original diagnostics: Calamares output or in the live terminal:") + "\n" +
-                f"sudo journalctl -b --since '{started}' --no-pager\n\n" +
+                diagnostics + "\n\n" +
                 _("Check the first error before subsequent errors. Review logs for sensitive data before sharing; no automatic upload."))
