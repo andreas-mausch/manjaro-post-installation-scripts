@@ -1,6 +1,6 @@
 ---
 status: workaround
-status-description: "Launcher starts with libSM/libICE supplied by Nix store paths inside steam-run; benchmark rendering not yet verified."
+status-description: "Manual libSM/libICE runtime workaround confirmed; benchmark completes with 17476 points at 1080p Medium."
 ---
 
 # Unigine Superposition fails to start on Strix Halo
@@ -13,8 +13,8 @@ The Qt XCB plugin dependency check inside `steam-run` reported both
 although the library exists at that path outside the runtime environment.
 The temporary output links were therefore not accessible inside
 `steam-run`. Resolving them to their actual Nix store paths fixed launcher
-startup; the user confirmed success. Full benchmark rendering and results
-have not yet been verified.
+startup; the user confirmed success. The subsequent benchmark completed
+and produced the user-reported result below.
 
 Commands used from the Superposition installation directory:
 
@@ -30,6 +30,21 @@ steam-run env LD_LIBRARY_PATH=$LD_LIBRARY_PATH ./Superposition
 This is a manual runtime workaround, not yet a packaged fix. Supply the
 library path inside `steam-run` and use actual store paths rather than
 the inaccessible temporary links. No Strix Halo GPU fault was established.
+
+## User-reported benchmark result, 2026-11-26
+
+- System: Bosgame M5, AMD Strix Halo.
+- Preset: **1080p Medium**.
+- Score: **17,476 points**.
+- Power consumption: approximately **120 W**, as reported by the user.
+- Power profile: **Balanced**, discussed by the user in connection with
+  an expected **85 W** cap.
+
+The power measurement source and scope (whole-system consumption versus
+APU telemetry) were not specified. The actual APU power limit was not
+verified; do not interpret the reported 120 W as proof that an 85 W APU
+limit was exceeded. Average/minimum/maximum FPS and the exact benchmark
+version were not recorded.
 
 ## Observation
 
@@ -69,7 +84,7 @@ of the plugin. It does not establish a Strix Halo GPU or driver fault.
 
 ## Remaining verification
 
-- Run the benchmark and verify rendering and completion.
+- Benchmark completion is confirmed by the user-reported score above.
 - Consider packaging the launcher with its runtime dependencies rather
   than requiring manual environment setup.
 
