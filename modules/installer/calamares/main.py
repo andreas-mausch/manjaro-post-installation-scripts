@@ -231,6 +231,10 @@ def provision_repository(source, destination, remote):
     host("git", "-C", checkout, "remote", "set-url", "origin", remote)
     host("git", "-C", checkout, "branch", "--set-upstream-to",
          f"origin/{branch}", branch)
+    host("git", "-C", checkout, "-c", "user.name=NixOS installer",
+         "-c", "user.email=nixos-installer@localhost", "-c", "tag.gpgSign=false",
+         "tag", "--annotate", "nixos-install", "--message",
+         "Initial repository revision deployed by the NixOS installer", revision)
     # The source link is only installation transport, not host configuration.
     host("rm", destination / "repository")
 

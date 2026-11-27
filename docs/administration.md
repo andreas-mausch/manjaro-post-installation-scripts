@@ -77,6 +77,10 @@ Rollback does not restore configuration files or locks; restore those from backu
 
 ## Local checkout fallback
 
+New installations mark the bundled project commit with the local annotated tag
+`nixos-install`. It records the installation-time tagger date and is not pushed
+automatically. Inspect it with `git -C /etc/nixos/my-os-setup show nixos-install`.
+
 Use the bundled checkout without GitHub, or pull it from a reachable remote after reviewing changes:
 
 ```bash

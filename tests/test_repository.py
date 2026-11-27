@@ -42,6 +42,12 @@ with tempfile.TemporaryDirectory() as temporary:
     assert host("git", "-C", checkout, "remote", "get-url", "origin", capture=True).stdout.strip() == remote
     assert (destination / "configuration.nix").read_text() == "host data"
     assert not (destination / "repository").exists()
+    assert host("git", "-C", checkout, "cat-file", "-t", "nixos-install", capture=True).stdout.strip() == "tag"
+    assert host("git", "-C", checkout, "rev-parse", "nixos-install^{commit}", capture=True).stdout.strip() == revision
+    tag = host("git", "-C", checkout, "cat-file", "-p", "nixos-install", capture=True).stdout
+    assert "tagger NixOS installer <nixos-installer@localhost> " in tag
+    assert host("git", "-C", checkout, "for-each-ref", "--format=%(taggerdate:iso-strict)",
+                "refs/tags/nixos-install", capture=True).stdout.strip()
     missing = root / "missing"
     missing.mkdir()
     with patch.object(adapter, "host", host):
