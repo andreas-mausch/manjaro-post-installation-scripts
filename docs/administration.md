@@ -44,9 +44,8 @@ An offline installation initially pins Flake inputs to retained local store path
 `flake.nix`; `nix flake update` resolves them again and replaces local locks with network locks.
 
 ```bash
-cd /etc/nixos
-sudo cp flake.lock flake.before-update.lock
-sudo nix flake update
+sudo cp /etc/nixos/flake.lock /etc/nixos/flake.before-update.lock
+sudo nix flake update --flake path:/etc/nixos
 sudo nixos-rebuild switch
 ```
 
@@ -83,24 +82,24 @@ Use the bundled checkout without GitHub, or pull it from a reachable remote afte
 
 ```bash
 sudo git -C /etc/nixos/my-os-setup pull --ff-only
-cd /etc/nixos
-sudo cp flake.lock flake.before-update.lock
+sudo cp /etc/nixos/flake.lock /etc/nixos/flake.before-update.lock
 sudo nix flake update my-os-setup \
+  --flake path:/etc/nixos \
   --override-input my-os-setup path:/etc/nixos/my-os-setup
 sudo nixos-rebuild switch
 ```
 
 Omit the pull and add `--offline` to the targeted update when using the existing checkout without network access.
 Only the project source is updated by this command; unrelated dependency inputs remain locked. Use a full
-`nix flake update --override-input my-os-setup path:/etc/nixos/my-os-setup` for intentional dependency updates too.
+`sudo nix flake update --flake path:/etc/nixos --override-input my-os-setup path:/etc/nixos/my-os-setup`
+for intentional dependency updates too.
 The override is recorded in the lock: a subsequent rebuild needs no override. After checkout edits or pulls,
 repeat the targeted override update to refresh its content hash.
 
 The input's original GitHub URL remains unchanged. To return to GitHub:
 
 ```bash
-cd /etc/nixos
-sudo nix flake update my-os-setup
+sudo nix flake update my-os-setup --flake path:/etc/nixos
 sudo nixos-rebuild switch
 ```
 
