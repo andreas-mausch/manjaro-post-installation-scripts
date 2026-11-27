@@ -6,12 +6,12 @@ Status: The user confirmed the new Full ISO's GUI startup, model selection, live
 
 Priority order:
 
-SSH provisioning is the current first priority, ahead of hardware verification
-and repository updates. Existing section numbers remain stable for links.
+Repository updates are the current first priority, ahead of SSH provisioning
+and hardware verification. Existing section numbers remain stable for links.
 
+2. [Repository-update workflow implementation and testing](#2-repository-updates)
 4. [Secure SSH provisioning access](#4-ssh-provisioning)
 1. [Full ISO verification on real hardware](#1-full-iso-verification)
-2. [Repository-update workflow implementation and testing](#2-repository-updates)
 3. [Release version tags](#3-release-version-tags)
 5. [TUI installer](#5-tui-installer)
 6. [UKI boot](#6-uki-boot)
@@ -30,6 +30,49 @@ Reusable libvirt images remain additional work after these priorities.
 ### 2. Repository updates
 
 - [ ] Implement and validate the host-independent repository-update workflow described in [the repository-update issue](docs/issues/2026-11-25_installed-system-repository-updates.md).
+  - Keep local host configuration under `/etc/nixos` and place the shared,
+    root-managed Git checkout under `/etc/nixos/my-os-setup`. Provide a small,
+    real local `/etc/nixos/flake.nix` that composes reusable project modules with
+    local configuration and hardware settings; do not symlink the project Flake
+    or use its reference system as the host configuration.
+  - Have the installer provision this layout completely: after installation,
+    `/etc/nixos/my-os-setup` must already be a usable Git checkout with the
+    intended remote and installed project revision, and the local Flake and host
+    files must be ready for the pull/rebuild workflow without manual setup.
+    Bundle the exact project revision used to build the ISO and install that
+    revision without fetching newer code during installation. Configure a named
+    update branch and its remote/upstream at that commit, not a detached HEAD,
+    so later pulls can advance from the ISO's project state.
+    Preserve offline installation support and validate the first online pull
+    and rebuild after installation.
+  - Provide a safe migration from existing archived installations, preserving
+    host configuration, hardware settings, installation metadata and SSH public
+    keys outside the shared checkout. Keep the password hash at its existing
+    protected location outside the repository and Nix Store. Document separate
+    backups for local host files, which shared Git history does not protect.
+  - Support updating the complete declaratively managed system to the latest
+    project state with `sudo git -C /etc/nixos/my-os-setup pull --ff-only` followed
+    by `sudo nix flake update` in `/etc/nixos` and
+    `sudo nixos-rebuild switch --flake path:/etc/nixos` (or an equally simple
+    documented command). Avoid a second, stale configuration source and manual
+    copying of project files.
+  - Ensure ignored/untracked host files are included in evaluation, using an
+    explicit `path:` Flake or a validated alternative. Never fall back silently
+    to reference hardware/user settings during an installed-system rebuild.
+  - Implement and test local project inclusion and lock handling: the local
+    System Flake defines its system dependencies and `/etc/nixos/flake.lock`
+    controls their versions. A full local `nix flake update` updates these
+    dependencies and the local project input, not just the project input.
+    The shared checkout's `flake.lock` remains unchanged and serves ISO builds
+    and project tests; installed systems may intentionally use newer dependency
+    versions than the tested ISO. Do not force installed systems to follow the
+    project's pinned package versions or assume `nixos-rebuild` performs updates.
+    Validate that shared modules and AI/Gufo integration use the intended local
+    dependencies. Define updates for managed model payloads separately; do not
+    imply that `git pull` alone updates external mutable data.
+  - Validate migration, project update, SSH access after rebuild/reboot, local
+    configuration preservation and rollback. Update `migration.md` and the
+    administration documentation to describe the supported workflow.
 
 ### 3. Release version tags
 
