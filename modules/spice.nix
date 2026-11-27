@@ -25,17 +25,18 @@ let
           id = "";
           name = "Without SPICE guest integration";
           "name[de]" = "Ohne SPICE-Gastintegration";
-          description = "Leave SPICE guest integration disabled.";
-          "description[de]" = "SPICE-Gastintegration deaktiviert lassen.";
+          description = "SPICE connects a virtual machine to its host, for example for clipboard sharing. Leave this integration disabled.";
+          "description[de]" =
+            "SPICE verbindet eine virtuelle Maschine mit ihrem Host, beispielsweise für eine gemeinsame Zwischenablage. Diese Integration deaktiviert lassen.";
           screenshot = "";
         }
         {
           id = "spice";
           name = "Enable SPICE guest integration";
           "name[de]" = "SPICE-Gastintegration aktivieren";
-          description = "Enable the SPICE daemon and install its session agent. Under Plasma/Wayland, clipboard sharing may work only from host to guest; session-agent autostart is not yet confirmed.";
+          description = "SPICE connects a virtual machine to its host, for example for clipboard sharing. Enable the SPICE daemon and install its session agent. Under Plasma/Wayland, clipboard sharing may work only from host to guest; session-agent autostart is not yet confirmed.";
           "description[de]" =
-            "SPICE-Dienst aktivieren und Sitzungs-Agent installieren. Unter Plasma/Wayland funktioniert die Zwischenablage möglicherweise nur vom Host zum Gast; der Autostart des Sitzungs-Agenten ist noch nicht bestätigt.";
+            "SPICE verbindet eine virtuelle Maschine mit ihrem Host, beispielsweise für eine gemeinsame Zwischenablage. SPICE-Dienst aktivieren und Sitzungs-Agent installieren. Unter Plasma/Wayland funktioniert die Zwischenablage möglicherweise nur vom Host zum Gast; der Autostart des Sitzungs-Agenten ist noch nicht bestätigt.";
           screenshot = "";
         }
       ];
