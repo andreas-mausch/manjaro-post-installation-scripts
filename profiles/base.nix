@@ -17,6 +17,13 @@
   security.rtkit.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.plymouth = {
+    enable = lib.mkDefault true;
+    # Built-in theme; local configuration can select or package another theme.
+    theme = lib.mkDefault "spinner";
+  };
+  # Escape exposes boot messages; Plymouth retains its native text fallback.
+  boot.kernelParams = [ "quiet" ];
   # Generated hardware configuration selects drivers and CPU microcode.
   hardware.enableRedistributableFirmware = true;
 

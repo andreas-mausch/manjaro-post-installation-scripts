@@ -72,6 +72,12 @@ let
     assert !target.boot.loader.systemd-boot.enable;
     assert !target.boot.loader.grub.enable;
     assert target.boot.loader.external.installHook == target.system.build.installBootLoader;
+    assert target.boot.plymouth.enable;
+    assert target.boot.plymouth.theme == "spinner";
+    assert lib.elem "splash" target.boot.kernelParams;
+    assert lib.elem "quiet" target.boot.kernelParams;
+    assert target.boot.initrd.systemd.contents ? "/etc/plymouth/themes";
+    assert target.boot.initrd.systemd.services.plymouth-start.wantedBy != [ ];
     assert target.services.desktopManager.plasma6.enable == desktop;
     assert target.services.displayManager.sddm.enable == desktop;
     assert target.programs.firefox.enable == desktop;
