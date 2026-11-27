@@ -73,6 +73,11 @@ let
     assert target.programs.firefox.enable == desktop;
     assert !target.programs.kde-pim.enable;
     assert !live.programs.kde-pim.enable;
+    assert
+      !lib.elem build.target.pkgs.kdePackages.plasma-workspace-wallpapers target.environment.systemPackages;
+    assert
+      !lib.elem build.installer.pkgs.kdePackages.plasma-workspace-wallpapers live.environment.systemPackages;
+    assert !desktop || lib.elem build.target.pkgs.kdePackages.breeze target.environment.systemPackages;
     assert target.programs.steam.enable == gaming;
     assert !(target.nixpkgs.config.allowUnfree or false);
     assert !(live.nixpkgs.config.allowUnfree or false);
