@@ -8,15 +8,14 @@ Contents:
 
 1. [Full ISO verification on real hardware](#1-full-iso-verification)
 2. [Release version tags](#2-release-version-tags)
-3. [Secure SSH provisioning access](#3-ssh-provisioning)
-4. [TUI installer](#4-tui-installer)
-5. [SBOM outputs](#5-sboms)
-6. [Alternative model sources](#6-alternative-model-sources)
-7. [Favorite programs and configuration](#7-favorite-programs)
-8. [Manual partitioning](#8-manual-partitioning)
-9. [Time synchronization](#9-time-synchronization)
-10. [Optional Gufo update automation](#10-optional-gufo-update-automation)
-11. [Verified Git source fetching](#11-verified-fetches)
+3. [TUI installer](#3-tui-installer)
+4. [SBOM outputs](#4-sboms)
+5. [Alternative model sources](#5-alternative-model-sources)
+6. [Favorite programs and configuration](#6-favorite-programs)
+7. [Manual partitioning](#7-manual-partitioning)
+8. [Time synchronization](#8-time-synchronization)
+9. [Optional Gufo update automation](#9-optional-gufo-update-automation)
+10. [Verified Git source fetching](#10-verified-fetches)
 
 Reusable libvirt images remain additional work after these priorities.
 
@@ -28,21 +27,7 @@ Reusable libvirt images remain additional work after these priorities.
 
 - [ ] Introduce joint releases of the Flake and its Base/Desktop/Gaming/AI modules using Git tags (for example `v0.1.0`); optionally use the same explicit release version in ISO filenames. Do not derive a build date automatically or change `system.stateVersion` for project versioning.
 
-### 3. SSH provisioning
-
-- [x] Provide declarative key-gated live SSH and opt-in installed-system SSH
-  through Calamares. Installed key login and access after rebuild/reboot were
-  exercised during the Plymouth VM investigation.
-
-- [ ] Complete SSH negative-path checks: rejection of password/root login and
-  disabled target SSH selection. Verify live key login and explicitly offline
-  installation with SSH enabled; installed key login/reboot already worked.
-
-- [x] Validate the documented `--override-input ssh-keys` build workflow with
-  the supplied OpenPGP public key: personalized ISO builds and retained key
-  comparisons passed; target key login worked after clean installation.
-
-### 4. TUI installer
+### 3. TUI installer
 
 - [ ] Provide general, installation-UI-independent hooks for post-installation
   operations such as preserving the initial system generation with a GC root.
@@ -55,15 +40,15 @@ Reusable libvirt images remain additional work after these priorities.
 
 - [ ] Find and validate a suitable TUI installer for server provisioning over SSH, deploying this project's Flake with user-selected identity and disk settings. Check target-disk confirmation and keep target modules independent of the installation UI. Reassess existing Flake support in candidates such as nixos-wizard; the previous evaluation is recorded in [ADR 0001](docs/decisions/0001-installation-interface.md).
 
-### 5. SBOMs
+### 4. SBOMs
 
 - [ ] Make each variant's software inventory understandable and externally inspectable: provide separate SBOM build outputs for the target system and live ISO. Evaluate `sbomnix` with CycloneDX/SPDX output; distinguish live installer tools from target software. Record provenance, licenses and checksums of optional model weights using `modules/generative-ai/models.lock.json`. Document inventory and license-data completeness and limitations; an SBOM is not proof of security.
 
-### 6. Alternative model sources
+### 5. Alternative model sources
 
 - [ ] Obtain model files independently of Hugging Face: let users supply files from a local directory or alternative web sources. Treat download locations as replaceable hints, not model identity; accept files based on the pinned manifest's expected contents and checksums, regardless of origin. Preserve the required file set and target layout, verify integrity before bundling or using files, and reject missing or mismatched files. Integrity verification does not replace trust in the reference manifest.
 
-### 7. Favorite programs
+### 6. Favorite programs
 
 - [ ] Assemble a workstation for its tasks without maintaining a separate ISO for every combination. Derive further composable modules from the previous Manjaro setup:
   - Development: Git with lazygit/tig/delta, editors, language servers, Meld, Zeal and HTTP/data tools; prefer `nix develop` for project-specific compilers and SDKs.
@@ -75,16 +60,16 @@ Reusable libvirt images remain additional work after these priorities.
   - Keep tool installation and preferred configuration together by topic, for example under `modules/git/`: `system.nix` installs Git/tig/lazygit/delta system-wide, while `home.nix` manages user configuration and aliases with Home Manager. Coordinate responsibilities and package versions for programs automatically installed by Home Manager. Do not blindly carry XFCE/X11-specific solutions over to KDE/Wayland; keep hardware workarounds with the respective PC.
   - Retain existing variants as presets; evaluate installer module selection later. Consider Desktop + Development + Virtualization as a workstation with optional Gaming and AI.
 
-### 8. Manual partitioning
+### 7. Manual partitioning
 
 - [ ] Audit Calamares settings and native UI options currently hidden or disabled by our configuration. Identify which should be exposed to users and document why any remain unavailable.
 - [ ] Implement and validate safe manual partitioning, including LUKS layouts, before exposing it in Calamares. The pinned Nixpkgs package includes `dont-allow-manual-luks.patch`; review supported native settings and target hardware-configuration integration before changing it. Keep manual partitioning disabled until verified; automatic whole-drive LUKS2 installation remains supported.
 
-### 9. Time synchronization
+### 8. Time synchronization
 
 - [ ] Configure and verify automatic time synchronization in live media and installed systems. Evaluate using NTP servers supplied by DHCP, with a documented fallback when DHCP supplies none; check integration with NetworkManager and the chosen time-sync service.
 
-### 10. Optional Gufo update automation
+### 9. Optional Gufo update automation
 
 - [x] Gufo operation on Bosgame M5 and AI/Full updates including Gufo are
   confirmed by the user. No further implementation is needed for manual updates.
@@ -99,7 +84,7 @@ Reusable libvirt images remain additional work after these priorities.
   not outstanding validation of the working manual update workflow.
   Source-signature verification is a separate optional investigation below.
 
-### 11. Verified fetches
+### 10. Verified fetches
 
 - [ ] Evaluate Nix's experimental `verified-fetches` support for authenticated
   Git source updates. Check availability in the project's supported Nix versions,
