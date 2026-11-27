@@ -1,5 +1,6 @@
 { ... }:
 {
+  imports = [ ./time-sync.nix ];
   networking.nftables.enable = true;
   networking.networkmanager = {
     enable = true;

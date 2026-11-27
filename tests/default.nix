@@ -21,6 +21,20 @@
         touch "$out"
       '';
   profile-tests = import ./profiles.nix { inherit pkgs builds profiles; };
+  time-sync-tests =
+    pkgs.runCommand "time-sync-tests"
+      {
+        nativeBuildInputs = [
+          pkgs.dash
+          pkgs.util-linux
+          pkgs.shellcheck
+        ];
+      }
+      ''
+        shellcheck -s sh ${../modules/time-sync/dhcp-sources.sh}
+        dash ${./time-sync.sh} ${../modules/time-sync/dhcp-sources.sh}
+        touch "$out"
+      '';
   uki-hook-tests = pkgs.runCommand "uki-hook-tests" { } ''
     ${pkgs.lib.concatMapStringsSep "\n" (name: ''
       test -x ${builds.${name}.target.config.system.build.installBootLoader}

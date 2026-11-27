@@ -13,9 +13,8 @@ Contents:
 5. [Alternative model sources](#5-alternative-model-sources)
 6. [Favorite programs and configuration](#6-favorite-programs)
 7. [Manual partitioning](#7-manual-partitioning)
-8. [Time synchronization](#8-time-synchronization)
-9. [Optional Gufo update automation](#9-optional-gufo-update-automation)
-10. [Verified Git source fetching](#10-verified-fetches)
+8. [Optional Gufo update automation](#8-optional-gufo-update-automation)
+9. [Verified Git source fetching](#9-verified-fetches)
 
 Reusable libvirt images remain additional work after these priorities.
 
@@ -50,6 +49,12 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 6. Favorite programs
 
+- [ ] Allow timezone changes through KDE in Desktop and derived profiles:
+  generate `time.timeZone = null;` and initialize the installer-selected zone
+  once in the target system. Preserve subsequent KDE changes across reboot and
+  rebuild; retain declarative timezone configuration for Base/server systems.
+  Do not add automatic location detection or change the DHCP-only NTP policy.
+
 - [ ] Assemble a workstation for its tasks without maintaining a separate ISO for every combination. Derive further composable modules from the previous Manjaro setup:
   - Development: Git with lazygit/tig/delta, editors, language servers, Meld, Zeal and HTTP/data tools; prefer `nix develop` for project-specific compilers and SDKs.
   - Virtualization: QEMU, libvirt and virt-manager with their required services and permissions.
@@ -65,11 +70,7 @@ Reusable libvirt images remain additional work after these priorities.
 - [ ] Audit Calamares settings and native UI options currently hidden or disabled by our configuration. Identify which should be exposed to users and document why any remain unavailable.
 - [ ] Implement and validate safe manual partitioning, including LUKS layouts, before exposing it in Calamares. The pinned Nixpkgs package includes `dont-allow-manual-luks.patch`; review supported native settings and target hardware-configuration integration before changing it. Keep manual partitioning disabled until verified; automatic whole-drive LUKS2 installation remains supported.
 
-### 8. Time synchronization
-
-- [ ] Configure and verify automatic time synchronization in live media and installed systems. Evaluate using NTP servers supplied by DHCP, with a documented fallback when DHCP supplies none; check integration with NetworkManager and the chosen time-sync service.
-
-### 9. Optional Gufo update automation
+### 8. Optional Gufo update automation
 
 - [x] Gufo operation on Bosgame M5 and AI/Full updates including Gufo are
   confirmed by the user. No further implementation is needed for manual updates.
@@ -84,7 +85,7 @@ Reusable libvirt images remain additional work after these priorities.
   not outstanding validation of the working manual update workflow.
   Source-signature verification is a separate optional investigation below.
 
-### 10. Verified fetches
+### 9. Verified fetches
 
 - [ ] Evaluate Nix's experimental `verified-fetches` support for authenticated
   Git source updates. Check availability in the project's supported Nix versions,

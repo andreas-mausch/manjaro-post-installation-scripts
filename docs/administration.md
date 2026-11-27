@@ -4,6 +4,25 @@
 may need a reboot. Keep backups: neither rebuilds nor rollback restore all configuration files or personal data.
 In examples using `#desktop`, substitute the installed or deliberately chosen profile.
 
+## Time synchronization
+
+Live media and installed systems use timesyncd exclusively with NTP addresses
+received by NetworkManager through DHCPv4 or DHCPv6. There are no static
+sources or fallbacks: without DHCP NTP information, no external synchronization
+takes place. timesyncd does not provide a network server.
+Check the actual synchronization with:
+
+```bash
+timedatectl status
+timedatectl timesync-status
+```
+
+The DHCP dispatcher maintains per-interface drop-ins under
+`/run/systemd/timesyncd.conf.d` and restarts timesyncd when sources change.
+Libvirt's default NAT network
+does not advertise NTP servers by default; advertising one via dnsmasq does not
+itself start a time server. See [ADR-0013](decisions/0013-time-synchronization.md).
+
 ## Local settings and passwords
 
 The installed setup lives under `/etc/nixos` and generates:

@@ -26,6 +26,7 @@ root [README](../../README.md); diagnosis and verification belong in
 
 | 0011 | [Wi-Fi backend](0011-wifi-backend.md)                                           | NetworkManager with iwd, no supplicant service         | ✅ `accepted` | 2026-11-26 | none       |
 | 0012 | [Firewall backend](0012-firewall-backend.md)                                   | NixOS firewall with nftables, host-local port policy   | ✅ `accepted` | 2026-11-26 | none       |
+| 0013 | [Time synchronization](0013-time-synchronization.md)                           | timesyncd, DHCP-only IPv4/IPv6, no network listeners    | ✅ `accepted` | 2026-11-27 | none       |
 
 The initial records were reconstructed on 2026-11-26 from current files and
 Git history. Dates identify the implementation or explicit policy evidence

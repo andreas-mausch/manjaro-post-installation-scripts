@@ -69,6 +69,16 @@ let
       ];
     in
     assert target.boot.loader.external.enable;
+    assert target.services.timesyncd.enable;
+    assert live.services.timesyncd.enable;
+    assert !target.services.chrony.enable;
+    assert !live.services.chrony.enable;
+    assert target.services.timesyncd.servers == [ ];
+    assert live.services.timesyncd.servers == [ ];
+    assert target.services.timesyncd.fallbackServers == [ ];
+    assert live.services.timesyncd.fallbackServers == [ ];
+    assert target.networking.timeServers == [ ];
+    assert live.networking.timeServers == [ ];
     assert !target.boot.loader.systemd-boot.enable;
     assert !target.boot.loader.grub.enable;
     assert target.boot.loader.external.installHook == target.system.build.installBootLoader;
