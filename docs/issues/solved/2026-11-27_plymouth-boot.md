@@ -79,3 +79,22 @@ The serial console itself remains available; only Plymouth ignores it.
 
 This resolves the reported VM behavior. Hardware boots and an explicit
 incorrect-password/text-fallback test were not separately established.
+
+## Clean installation and retained splash
+
+A fresh encrypted Desktop VM installation from the personalized `d2284ad`
+ISO confirmed graphical boot without local early-GPU overrides. Kernel logs
+show `virtio_gpu` loading early. The user nevertheless observed a brief,
+likely textual flicker before the login screen. Plymouth quit at 15:49:50;
+the SDDM greeter added its view at 15:49:53. This supports a visible handover
+gap, but does not prove which content appeared during it.
+
+The VM then tested `plymouth quit --retain-splash` in the existing quit unit,
+without sleeps, parallel startup or replacing SDDM's service. The user judged
+the result good enough, with a possible remaining mini-flicker. This override
+is now shared by the Desktop-derived profiles, conditional on Plymouth being
+enabled. The base/server profile retains native quit behavior.
+
+This preserves SDDM's ordering after Plymouth quit and uses Plymouth's native
+retained final frame. It is not a coordinated compositor handover or a promise
+of flicker-free output on all hardware. Bosgame validation remains pending.

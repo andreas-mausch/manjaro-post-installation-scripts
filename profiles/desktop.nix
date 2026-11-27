@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     ./base.nix
@@ -8,6 +13,13 @@
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
+  };
+  # Release Plymouth before SDDM starts, but keep its final frame on screen.
+  systemd.services.plymouth-quit = lib.mkIf config.boot.plymouth.enable {
+    serviceConfig.ExecStart = [
+      ""
+      "-${config.boot.plymouth.package}/bin/plymouth quit --retain-splash"
+    ];
   };
   services.desktopManager.plasma6.enable = true;
   # Omit KDE's mail/calendar/contact suite and its Akonadi/MariaDB backend.

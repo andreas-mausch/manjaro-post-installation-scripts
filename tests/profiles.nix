@@ -81,6 +81,13 @@ let
     assert target.boot.initrd.systemd.services.plymouth-start.wantedBy != [ ];
     assert target.services.desktopManager.plasma6.enable == desktop;
     assert target.services.displayManager.sddm.enable == desktop;
+    assert
+      !desktop
+      ||
+        target.systemd.services.plymouth-quit.serviceConfig.ExecStart == [
+          ""
+          "-${target.boot.plymouth.package}/bin/plymouth quit --retain-splash"
+        ];
     assert target.programs.firefox.enable == desktop;
     assert !target.programs.kde-pim.enable;
     assert !live.programs.kde-pim.enable;
