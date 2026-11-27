@@ -75,6 +75,12 @@ offers no integration advantage for this requirement.
 - [Time module](../../modules/time-sync.nix).
 - [POSIX sh DHCP dispatcher](../../modules/time-sync/dhcp-sources.sh).
 - [Administration](../administration.md#time-synchronization).
-- [Validation evidence](../time-synchronization.md).
 - Pinned Nixpkgs `nixos/modules/system/boot/timesyncd.nix` and
   `nixos/modules/services/networking/ntp/chrony.nix`.
+
+## Validation — 2026-11-27
+
+IPv4/IPv6 DHCP NTP synchronization and absence of network listeners were
+checked in the live ISO and installed VM. Source withdrawal was simulated
+without fallback; desktop timezone changes survived a rebuild. The user
+confirmed that DHCP NTP and the timezone adjustment work.
