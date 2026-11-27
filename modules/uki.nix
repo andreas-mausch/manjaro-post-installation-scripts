@@ -61,7 +61,7 @@ in
       image=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}/EFI/my-os-setup/"$(${pkgs.coreutils}/bin/basename "$system")".efi
       PATH=${config.systemd.package}/bin:$PATH \
         ${pkgs.python3Packages.virt-firmware}/bin/kernel-bootcfg \
-        --add-uki "$image" --title "NixOS UKI $(${pkgs.coreutils}/bin/basename "$system" | ${pkgs.coreutils}/bin/cut -d- -f1)" \
+        --add-uki "$image" --title "NixOS UKI $(${pkgs.coreutils}/bin/date -r "$image" '+%Y-%m-%d %H:%M')" \
         --boot-order last
     '';
     # Retain the CLI for inspection and explicit selection during VM validation.
