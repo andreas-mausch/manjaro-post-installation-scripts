@@ -39,7 +39,8 @@ for index in range(1, len(sys.argv), 4):
     validate = json.loads((modules / "desktop-validate.conf").read_text())
     assert install["target"] == name, name
     assert install["withModels"] == validate["withModels"] == ai, name
-    for filename in ["flake.lock", "flake.online.lock"]:
+    assert not (Path(source) / "flake.online.lock").exists(), name
+    for filename in ["flake.lock"]:
         lock = json.loads((Path(source) / filename).read_text())
         inputs = lock["nodes"][lock["root"]]["inputs"]
         if filename == "flake.lock":
@@ -48,10 +49,13 @@ for index in range(1, len(sys.argv), 4):
                     assert node["locked"]["type"] == "path", (name, node)
                     assert node["locked"]["narHash"].startswith("sha256-"), (name, node)
         assert ("gufo" in inputs) == ai, (name, filename)
-        assert "ssh-keys" in inputs, (name, filename)
+        assert "my-os-setup" in inputs and "ssh-keys" not in inputs, (name, filename)
+        assert lock["nodes"][inputs["my-os-setup"]]["flake"] is False
         if not ai:
-            assert set(lock["nodes"]) == {lock["root"], inputs["nixpkgs"], inputs["ssh-keys"]}, (name, filename)
+            assert set(lock["nodes"]) == {lock["root"], inputs["nixpkgs"], inputs["my-os-setup"]}, (name, filename)
     flake = (Path(source) / "flake.nix").read_text()
+    project = lock["nodes"][inputs["my-os-setup"]]["original"]
+    assert install["repositoryRemote"] == f"https://github.com/{project['owner']}/{project['repo']}.git", name
     assert (Path(source) / "ssh-authorized-keys").is_file(), name
     ssh = json.loads((modules / "desktop-ssh.conf").read_text())
     assert "packagechooser@ssh" in shown, name
@@ -64,12 +68,14 @@ for index in range(1, len(sys.argv), 4):
     assert "nixConfig" not in flake, name
     assert "extra-substituters" not in flake, name
     assert "extra-trusted-public-keys" not in flake, name
+    assert not (Path(source) / "setup-flake.nix").exists(), name
+    assert "flake = false" in flake, name
+    assert '(my-os-setup + "/profiles/' + name + '.nix")' in flake, name
+    assert "./configuration.nix" in flake and "target-configuration.nix" not in flake, name
     if ai:
-        assert "outputs = inputs@{ self, gufo, nixpkgs, ssh-keys }: (import ./setup-flake.nix).outputs inputs;" in flake, name
-        assert (Path(source) / "setup-flake.nix").is_file(), name
+        assert 'github:gufo-org/gufo"' in flake, name
+        assert "specialArgs.gufoPackage" in flake, name
     else:
         assert "gufo" not in flake, name
-        assert f"nixosConfigurations = {{ {name} = target; }}" in flake, name
-        assert f"./profiles/{name}.nix" in flake, name
-        assert "./modules/target-configuration.nix" in flake, name
-        assert '"${target.config.networking.hostName}" = target;' in flake, name
+        assert f"nixosConfigurations = {{ {name} = target; default = target; }}" in flake, name
+    assert '"${target.config.networking.hostName}" = target;' in flake, name

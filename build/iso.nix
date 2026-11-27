@@ -7,6 +7,8 @@
   name,
   profileSpec,
   ssh-keys,
+  repository,
+  projectSource,
   mkTarget,
 }:
 let
@@ -18,14 +20,16 @@ let
       nixpkgs
       system
       name
+      repository
+      projectSource
       ;
     sshKeysFile = ssh-keys + "/authorized_keys";
     rootInputs = {
-      inherit nixpkgs ssh-keys;
+      inherit nixpkgs;
     }
     // lib.optionalAttrs profileSpec.ai { inherit gufo; };
     targetProfile = profileSpec.profile;
-    reuseSetupOutputs = profileSpec.ai;
+    withAI = profileSpec.ai;
   };
   inherit (archive) inputSources offlineSource;
   target = mkTarget inputSources;
@@ -41,6 +45,7 @@ let
   };
   calamares = import ../modules/installer/calamares.nix {
     inherit pkgs lib offlineSource;
+    repositoryRemote = "https://github.com/${projectSource.owner}/${projectSource.repo}.git";
     sshKeysFile = ssh-keys + "/authorized_keys";
     variantName = name;
     withModels = profileSpec.ai;

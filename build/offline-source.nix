@@ -6,29 +6,46 @@
   name,
   rootInputs,
   targetProfile,
-  reuseSetupOutputs,
+  withAI,
+  repository,
+  projectSource,
   sshKeysFile,
 }:
 let
   lib = nixpkgs.lib;
-  fullLock = builtins.fromJSON (builtins.readFile (self + "/flake.lock"));
+  hasRepository = builtins.pathExists (repository + "/.git/HEAD");
+  projectLock = builtins.fromJSON (builtins.readFile (self + "/flake.lock"));
   reachable =
     nodeName:
     [ nodeName ]
     ++ lib.concatMap (edge: if builtins.isString edge then reachable edge else [ ]) (
-      builtins.attrValues (fullLock.nodes.${nodeName}.inputs or { })
+      builtins.attrValues (projectLock.nodes.${nodeName}.inputs or { })
     );
   selectedNodes = lib.unique (
-    lib.concatMap (inputName: reachable fullLock.nodes.${fullLock.root}.inputs.${inputName}) (
+    lib.concatMap (inputName: reachable projectLock.nodes.${projectLock.root}.inputs.${inputName}) (
       builtins.attrNames rootInputs
     )
   );
-  originalLock = fullLock // {
-    nodes = (lib.filterAttrs (nodeName: _: builtins.elem nodeName selectedNodes) fullLock.nodes) // {
-      ${fullLock.root} = {
-        inputs = lib.filterAttrs (
+  originalLock = projectLock // {
+    nodes = (lib.filterAttrs (nodeName: _: builtins.elem nodeName selectedNodes) projectLock.nodes) // {
+      my-os-setup = {
+        flake = false;
+        original = {
+          type = "github";
+        }
+        // projectSource;
+        locked = {
+          type = "path";
+          path = self.outPath;
+        };
+      };
+      ${projectLock.root} = {
+        inputs = {
+          my-os-setup = "my-os-setup";
+        }
+        // lib.filterAttrs (
           inputName: _: builtins.hasAttr inputName rootInputs
-        ) fullLock.nodes.${fullLock.root}.inputs;
+        ) projectLock.nodes.${projectLock.root}.inputs;
       };
     };
   };
@@ -47,7 +64,10 @@ let
       in
       if builtins.isString edge then collectInputNodes edge input.inputs.${inputName} else [ ]
     ) (builtins.attrNames (originalLock.nodes.${nodeName}.inputs or { }));
-  inputNodes = builtins.listToAttrs (
+  inputNodes = {
+    my-os-setup = self.outPath;
+  }
+  // builtins.listToAttrs (
     lib.concatMap (
       inputName:
       collectInputNodes originalLock.nodes.${originalLock.root}.inputs.${inputName}
@@ -106,51 +126,56 @@ let
             json.dump(lock, destination)
         PY
       '';
-  onlineLockFile = pkgs.writeText "${name}-online-flake.lock" (builtins.toJSON originalLock);
-  # Reuse the original entry point even when rebuilding an installed archive.
-  setupFlakePath =
-    if builtins.pathExists (self + "/setup-flake.nix") then
-      self + "/setup-flake.nix"
-    else
-      self + "/flake.nix";
-  sourceInputs = lib.filterAttrs (
-    inputName: _: builtins.hasAttr inputName rootInputs
-  ) (import setupFlakePath).inputs;
+  sourceInputs = {
+    my-os-setup = {
+      url = "github:${projectSource.owner}/${projectSource.repo}";
+      flake = false;
+    };
+  }
+  //
+    lib.filterAttrs (inputName: _: builtins.hasAttr inputName rootInputs)
+      (import (self + "/flake.nix")).inputs;
   targetFlake = pkgs.writeText "${name}-flake.nix" ''
     {
       inputs = ${lib.generators.toPretty { } sourceInputs};
-      outputs = { self, nixpkgs, ... }: let
+      outputs = inputs@{ self, nixpkgs, my-os-setup, ${lib.optionalString withAI "gufo,"} ... }: let
+        sources = map (entry: entry.key) (builtins.genericClosure {
+          startSet = map (input: { key = input.outPath; inherit input; })
+            (builtins.attrValues (builtins.removeAttrs inputs [ "self" ]));
+          operator = entry: map (input: { key = input.outPath; inherit input; })
+            (builtins.attrValues (entry.input.inputs or {}));
+        });
         target = nixpkgs.lib.nixosSystem {
           system = "${system}";
-          modules = [ ./profiles/${builtins.baseNameOf targetProfile}
-            ./modules/target-configuration.nix
-            { system.extraDependencies = [ nixpkgs.outPath ]; } ];
+          ${lib.optionalString withAI ''
+            specialArgs.gufoPackage = import (my-os-setup + "/modules/generative-ai/gufo.nix") {
+              pkgs = nixpkgs.legacyPackages.${system};
+              inherit gufo;
+              revision = gufo.shortRev or (
+                if gufo.outPath == "${rootInputs.gufo.outPath}" then
+                  "${rootInputs.gufo.shortRev}"
+                else "dirty"
+              );
+            };
+          ''}
+          modules = [ (my-os-setup + "/profiles/${builtins.baseNameOf targetProfile}")
+            ./configuration.nix
+            { system.extraDependencies = sources; } ];
         };
       in {
-        nixosConfigurations = { ${name} = target; }
-        // nixpkgs.lib.optionalAttrs (builtins.pathExists ./configuration.nix) {
+        nixosConfigurations = { ${name} = target; default = target; }
+        // {
           "''${target.config.networking.hostName}" = target;
         };
       };
     }
   '';
-  # Reuse revision-sensitive outputs without forwarding nixConfig.
-  setupTargetFlake = pkgs.writeText "${name}-target-flake.nix" ''
-    {
-      inputs = ${lib.generators.toPretty { } sourceInputs};
-      outputs = inputs@{ self, ${lib.concatStringsSep ", " (builtins.attrNames rootInputs)} }: (import ./setup-flake.nix).outputs inputs;
-    }
-  '';
   offlineSource = pkgs.runCommand "${name}-offline-source" { } ''
     mkdir "$out"
-    cp -r ${self}/. "$out/"
-    chmod -R u+w "$out"
-    ${lib.optionalString reuseSetupOutputs ''
-      cp ${setupFlakePath} "$out/setup-flake.nix"
-      cp ${setupTargetFlake} "$out/flake.nix"
+    ${lib.optionalString hasRepository ''
+      ln -s ${repository} "$out/repository"
     ''}
-    ${lib.optionalString (!reuseSetupOutputs) "cp ${targetFlake} \"$out/flake.nix\""}
-    cp ${onlineLockFile} "$out/flake.online.lock"
+    cp ${targetFlake} "$out/flake.nix"
     cp ${localLockFile} "$out/flake.lock"
     cp ${sshKeysFile} "$out/ssh-authorized-keys"
   '';

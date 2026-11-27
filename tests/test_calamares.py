@@ -21,6 +21,12 @@ spec.loader.exec_module(adapter)
 
 
 class AdapterTests(unittest.TestCase):
+    def setUp(self):
+        # Repository transport is tested separately from disk deployment.
+        patcher = patch.object(adapter, "provision_repository")
+        self.provision_repository = patcher.start()
+        self.addCleanup(patcher.stop)
+
     def storage(self, **changes):
         values = {
             "firmwareType": "efi", "username": "testuser", "hostname": "nixos-desktop",
@@ -66,7 +72,7 @@ class AdapterTests(unittest.TestCase):
                 with self.subTest(choice=choice), \
                         patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host, \
                         patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")):
-                    adapter.deploy(self.storage(packagechooser_ssh=choice), {"source": folder})
+                    adapter.deploy(self.storage(packagechooser_ssh=choice), {"source": folder, "repositoryRemote": "https://example.invalid/setup.git"})
                     configuration = next(call.kwargs["input"] for call in host.call_args_list
                                          if call.args[0] == "tee" and str(call.args[1]).endswith("/configuration.nix"))
                     self.assertEqual("services.openssh.enable = true;" in configuration, choice == "ssh")
@@ -89,7 +95,7 @@ class AdapterTests(unittest.TestCase):
                         patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host, \
                         patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")):
                     adapter.deploy(self.storage(packagechooser_models=None, hostname="workstation"),
-                                   {"source": str(source), "target": variant, "withModels": False})
+                                   {"source": str(source), "target": variant, "withModels": False, "repositoryRemote": "https://example.invalid/setup.git"})
                     command = next(call.args for call in host.call_args_list if call.args[0] == "nixos-install")
                     self.assertIn("path:/tmp/calamares-root-test/etc/nixos#workstation", command)
                     identity_call = next(call for call in host.call_args_list
@@ -152,7 +158,7 @@ class AdapterTests(unittest.TestCase):
             source.mkdir()
             (source / "flake.lock").write_text("{}")
             (models / "flash-next-q4").mkdir(parents=True)
-            config = {"source": str(source)}
+            config = {"source": str(source), "repositoryRemote": "https://example.invalid/setup.git"}
             with (
                 patch.object(adapter, "host", return_value=SimpleNamespace(stdout="hardware")) as host,
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")) as run,
@@ -222,7 +228,7 @@ class AdapterTests(unittest.TestCase):
                 patch.object(adapter.subprocess, "run", return_value=SimpleNamespace(stdout="$y$hash\n")),
             ):
                 adapter.deploy(self.storage(packagechooser_models="without-models"),
-                                {"source": str(source), "models": str(models)})
+                                {"source": str(source), "models": str(models), "repositoryRemote": "https://example.invalid/setup.git"})
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             identity_call = next(call for call in host.call_args_list
                                  if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))

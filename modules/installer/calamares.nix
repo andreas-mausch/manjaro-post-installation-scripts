@@ -7,6 +7,7 @@
   modelFiles,
   modelsDirectory,
   sshKeysFile,
+  repositoryRemote,
 }:
 let
   # Reuse NixOS' Calamares configuration and native view/storage modules.
@@ -300,7 +301,7 @@ let
     stage = "install";
     source = "${offlineSource}";
     target = variantName;
-    inherit withModels;
+    inherit withModels repositoryRemote;
   };
   copyModelSettings = yaml "desktop-copy-models.conf" {
     stage = "models";

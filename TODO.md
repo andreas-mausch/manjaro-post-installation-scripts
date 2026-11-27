@@ -32,6 +32,12 @@ Reusable libvirt images remain additional work after these priorities.
 ### 2. Repository updates
 
 - [ ] Implement and validate the host-independent repository-update workflow described in [the repository-update issue](docs/issues/2026-11-25_installed-system-repository-updates.md).
+  - Implementation now generates the independent local Flake and offline lock,
+    imports profiles through a non-Flake source input, and provisions the Git
+    checkout from an explicitly supplied temporary Git folder. Focused installer/Git tests and
+    offline Desktop/AI/Full evaluation cover host preservation and source overrides.
+    End-to-end offline installation, online update/reboot, rollback and migration
+    remain unverified; do not consider this task complete before those checks.
   - Keep local host configuration under `/etc/nixos` and place the shared,
     root-managed Git checkout under `/etc/nixos/my-os-setup`. Provide a small,
     real local `/etc/nixos/flake.nix` that composes reusable project modules with
@@ -63,8 +69,10 @@ Reusable libvirt images remain additional work after these priorities.
     backups for local host files, which shared Git history does not protect.
   - Support updating the complete declaratively managed system with
     `sudo nix flake update` in `/etc/nixos` followed by
-    `sudo nixos-rebuild switch --flake path:/etc/nixos` (or an equally simple
-    documented command). This normally fetches the project from GitHub; no Git
+    `sudo nixos-rebuild switch` (automatic local Flake and hostname selection).
+    Document an explicit `--flake path:/etc/nixos#default` for hostname changes
+    and explicit `path:` when Git filtering would otherwise omit host files.
+    This normally fetches the project from GitHub; no Git
     pull in the fallback checkout is required. Avoid manual copying of project
     files and make the selected source explicit.
   - Document and validate the administrator-controlled local fallback: update

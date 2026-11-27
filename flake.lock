@@ -90,10 +90,23 @@
         "type": "github"
       }
     },
+    "repository": {
+      "flake": false,
+      "locked": {
+        "path": "./build",
+        "type": "path"
+      },
+      "original": {
+        "path": "./build",
+        "type": "path"
+      },
+      "parent": []
+    },
     "root": {
       "inputs": {
         "gufo": "gufo",
         "nixpkgs": "nixpkgs_2",
+        "repository": "repository",
         "ssh-keys": "ssh-keys"
       }
     },

@@ -11,6 +11,12 @@ The installed setup lives under `/etc/nixos` and generates:
 - `configuration.nix`: editable hostname, user, language, local additions and the existing `system.stateVersion`.
 - `hardware-configuration.nix`: hardware, filesystems and LUKS UUIDs, imported by the local configuration.
 - `installation.json`: installation metadata, including the selected `variant`.
+- `flake.nix` and `flake.lock`: local system composition and independently updatable dependency versions.
+- `my-os-setup/`: root-managed Git checkout at the ISO revision, with a named branch and `origin` upstream.
+
+The local Flake normally imports the selected profile from a non-Flake GitHub source input (`flake = false`),
+without evaluating the project's Flake or using its ISO dependency graph. AI/Full additionally have a Gufo Flake input.
+The checkout is an explicit fallback/development source, not a second automatically selected configuration.
 
 Edit local settings rather than shared profiles:
 
@@ -23,25 +29,31 @@ The hostname alias follows `networking.hostName`; the explicit profile target re
 are not secrets, but contain PC-specific data. If `/etc/nixos` becomes a Git checkout, explicitly include needed host
 files or use a `path:/etc/nixos` Flake so ignored/untracked files are not filtered out.
 
+The shipped `nixos-rebuild` automatically finds `/etc/nixos/flake.nix` and selects the running hostname.
+When changing `networking.hostName`, use `sudo nixos-rebuild switch --flake path:/etc/nixos#default` once,
+because the running hostname still has its old value. Explicit `path:` is also useful if `/etc/nixos` itself
+becomes a Git repository; the fallback checkout in its subdirectory does not make the parent a Git repository.
+
 The password hash stays outside the repository/store at `/var/lib/nixos-secrets/user-password.hash`. For persistent
 password changes, replace that root-protected hash file; `users.mutableUsers = false` means plain `passwd` is not a
 persistent change. Keep root login locked and never commit the hash or copy it into a development checkout.
 
-## Update dependencies online
+## Update shared modules and dependencies online
 
 An offline installation initially pins Flake inputs to retained local store paths. Original GitHub URLs stay in
-`flake.nix`; `nix flake update` resolves them again and replaces local locks with network locks. `flake.online.lock`
-backs up the original network state but is not required for updating.
+`flake.nix`; `nix flake update` resolves them again and replaces local locks with network locks.
 
 ```bash
 cd /etc/nixos
 sudo cp flake.lock flake.before-update.lock
 sudo nix flake update
-sudo nixos-rebuild switch --flake path:/etc/nixos#desktop
+sudo nixos-rebuild switch
 ```
 
 This updates within configured branches/tags. Nixpkgs follows `nixos-unstable`, not necessarily every latest upstream
 release. AI/Full already configure the Gufo cache/key in the daemon and need no extra Flake cache approval.
+Shared project modules update along with these inputs; no checkout pull or file copying is needed. Local host files
+and the checkout's project lock remain unchanged. Newer system dependencies than the ISO's tested versions are intentional.
 
 Gufo uses `github:gufo-org/gufo` without a release tag. `nix flake update` selects the current default-branch commit,
 not necessarily a stable release; ordinary rebuilds use the exact commit in `flake.lock`. Existing installations
@@ -65,31 +77,41 @@ sudo nixos-rebuild switch --rollback
 Rollback does not restore configuration files or locks; restore those from backups/Git separately.
 VM update/reboot evidence is in [the offline investigation](issues/solved/2026-11-25_offline-installation.md).
 
-## Apply changes from this repository
+## Local checkout fallback
 
-`nix flake update` updates dependencies, **not this project's module files**. `/etc/nixos` is an archived copy, not an
-automatically maintained checkout. To apply repository changes without reinstalling, use your own checkout, for example
-`~/coding/nixos-setup`.
-
-> **The checkout must contain this exact PC's configuration, hardware settings and installation metadata.**
-> Without them, evaluation falls back to reference disk/user settings. This checkout workflow is documented but has not
-> been VM-validated; the future pinned-input workflow that avoids copying host data is not implemented.
-
-Inspect any existing local files before copying; do not overwrite unrelated work:
+Use the bundled checkout without GitHub, or pull it from a reachable remote after reviewing changes:
 
 ```bash
-cd ~/coding/nixos-setup
-cp /etc/nixos/hardware-configuration.nix .
-cp /etc/nixos/installation.json .
-cp /etc/nixos/configuration.nix .
-sudo nixos-rebuild switch --flake "path:$HOME/coding/nixos-setup#desktop"
+sudo git -C /etc/nixos/my-os-setup pull --ff-only
+cd /etc/nixos
+sudo cp flake.lock flake.before-update.lock
+sudo nix flake update my-os-setup \
+  --override-input my-os-setup path:/etc/nixos/my-os-setup
+sudo nixos-rebuild switch
 ```
 
-Use `path:` explicitly: a Git Flake omits ignored/untracked files, including deliberately ignored host data. Keep
-PC-specific files out of shared commits and leave the password hash on the target at its existing protected location.
+Omit the pull and add `--offline` to the targeted update when using the existing checkout without network access.
+Only the project source is updated by this command; unrelated dependency inputs remain locked. Use a full
+`nix flake update --override-input my-os-setup path:/etc/nixos/my-os-setup` for intentional dependency updates too.
+The override is recorded in the lock: a subsequent rebuild needs no override. After checkout edits or pulls,
+repeat the targeted override update to refresh its content hash.
 
-For later project updates, review/account for local changes, run `git pull --ff-only`, then repeat the same rebuild.
-Optionally update dependencies separately; retain a published release's lock for a repeatable build.
-**Rebuilding from the checkout does not update `/etc/nixos`.** Keep using the same source, or an ordinary rebuild from
-the older archive could reactivate old project files. Track this limitation in
-[the repository-update issue](issues/2026-11-25_installed-system-repository-updates.md).
+The input's original GitHub URL remains unchanged. To return to GitHub:
+
+```bash
+cd /etc/nixos
+sudo nix flake update my-os-setup
+sudo nixos-rebuild switch
+```
+
+An ordinary full update also returns to the configured GitHub source unless the override is supplied again.
+Change `origin` or add another remote explicitly if needed; a GitHub pull cannot obtain new commits during a GitHub outage.
+Keep local host files outside the checkout. Missing host configuration causes evaluation to fail, not reference fallback.
+
+Flake sources are retained through the system generation's `system.extraDependencies`, including transitive inputs.
+Keep the relevant system generation to protect those sources from garbage collection. Available sources do not imply
+that arbitrary new packages can be built offline. Explicit `path:/etc/nixos` evaluation may copy the bundled checkout
+and history to the store; do not store secrets anywhere in this tree.
+
+Existing archive-based installations require migration or reinstallation; their old Flake does not acquire this layout
+by updating dependency locks alone. See [the repository-update issue](issues/2026-11-25_installed-system-repository-updates.md).

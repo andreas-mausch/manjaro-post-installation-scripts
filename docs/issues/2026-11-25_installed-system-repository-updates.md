@@ -1,6 +1,6 @@
 ---
 status: open
-status-description: "Documented workaround not yet VM-validated; broader workflow pending"
+status-description: "New source-input layout implemented; migration and end-to-end VM validation pending"
 ---
 
 # Repository updates require host files in the checkout and careful source selection
@@ -17,6 +17,20 @@ Rebuilding from a checkout does not update `/etc/nixos`; later rebuilding from
 that older source can reactivate the old project version.
 
 ## Current workaround and remaining work
+
+New ISO builds now generate a real local system Flake that imports the selected
+profile from `my-os-setup` with `flake = false`, while keeping host files under
+`/etc/nixos`. An explicitly supplied temporary Git folder is cloned locally into
+`/etc/nixos/my-os-setup`, without fetching during installation. The initial lock
+uses retained ISO sources; later explicit updates use GitHub or a local override.
+See [administration](../administration.md) for the current workflow.
+
+Offline evaluation of generated Desktop, AI and Full Flakes has been tested
+with local hardware/identity settings and hostname changes. A local source
+override persists for rebuilds while ordinary updates return to GitHub.
+Full network-isolated installation, real GitHub update/reboot, rollback and
+migration from archived installations remain to be validated. The older
+workaround below describes the pre-migration situation only.
 
 The README documents copying the existing PC-specific files after checking
 for local work, then rebuilding explicitly from a `path:` Flake. Keep the

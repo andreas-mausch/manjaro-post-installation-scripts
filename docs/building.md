@@ -12,19 +12,34 @@ configuration. Do not update dependencies just to repeat a build.
 
 ```bash
 nix fmt
-nix flake check --no-build
 nix build .#checks.x86_64-linux.installer-tests
 nix build .#checks.x86_64-linux.profile-tests
 nix build .#checks.x86_64-linux.reusable-module-tests
-nix build .#iso-desktop
 ```
 
-`--no-build` evaluates checks, not their runtime assertions. Focused tests do not prove a complete installation or boot.
+Focused tests do not prove a complete installation or boot.
 When verifying offline installation, boot a finished ISO in a UEFI VM **without a network adapter**, choose identity and
 language different from the reference, then test installation, LUKS unlock, login and the selected applications after
 removing the ISO. This describes the evidence needed for an offline claim, not additional mandatory regression builds.
 See [validation policy](decisions/0010-validation-and-evidence.md) and
 [recorded limitations](issues/solved/2026-11-25_offline-installation.md).
+
+Installation ISOs need the build revision as a separate Git folder, including `.git`.
+Commit intended changes and build from a named branch. Create a clean, independent local clone:
+
+```bash
+repository_dir=$(mktemp -d /tmp/opencode/iso-repository.XXXXXX)
+git clone --no-hardlinks --single-branch --branch "$(git branch --show-current)" . "$repository_dir"
+nix build .#iso-desktop --out-link result-desktop \
+  --override-input repository "path:$repository_dir" --no-write-lock-file
+```
+
+After the build, the temporary clone can be removed. No project lock is changed. Always create the clone from the
+same clean commit being built; the clone does not include uncommitted changes. Unpushed commits are supported; the initial
+offline source is the exact build revision. Commit intended changes first and keep unrelated untracked files outside
+the checkout. Direct ISO outputs reject the default build-only placeholder input. Focused checks do not need a Git folder.
+The folder includes history: never commit secrets, including in earlier revisions. Do not supply a personal checkout
+with credential-bearing Git configuration, hooks or unrelated files; use the fresh clone above.
 
 ## Build-supplied SSH access keys
 
@@ -40,6 +55,7 @@ with one public SSH key per line. For an OpenPGP authentication key:
 mkdir -p ~/.config/nixos-spike/ssh-keys
 gpg --export-ssh-key <KEY-ID> > ~/.config/nixos-spike/ssh-keys/authorized_keys
 nix build .#iso-desktop --out-link result-desktop \
+  --override-input repository "path:$repository_dir" \
   --override-input ssh-keys "path:$HOME/.config/nixos-spike/ssh-keys" \
   --no-write-lock-file
 ```
@@ -136,8 +152,9 @@ The Python adapter handles preflight, local settings, hardware generation, passw
 model copying. Native user jobs are omitted because users are configured declaratively. The C++ welcome extension adds
 UEFI requirements through the official ViewStep interface, without replacing the welcome page or patching Calamares.
 
-Archived locks use local store paths; `flake.online.lock` preserves network locks. Target `system.extraDependencies`
-keeps sources available after ISO removal and garbage collection. Gufo recovers the original revision to preserve
+Installed locks initially use local store paths; online URLs remain in the local Flake. Target `system.extraDependencies`
+keeps sources available after ISO removal and garbage collection. The generated AI/Full Flake supplies the ISO's Gufo
+revision only for its original retained source to preserve
 package identity. Shared locales and prepared outputs allow dynamic identity/UUID assembly without bundling the full
 kernel/ROCm source/compiler graph. Normal installation permits both local and configured remote sources; offline
 tests must block networking separately. `--no-root-passwd` suppresses a prompt; root remains locked.

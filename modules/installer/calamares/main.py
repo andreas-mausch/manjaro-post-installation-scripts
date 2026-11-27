@@ -175,6 +175,7 @@ def deploy(gs, config, context=None):
     host("mkdir", "-p", destination)
     host("cp", "-r", str(source) + "/.", destination)
     host("chmod", "-R", "u+rwX,go+rX,go-w", destination)
+    provision_repository(source, destination, config["repositoryRemote"])
     installation = identity(gs) | {"variant": config.get("target", "desktop")}
     write_file(destination / "installation.json", json.dumps(installation, indent=2) + "\n")
     context["phase"] = _("Generating hardware configuration")
@@ -213,6 +214,25 @@ def deploy(gs, config, context=None):
     context["phase"] = _("System installation")
     host(*install_command, stream=True)
     libcalamares.job.setprogress(1.0)
+
+
+def provision_repository(source, destination, remote):
+    """Clone the ISO's Git folder locally; never fetch from the network."""
+    repository = source / "repository"
+    if not (repository / ".git/HEAD").is_file():
+        raise ValueError(_("Git repository is missing from the image."))
+    git = ["git", "-c", f"safe.directory={repository}"]
+    branch = host(*git, "-C", repository, "symbolic-ref", "--short", "HEAD", capture=True).stdout.strip()
+    revision = host(*git, "-C", repository, "rev-parse", "HEAD", capture=True).stdout.strip()
+    checkout = destination / "my-os-setup"
+    host(*git, "clone", "--no-local", "--branch", branch, repository, checkout)
+    if host("git", "-C", checkout, "rev-parse", "HEAD", capture=True).stdout.strip() != revision:
+        raise ValueError(_("Git repository revision does not match the image."))
+    host("git", "-C", checkout, "remote", "set-url", "origin", remote)
+    host("git", "-C", checkout, "branch", "--set-upstream-to",
+         f"origin/{branch}", branch)
+    # The source link is only installation transport, not host configuration.
+    host("rm", destination / "repository")
 
 
 def copy_model_file(source, target, completed, total, report=None):

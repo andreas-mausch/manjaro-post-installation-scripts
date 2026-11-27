@@ -28,7 +28,7 @@ def evaluate(path, target, expression):
 
 
 def check(variant, archive):
-    with tempfile.TemporaryDirectory(prefix=f"installed-{variant}-") as temporary:
+    with tempfile.TemporaryDirectory(prefix=f"installed-{variant}-", dir="/tmp/opencode") as temporary:
         source = Path(temporary) / "source"
         shutil.copytree(archive, source, symlinks=True)
         for path in [source, *source.rglob("*")]:
@@ -81,6 +81,35 @@ def check(variant, archive):
             'networking.hostName = "workstation";', 'networking.hostName = "renamed-host";',
         ))
         assert evaluate(source, "renamed-host", "c: c.networking.hostName") == "renamed-host"
+        assert evaluate(source, "default", "c: c.networking.hostName") == "renamed-host"
+        lock = json.loads((source / "flake.lock").read_text())
+        expected_sources = {node["locked"]["path"] for node in lock["nodes"].values() if "locked" in node}
+        retained = evaluate(source, "default", "c: map toString c.system.extraDependencies")
+        assert expected_sources <= set(retained), (variant, expected_sources - set(retained))
+        checkout = source / "my-os-setup"
+        shutil.copytree(lock["nodes"]["my-os-setup"]["locked"]["path"], checkout, symlinks=True)
+        before = (source / "configuration.nix").read_bytes()
+        subprocess.run([
+            "nix", "flake", "update", "my-os-setup", "--offline",
+            "--override-input", "my-os-setup", f"path:{checkout}",
+        ], cwd=source, check=True)
+        updated = json.loads((source / "flake.lock").read_text())
+        assert updated["nodes"]["my-os-setup"]["locked"]["path"] == str(checkout)
+        assert updated["nodes"]["my-os-setup"]["original"]["type"] == "github"
+        # Nix may rename lock nodes while preserving their locked sources.
+        def dependencies(value):
+            return sorted(json.dumps(node["locked"], sort_keys=True)
+                          for name, node in value["nodes"].items()
+                          if name != "my-os-setup" and "locked" in node)
+        assert dependencies(updated) == dependencies(lock)
+        assert evaluate(source, "default", "c: c.networking.hostName") == "renamed-host"
+        assert (source / "configuration.nix").read_bytes() == before
+        (source / "configuration.nix").unlink()
+        result = subprocess.run([
+            "nix", "eval", "--offline", "--raw",
+            f"path:{source}#nixosConfigurations.default.config.networking.hostName",
+        ], capture_output=True)
+        assert result.returncode != 0, "Missing host files must not fall back to reference settings"
         print(f"{variant}: local settings, hardware, user, variant and hostname alias OK")
 
 
