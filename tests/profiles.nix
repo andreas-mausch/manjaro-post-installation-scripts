@@ -71,6 +71,8 @@ let
     assert target.services.desktopManager.plasma6.enable == desktop;
     assert target.services.displayManager.sddm.enable == desktop;
     assert target.programs.firefox.enable == desktop;
+    assert !target.programs.kde-pim.enable;
+    assert !live.programs.kde-pim.enable;
     assert target.programs.steam.enable == gaming;
     assert !(target.nixpkgs.config.allowUnfree or false);
     assert !(live.nixpkgs.config.allowUnfree or false);
