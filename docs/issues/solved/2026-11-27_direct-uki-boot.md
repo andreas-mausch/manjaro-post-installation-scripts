@@ -151,21 +151,25 @@ result; the screenshot alone is not an inventory of all EFI-partition files.
 With no further dependency update available, the user compared firmware state
 before and after an identical `nixos-rebuild switch` and confirmed no change.
 The three entry numbers and BootOrder therefore remained stable for that repeat.
-A before/after comparison across a genuinely new generation remains pending;
-the previous update's successful boots do not independently prove unchanged
-entry numbers. Unchanged displayed state also does not prove absence of actual
-NVRAM writes; no-write behavior is covered by unit tests, not a VM write trace.
+The user subsequently performed a real update and confirmed that the three
+UEFI entry numbers remained stable. This completes the update comparison;
+no additional before/after screenshot was supplied. Unchanged displayed state
+does not prove absence of actual NVRAM writes; no-write behavior is covered by
+unit tests, not a VM write trace.
+
+The user also confirmed the final stable-file GC test (including the requested
+Installation boot after GC), offline rebuild and local Git fallback with the
+external hook. These are user-reported successes; no additional command logs
+were supplied. Rollback was not part of this latest confirmation.
 
 The agreed UKI implementation is complete for the intended use. Remaining items
 below are validation coverage or separate installation/hardware work, not a
-reason to add more UKI infrastructure. Earlier GC evidence used the temporary
-integration; GC was not repeated with the final stable-file implementation.
+reason to add more UKI infrastructure. Both the earlier temporary integration
+and the final stable-file implementation now have user-confirmed GC coverage.
 
 ### Remaining coverage and separate work
 
-- Compare the three entry numbers across the next genuinely new generation.
-- Repeat unchanged Installation/GC survival checks with the final stable files.
-- External-hook offline rebuild, local Git fallback and rollback.
+- Rollback with the final external-hook implementation.
 - Verify identical rebuilds produce no actual firmware writes in the VM.
 - In-place migration from an older installation, if needed: legacy systemd-boot
   files and old generation-named UKIs are not automatically removed. This is not

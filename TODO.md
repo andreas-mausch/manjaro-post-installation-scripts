@@ -199,14 +199,12 @@ Reusable libvirt images remain additional work after these priorities.
 - [x] Implement direct UKI boot through the external bootloader hook, without
   systemd-boot/GRUB. Completed 2026-11-27: fresh Desktop VM installation,
   default NixOS boot, update and all three stable selections confirmed.
-  Identical rebuild preserved entry numbers and BootOrder. Installation-root
-  and GC survival evidence was obtained before the final stable-file change.
+  Identical rebuild preserved entry numbers and BootOrder; the user also
+  confirmed stable entry numbers across a subsequent real update, GC survival
+  with the final stable files, external-hook offline rebuild and local Git fallback.
   See [UKI evidence and remaining coverage](docs/issues/solved/2026-11-27_direct-uki-boot.md).
   New installs use three fixed UKI filenames; no growing generation-file cache
   or additional cleanup infrastructure is needed.
-- [ ] Complete remaining coverage: entry-number comparison at the next real
-  update, final stable-file GC test, external-hook offline rebuild/Git fallback
-  and rollback, Bosgame hardware and other profiles' end-to-end boots.
 - [ ] Integrate graphical LUKS password entry through Plymouth in the initrd;
   test the theme, early GPU drivers and password/text fallback on target hardware.
   Plymouth can be used independently of direct UKI boot. No automatic LUKS
