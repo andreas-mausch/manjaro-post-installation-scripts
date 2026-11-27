@@ -1,5 +1,4 @@
 """Keep current, backup and installation UKI entries using virt-firmware."""
-from datetime import datetime
 import fcntl
 import json
 import os
@@ -12,7 +11,8 @@ from virt.firmware.bootcfg import linuxcfg
 from virt.firmware.efi import bootentry, ucs16
 
 
-LABELS = {"current": "Current", "backup": "Backup", "installation": "Installation"}
+LABELS = {"current": "NixOS", "backup": "NixOS (Previous)", "installation": "NixOS (Installation)"}
+FILENAMES = {"current": "nixos.efi", "backup": "nixos-previous.efi", "installation": "nixos-installation.efi"}
 
 
 def next_roles(old, target, installation, fallback):
@@ -54,7 +54,7 @@ def register_roles(cfg, images):
         efifile = linuxcfg.LinuxEfiFile(str(image))
         devicepath = efifile.dev_path_file()
         partition = bytes(devicepath[0])
-        title = "NixOS " + LABELS[role] + " " + datetime.fromtimestamp(image.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+        title = LABELS[role]
         number = next((nr for nr, entry in cfg.bentr.items()
                        if entry and str(entry.title) == title
                        and bytes(entry.devicepath) == bytes(devicepath)), None)
@@ -116,9 +116,13 @@ def manage(system, esp, state, installation_root, fallback):
         if cfg.secureboot:
             raise ValueError("Unsigned UKI role installation requires Secure Boot to be disabled")
         images = {}
-        for role, target in roles.items():
-            subprocess.run(["prepare-system-uki", target, str(esp)], check=True)
-            images[role] = esp / "EFI/my-os-setup" / (Path(target).name + ".efi")
+        # Replace Previous before the default; each builder write is atomic.
+        for role in ["backup", "installation", "current"]:
+            if role not in roles:
+                continue
+            image = esp / "EFI/my-os-setup" / FILENAMES[role]
+            subprocess.run(["prepare-system-uki", roles[role], str(esp), FILENAMES[role]], check=True)
+            images[role] = image
         keep, partition = register_roles(cfg, images)
         save_state(state, roles)
         remove_superseded(cfg, keep, partition)

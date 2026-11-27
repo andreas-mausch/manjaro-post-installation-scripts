@@ -12,17 +12,17 @@ builder=$1
 system=$2
 esp=$3
 # Reject an unmounted destination before writing anything.
-if "$builder" "$system" "$esp"; then
+if "$builder" "$system" "$esp" nixos.efi; then
     echo "Unexpectedly accepted an unmounted EFI destination" >&2
     exit 1
 fi
 # All writes go to an ephemeral filesystem in this mount namespace.
 mount -t tmpfs tmpfs "$esp"
-"$builder" "$system" "$esp"
-image="$esp/EFI/my-os-setup/$(basename "$system").efi"
+"$builder" "$system" "$esp" nixos.efi
+image="$esp/EFI/my-os-setup/nixos.efi"
 test -s "$image"
 before=$(sha256sum "$image")
-"$builder" "$system" "$esp"
+"$builder" "$system" "$esp" nixos.efi
 test "$before" = "$(sha256sum "$image")"
 objcopy --dump-section .cmdline="$esp/cmdline" "$image"
 grep -aF "init=$system/init" "$esp/cmdline"

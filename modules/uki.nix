@@ -15,6 +15,11 @@ let
     text = ''
       system=$(readlink -e "$1")
       esp=$2
+      filename=$3
+      case "$filename" in
+        nixos.efi|nixos-previous.efi|nixos-installation.efi) ;;
+        *) echo "Invalid UKI filename: $filename" >&2; exit 1 ;;
+      esac
       findmnt --mountpoint "$esp" >/dev/null
       spec="$system/boot.json"
       jq -e --arg system "$system" '
@@ -31,8 +36,8 @@ let
       # Serialize preparation on the EFI partition.
       exec 9>"$directory/.prepare.lock"
       flock 9
-      output="$directory/$(basename "$system").efi"
-      if [ ! -f "$output" ]; then
+      output="$directory/$filename"
+      if [ ! -f "$output" ] || [ "$(cat "$output.generation" 2>/dev/null || true)" != "$system" ]; then
         temporary=$(mktemp "$directory/.uki-XXXXXX")
         trap 'rm -f "$temporary"' EXIT
         ${pkgs.systemdUkify}/lib/systemd/ukify build \
@@ -42,7 +47,14 @@ let
           --output="$temporary"
         chmod 0644 "$temporary"
         sync -f "$temporary"
+        # Never leave an old marker describing a replaced image after a crash.
+        rm -f "$output.generation"
+        sync -f "$directory"
         mv "$temporary" "$output"
+        sync -f "$directory"
+        printf '%s\n' "$system" > "$temporary"
+        sync -f "$temporary"
+        mv "$temporary" "$output.generation"
         sync -f "$directory"
         trap - EXIT
       fi

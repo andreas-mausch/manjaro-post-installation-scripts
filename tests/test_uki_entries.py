@@ -46,9 +46,12 @@ class RoleTests(unittest.TestCase):
     def apply(self, desired):
         with patch.object(roles.linuxcfg, "LinuxEfiFile") as efifile:
             efifile.side_effect = lambda image: Mock(dev_path_file=lambda: devicepath("\\EFI\\my-os-setup\\" + Path(image).name))
-            keep, partition = roles.register_roles(self.cfg, {role: self.images[target] for role, target in desired.items()})
+            images = {role: self.directory / roles.FILENAMES[role] for role in desired}
+            for image in images.values():
+                image.touch()
+            keep, partition = roles.register_roles(self.cfg, images)
         roles.remove_superseded(self.cfg, keep, partition)
-        self.assertTrue(str(self.cfg.bentr[self.cfg.blist[0]].title).startswith("NixOS Current "))
+        self.assertEqual(str(self.cfg.bentr[self.cfg.blist[0]].title), "NixOS")
         self.assertIn(self.foreign, self.cfg.blist)
         self.assertEqual(len(self.cfg.bentr), len(desired) + 1)
         return keep
@@ -66,7 +69,16 @@ class RoleTests(unittest.TestCase):
         state = roles.next_roles(state, "b", "a", "c")
         self.assertEqual(state, {"current": "b", "backup": "c", "installation": "a"})
         self.apply(state)
-        self.assertTrue(all(len(str(self.cfg.bentr[nr].title).split()[-1]) == 5 for nr in self.cfg.bentr if nr != self.foreign))
+        self.assertEqual({str(self.cfg.bentr[nr].title) for nr in self.cfg.bentr if nr != self.foreign}, set(roles.LABELS.values()))
+
+    def test_update_retains_firmware_entries(self):
+        before = self.apply({"current": "b", "backup": "a", "installation": "a"})
+        self.cfg.linux_write_entry.reset_mock()
+        self.cfg.linux_remove_entry.reset_mock()
+        after = self.apply({"current": "c", "backup": "b", "installation": "a"})
+        self.assertEqual(before, after)
+        self.cfg.linux_write_entry.assert_not_called()
+        self.cfg.linux_remove_entry.assert_not_called()
 
     def test_existing_installation_does_not_invent_baseline(self):
         state = roles.next_roles({}, "b", None, "a")

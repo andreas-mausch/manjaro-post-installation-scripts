@@ -29,8 +29,15 @@ GC-protected. The installation baseline changes only on full reinstallation.
   protection, not additional custom roots. Only the installation baseline has
   an independent permanent root. Do not implement automatic profile deletion;
   additional stored generations may remain beyond the three firmware-menu roles.
-- The shared hook now manages at most three project UKI entries: `NixOS Current`,
-  `NixOS Backup` and `NixOS Installation`, each with a minute-precision timestamp.
+- The shared hook now manages at most three stable project UKI entries: `NixOS`,
+  `NixOS (Previous)` and `NixOS (Installation)`, without timestamps. They point to
+  `EFI/my-os-setup/nixos.efi`, `nixos-previous.efi` and `nixos-installation.efi`.
+  The builder writes directly to these filenames, replacing Previous and
+  Installation before the default UKI. A `.generation` sidecar records the
+  built system path to skip unchanged builds. Each changed file is
+  replaced atomically, but the three replacements are not one transaction.
+  Updates reuse the firmware entries rather than writing NVRAM for each generation.
+  Legacy dated project entries on this partition are removed during migration.
   It remembers the selected generations in
   `/var/lib/my-os-setup/uki/generations.json`. Identical rebuilds retain the backup;
   updates move the previous current generation to backup. Rollback reverses this
