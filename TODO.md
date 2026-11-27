@@ -196,12 +196,21 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 6. UKI boot
 
-- Manual direct UKI boot of the rebuilt Desktop generation is confirmed in the
-  user's UEFI VM (2026-11-27). See [UKI evidence and remaining coverage](docs/issues/2026-11-27_direct-uki-boot.md).
-  Automatic registration and the current/previous/installation retention rule
-  remain open; systemd-boot is still the rescue path.
-
-- [ ] Prepare direct UKI boot for the installed system: UEFI starts the Unified Kernel Image without systemd-boot/GRUB. Implement and test UKI generation, installation on the EFI partition, UEFI boot entries and safe updates with fallback/recovery for previous generations. Integrate graphical LUKS password entry through Plymouth in the initrd; test the theme, early GPU drivers and password/text fallback on target hardware. Plymouth can be used independently of direct UKI boot. No automatic LUKS unlocking; Secure Boot signing is a separate task.
+- [x] Implement direct UKI boot through the external bootloader hook, without
+  systemd-boot/GRUB. Completed 2026-11-27: fresh Desktop VM installation,
+  default NixOS boot, update and all three stable selections confirmed.
+  Identical rebuild preserved entry numbers and BootOrder. Installation-root
+  and GC survival evidence was obtained before the final stable-file change.
+  See [UKI evidence and remaining coverage](docs/issues/solved/2026-11-27_direct-uki-boot.md).
+  New installs use three fixed UKI filenames; no growing generation-file cache
+  or additional cleanup infrastructure is needed.
+- [ ] Complete remaining coverage: entry-number comparison at the next real
+  update, final stable-file GC test, external-hook offline rebuild/Git fallback
+  and rollback, Bosgame hardware and other profiles' end-to-end boots.
+- [ ] Integrate graphical LUKS password entry through Plymouth in the initrd;
+  test the theme, early GPU drivers and password/text fallback on target hardware.
+  Plymouth can be used independently of direct UKI boot. No automatic LUKS
+  unlocking; Secure Boot signing is a separate task.
 
 ### 7. SBOMs
 

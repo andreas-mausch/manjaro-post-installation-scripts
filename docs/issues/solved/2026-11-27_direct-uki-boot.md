@@ -1,9 +1,17 @@
 ---
-status: open
-status-description: "Three UKI boots and GC survival verified in Desktop VM; external hook implemented, fresh boot validation pending"
+status: solved
+status-description: "Solved and validated in the Desktop UEFI VM; broader hardware and regression coverage tracked separately"
 ---
 
 # Direct UKI boot with three retained system generations
+
+- Resolved: 2026-11-27
+
+Direct UKI boot is implemented and validated for the fresh Desktop UEFI VM:
+NixOS boots by default without systemd-boot, and all three stable selections
+boot after an update. Identical rebuilds preserve firmware entry numbers and
+BootOrder. Remaining hardware and regression checks are tracked in `TODO.md`
+and summarized below; they do not represent unfinished UKI implementation.
 
 ## Goal
 
@@ -46,12 +54,16 @@ GC-protected. The installation baseline changes only on full reinstallation.
 - New installations rerun the entry manager after establishing the permanent
   installation root so that the installation selection appears immediately.
   Existing installations with no such root receive no invented baseline.
-- NixOS profiles and Store generations are not deleted. Cached UKI files are
-  not yet cleaned up. systemd-stub remains part of each UKI, not a separate boot manager.
+- NixOS profiles and Store generations are not deleted. New installations create
+  only the three stable UKI files and their generation sidecars, not a growing
+  collection. Generation-named UKIs from older installations are not deleted
+  automatically; fresh installations have none and need no such cleanup.
+  systemd-stub remains part of each UKI, not a separate boot manager.
 - Unit tests cover lifecycle, identical rebuild, rollback, fresh baseline,
   removal of legacy entries, preservation of foreign/other-disk entries and
-  failure handling and identical rebuilds without NVRAM writes. VM evidence below
-  predates the external-hook transition; that transition still needs real boot tests.
+  failure handling and identical rebuilds without NVRAM writes. Entry tests,
+  external-hook builds for all target profiles, installer/profile checks,
+  formatting and whitespace checks passed before the implementation commits.
 
 ## User VM evidence, 2026-11-27
 
@@ -76,7 +88,7 @@ This verifies manual direct UKI boot in this QEMU/KVM UEFI VM, not fresh ISO
 installation, LUKS, Secure Boot, other profiles' real boots, generation rotation,
 GC survival or Bosgame hardware. systemd-boot remains installed as a rescue path.
 
-## Next validation
+## Further VM evidence
 
 ### Further user VM evidence
 
@@ -111,14 +123,52 @@ this verifies GC survival but does not isolate protection by the installation
 root alone. Network-disabled installation and LUKS coverage were not established
 by the supplied screenshots.
 
-### Remaining checks
+### Stable entries and external hook: fresh installation
 
-- External-hook bootloader build and profile checks for every target profile.
-- Fresh UEFI installation without systemd-boot; Current boots by default and all
-  three selections boot after an update, with unchanged Installation and GC survival.
+The subsequent personalized Desktop ISO was built from `3e62360`, including
+the external-hook transition in `1c928e8`. Its retained repository commit and
+supplied public SSH key were checked; the local `Plan.md` was excluded.
+The user requested a fresh installation test rather than an in-place migration.
+The conversation does not separately establish the disk/NVRAM reset procedure.
+
+The user confirmed successful fresh installation and default boot, then
+successful update and boot of all three selections with the stable names.
+A screenshot of `kernel-bootcfg --show` confirms:
+
+```text
+BootCurrent: 0008
+0008  NixOS                 first in BootOrder
+0002  UEFI Misc Device
+0009  NixOS (Installation)
+000a  NixOS (Previous)
+0000  BootManagerMenuApp
+0001  EFI Firmware Setup
+```
+
+No Linux Boot Manager entry appears. This supports the fresh direct-UKI boot
+result; the screenshot alone is not an inventory of all EFI-partition files.
+
+With no further dependency update available, the user compared firmware state
+before and after an identical `nixos-rebuild switch` and confirmed no change.
+The three entry numbers and BootOrder therefore remained stable for that repeat.
+A before/after comparison across a genuinely new generation remains pending;
+the previous update's successful boots do not independently prove unchanged
+entry numbers. Unchanged displayed state also does not prove absence of actual
+NVRAM writes; no-write behavior is covered by unit tests, not a VM write trace.
+
+The agreed UKI implementation is complete for the intended use. Remaining items
+below are validation coverage or separate installation/hardware work, not a
+reason to add more UKI infrastructure. Earlier GC evidence used the temporary
+integration; GC was not repeated with the final stable-file implementation.
+
+### Remaining coverage and separate work
+
+- Compare the three entry numbers across the next genuinely new generation.
+- Repeat unchanged Installation/GC survival checks with the final stable files.
 - External-hook offline rebuild, local Git fallback and rollback.
 - Verify identical rebuilds produce no actual firmware writes in the VM.
-- Deliberate removal of legacy systemd-boot from the existing test VM, or replace
-  it with a fresh virtual disk and firmware variable store.
+- In-place migration from an older installation, if needed: legacy systemd-boot
+  files and old generation-named UKIs are not automatically removed. This is not
+  required for the user's fresh-installation path.
 - Confirm offline installation, LUKS and target SSH explicitly; real hardware
   and other profiles' end-to-end boot coverage remain pending.
