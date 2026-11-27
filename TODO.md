@@ -20,6 +20,7 @@ and hardware verification. Existing section numbers remain stable for links.
 9. [Favorite programs and configuration](#9-favorite-programs)
 10. [Manual partitioning](#10-manual-partitioning)
 11. [Time synchronization](#11-time-synchronization)
+12. [Automatic Gufo updates and verification](#12-gufo-updates)
 
 Reusable libvirt images remain additional work after these priorities.
 
@@ -35,12 +36,21 @@ Reusable libvirt images remain additional work after these priorities.
     real local `/etc/nixos/flake.nix` that composes reusable project modules with
     local configuration and hardware settings; do not symlink the project Flake
     or use its reference system as the host configuration.
+    By default, consume the repository as a non-Flake source input with
+    `inputs.my-os-setup.url = "github:andreas-mausch/my-os-setup"` and
+    `inputs.my-os-setup.flake = false`, not through the local checkout. Import
+    the selected profile (for example `${my-os-setup}/profiles/desktop.nix`)
+    from that source without evaluating the project's `flake.nix` or importing
+    its dependency graph. Keep the project Flake for ISO builds and tests.
+    Retain the checkout as an administrator-controlled fallback and development
+    source.
   - Have the installer provision this layout completely: after installation,
     `/etc/nixos/my-os-setup` must already be a usable Git checkout with the
     intended remote and installed project revision, and the local Flake and host
     files must be ready for the pull/rebuild workflow without manual setup.
-    Bundle the exact project revision used to build the ISO and install that
-    revision without fetching newer code during installation. Configure a named
+    Bundle a Git repository at the exact project revision used to build the ISO
+    and clone it locally into the target checkout without fetching newer code
+    during installation. Configure a named
     update branch and its remote/upstream at that commit, not a detached HEAD,
     so later pulls can advance from the ISO's project state.
     Preserve offline installation support and validate the first online pull
@@ -50,29 +60,74 @@ Reusable libvirt images remain additional work after these priorities.
     keys outside the shared checkout. Keep the password hash at its existing
     protected location outside the repository and Nix Store. Document separate
     backups for local host files, which shared Git history does not protect.
-  - Support updating the complete declaratively managed system to the latest
-    project state with `sudo git -C /etc/nixos/my-os-setup pull --ff-only` followed
-    by `sudo nix flake update` in `/etc/nixos` and
+  - Support updating the complete declaratively managed system with
+    `sudo nix flake update` in `/etc/nixos` followed by
     `sudo nixos-rebuild switch --flake path:/etc/nixos` (or an equally simple
-    documented command). Avoid a second, stale configuration source and manual
-    copying of project files.
+    documented command). This normally fetches the project from GitHub; no Git
+    pull in the fallback checkout is required. Avoid manual copying of project
+    files and make the selected source explicit.
+  - Document and validate the administrator-controlled local fallback: update
+    `/etc/nixos/my-os-setup` with `git pull --ff-only` when a configured remote
+    is reachable, then update the local System Flake lock with
+    `nix flake update --override-input my-os-setup path:./my-os-setup` from
+    `/etc/nixos`. Validate the exact CLI and whether the rebuild also needs the
+    override. Explain persistence of the source override and how to return to
+    the default GitHub input. Allow remote URL changes and additional remotes;
+    a pull from GitHub cannot fetch new revisions while GitHub is unavailable.
+    The bundled checkout must also support using its existing revision offline
+    without pulling or updating unrelated network inputs.
   - Ensure ignored/untracked host files are included in evaluation, using an
     explicit `path:` Flake or a validated alternative. Never fall back silently
     to reference hardware/user settings during an installed-system rebuild.
   - Implement and test local project inclusion and lock handling: the local
     System Flake defines its system dependencies and `/etc/nixos/flake.lock`
     controls their versions. A full local `nix flake update` updates these
-    dependencies and the local project input, not just the project input.
+    dependencies and the selected project input, not just the project input.
     The shared checkout's `flake.lock` remains unchanged and serves ISO builds
     and project tests; installed systems may intentionally use newer dependency
     versions than the tested ISO. Do not force installed systems to follow the
     project's pinned package versions or assume `nixos-rebuild` performs updates.
-    Validate that shared modules and AI/Gufo integration use the intended local
-    dependencies. Define updates for managed model payloads separately; do not
+    Have the local system composition explicitly provide packages and module
+    arguments needed by AI/Gufo; importing a profile alone must not rely on
+    implicit wiring from the project Flake. For AI and Full only, have Calamares
+    generate `inputs.gufo.url = "github:gufo-org/gufo/v0.36.0"` in the local
+    System Flake as a normal Flake input (not `flake = false`) and wire its
+    release package into the AI modules. Omit the Gufo input for other profiles.
+    Keep the explicit version tag; upgrading Gufo requires changing that tag,
+    not merely running `nix flake update`. Validate that shared modules and
+    AI/Gufo integration use the intended local dependencies. Define updates for
+    managed model payloads separately; do not
     imply that `git pull` alone updates external mutable data.
+  - Retain the installed project's sources and required Flake inputs against
+    garbage collection so normal rebuilds with the existing lock do not depend
+    on GitHub availability. Initialize the local lock to the ISO's project and
+    dependency state without contacting GitHub during installation. Distinguish
+    offline source availability from availability of newly required packages.
   - Validate migration, project update, SSH access after rebuild/reboot, local
-    configuration preservation and rollback. Update `migration.md` and the
+    configuration preservation, GitHub/local source switching, offline rebuilds
+    and rollback. Local host settings must remain effective and unchanged across
+    pulls, Flake updates and rebuilds. Update `migration.md` and the
     administration documentation to describe the supported workflow.
+
+### 12. Gufo updates
+
+- [ ] Design and validate automatic Gufo version updates for AI and Full,
+  replacing the current manually changed release tag with a controlled update
+  mechanism. Prefer stable releases and define whether automation proposes,
+  locks, builds or activates an update; do not silently activate untested code.
+  Preserve offline rebuilds, reproducible locked versions and recovery to the
+  previous working version.
+- [ ] Verify updates where possible: investigate developer-signed releases or
+  tags and independently provisioned trusted keys. Distinguish developer
+  signatures from GitHub-generated commit signatures, content hashes and Cachix
+  package signatures. Do not treat these as equivalent assurances or claim
+  protection against a compromised release pipeline. If independent developer
+  verification is unavailable, document the remaining trust assumptions and
+  choose an explicit fallback policy rather than silently weakening checks.
+- [ ] Test Gufo compatibility with the shared AI modules and managed model
+  payloads before activation, including failed verification/build handling and
+  rollback. Reconcile this future mechanism with the initially pinned Gufo input
+  in the repository-update workflow.
 
 ### 3. Release version tags
 
