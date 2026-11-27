@@ -209,8 +209,10 @@ Reusable libvirt images remain additional work after these priorities.
   in the initrd. Completed 2026-11-27: installed profiles use the built-in
   `spinner` theme; local configuration can select custom theme packages.
   Profile checks, UKI hook builds and the Desktop initrd build passed.
-  Runtime validation of the graphical prompt, early GPU drivers and password/text
-  fallback in the encrypted VM and on target hardware is still pending.
+  Encrypted VirtIO GPU VM confirmed graphical unlock, spinner and clean login
+  handover without Escape or text flash. See the
+  [resolved Plymouth issue](docs/issues/solved/2026-11-27_plymouth-boot.md)
+  for the fix and validation limits.
   Plymouth can be used independently of direct UKI boot. No automatic LUKS
   unlocking; Secure Boot signing is a separate task.
 

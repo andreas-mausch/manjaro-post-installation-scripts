@@ -76,6 +76,7 @@ let
     assert target.boot.plymouth.theme == "spinner";
     assert lib.elem "splash" target.boot.kernelParams;
     assert lib.elem "quiet" target.boot.kernelParams;
+    assert lib.elem "plymouth.ignore-serial-consoles" target.boot.kernelParams;
     assert target.boot.initrd.systemd.contents ? "/etc/plymouth/themes";
     assert target.boot.initrd.systemd.services.plymouth-start.wantedBy != [ ];
     assert target.services.desktopManager.plasma6.enable == desktop;

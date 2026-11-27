@@ -23,7 +23,11 @@
     theme = lib.mkDefault "spinner";
   };
   # Escape exposes boot messages; Plymouth retains its native text fallback.
-  boot.kernelParams = [ "quiet" ];
+  boot.kernelParams = [
+    "quiet"
+    # QEMU's serial console must not force Plymouth's text-only details view.
+    "plymouth.ignore-serial-consoles"
+  ];
   # Generated hardware configuration selects drivers and CPU microcode.
   hardware.enableRedistributableFirmware = true;
 
