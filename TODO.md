@@ -21,6 +21,7 @@ and hardware verification. Existing section numbers remain stable for links.
 10. [Manual partitioning](#10-manual-partitioning)
 11. [Time synchronization](#11-time-synchronization)
 12. [Automatic Gufo updates and verification](#12-gufo-updates)
+13. [Verified Git source fetching](#13-verified-fetches)
 
 Reusable libvirt images remain additional work after these priorities.
 
@@ -108,6 +109,23 @@ Reusable libvirt images remain additional work after these priorities.
     and rollback. Local host settings must remain effective and unchanged across
     pulls, Flake updates and rebuilds. Update `migration.md` and the
     administration documentation to describe the supported workflow.
+
+### 13. Verified fetches
+
+- [ ] Evaluate Nix's experimental `verified-fetches` support for authenticated
+  Git source updates. Check availability in the project's supported Nix versions,
+  exact input/fetcher configuration, supported signature formats and independently
+  provisioned trusted public keys. Do not assume ordinary `github:` inputs verify
+  Git signatures; determine whether verified fetching requires a Git input URL.
+- [ ] Prototype signed project commits and enforced verification for the shared
+  setup source, including its non-Flake input, local checkout overrides and
+  ISO-provisioned offline sources. Reject unsigned or untrusted updates without
+  silently bypassing verification; test key rotation and recovery behavior.
+- [ ] Assess applicability to Gufo if independently trusted developer signatures
+  become available. Document the limits: source authentication is not a guarantee
+  of harmless code, and GitHub-generated signatures, lock hashes and binary-cache
+  signatures provide different assurances. Update the supported update workflow
+  only after verifying the behavior with the actual Nix version.
 
 ### 12. Gufo updates
 
