@@ -130,6 +130,7 @@ def nix_string(value):
 
 def local_configuration(installation, spice=False, ssh=False):
     quoted = {key: nix_string(value) for key, value in installation.items()}
+    timezone = quoted["timezone"] if installation.get("variant", "desktop") == "base" else "null"
     guest_integration = "  services.spice-vdagentd.enable = true;\n\n" if spice else ""
     ssh_access = (
         "  services.openssh.enable = true;\n"
@@ -142,7 +143,7 @@ def local_configuration(installation, spice=False, ssh=False):
   imports = [ ./hardware-configuration.nix ];
 
   networking.hostName = {quoted["hostname"]};
-  time.timeZone = {quoted["timezone"]};
+  time.timeZone = {timezone};
   i18n.defaultLocale = {quoted["locale"]};
   console.keyMap = {quoted["consoleKeyMap"]};
   services.xserver.xkb = {{
@@ -213,6 +214,13 @@ def deploy(gs, config, context=None):
     # disabling package sources during ordinary installation.
     context["phase"] = _("System installation")
     host(*install_command, stream=True)
+    if installation["variant"] != "base":
+        # Initialize once; subsequent KDE changes must survive rebuilds.
+        zone = Path(installation["timezone"])
+        if zone.is_absolute() or ".." in zone.parts:
+            raise ValueError(_("Invalid installation timezone."))
+        host("test", "-f", root / "etc/zoneinfo" / zone)
+        host("ln", "-sfn", f"/etc/zoneinfo/{zone}", root / "etc/localtime")
     # Resolve the installed profile inside the target, never the live system.
     # A fresh installation deliberately replaces any previous installation root.
     context["phase"] = _("Preserving initial system generation")

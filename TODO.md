@@ -49,12 +49,6 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 6. Favorite programs
 
-- [ ] Allow timezone changes through KDE in Desktop and derived profiles:
-  generate `time.timeZone = null;` and initialize the installer-selected zone
-  once in the target system. Preserve subsequent KDE changes across reboot and
-  rebuild; retain declarative timezone configuration for Base/server systems.
-  Do not add automatic location detection or change the DHCP-only NTP policy.
-
 - [ ] Assemble a workstation for its tasks without maintaining a separate ISO for every combination. Derive further composable modules from the previous Manjaro setup:
   - Development: Git with lazygit/tig/delta, editors, language servers, Meld, Zeal and HTTP/data tools; prefer `nix develop` for project-specific compilers and SDKs.
   - Virtualization: QEMU, libvirt and virt-manager with their required services and permissions.

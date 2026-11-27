@@ -10,6 +10,8 @@
     (import ../modules/spice.nix { inherit pkgs; }).nixosModule
   ];
   hardware.graphics.enable = true;
+  # Prefer mutable KDE timezone settings over Base's declarative default.
+  time.timeZone = lib.mkOverride 900 null;
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;

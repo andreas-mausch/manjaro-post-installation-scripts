@@ -55,6 +55,12 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("services.spice-vdagentd.enable = true;",
                       adapter.local_configuration(installation, spice=True))
 
+    def test_timezone_is_mutable_only_for_desktop_profiles(self):
+        for variant in ["base", "desktop", "gaming", "ai", "full"]:
+            installation = adapter.identity(self.storage()) | {"variant": variant}
+            value = '"Europe/Berlin"' if variant == "base" else "null"
+            self.assertIn(f"time.timeZone = {value};", adapter.local_configuration(installation))
+
     def test_ssh_is_opt_in_and_uses_build_supplied_key_file(self):
         installation = adapter.identity(self.storage())
         self.assertNotIn("openssh", adapter.local_configuration(installation))
@@ -101,6 +107,11 @@ class AdapterTests(unittest.TestCase):
                     identity_call = next(call for call in host.call_args_list
                                          if call.args[0] == "tee" and str(call.args[1]).endswith("installation.json"))
                     self.assertEqual(json.loads(identity_call.kwargs["input"])["variant"], variant)
+                    timezone_calls = [call for call in host.call_args_list
+                                      if call.args[0] == "ln" and str(call.args[-1]).endswith("/etc/localtime")]
+                    self.assertEqual(len(timezone_calls), 0 if variant == "base" else 1)
+                    if timezone_calls:
+                        self.assertEqual(timezone_calls[0].args[2], "/etc/zoneinfo/Europe/Berlin")
 
     def test_selection_accepts_optional_encryption_and_native_passphrase_policy(self):
         for passphrase in [None, "", "short", "luks-test-secret"]:

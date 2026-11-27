@@ -94,6 +94,7 @@ let
     assert target.boot.initrd.systemd.contents ? "/etc/plymouth/themes";
     assert target.boot.initrd.systemd.services.plymouth-start.wantedBy != [ ];
     assert target.services.desktopManager.plasma6.enable == desktop;
+    assert target.time.timeZone == (if desktop then null else "Europe/Berlin");
     assert target.services.displayManager.sddm.enable == desktop;
     assert
       !desktop

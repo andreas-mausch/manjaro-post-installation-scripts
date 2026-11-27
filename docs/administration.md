@@ -25,6 +25,13 @@ itself start a time server. See [ADR-0013](decisions/0013-time-synchronization.m
 
 ## Local settings and passwords
 
+Installed Desktop and derived profiles use `time.timeZone = null;`: the
+installer initializes the chosen timezone once, then KDE's Date & Time settings
+or `sudo timedatectl set-timezone Europe/Berlin` can change it persistently.
+Rebuilds do not reset that choice. Base/server installations retain their
+declarative timezone; live media retain the existing UTC policy. No automatic
+location detection is enabled. Timezone changes are independent of NTP.
+
 The installed setup lives under `/etc/nixos` and generates:
 
 - `configuration.nix`: editable hostname, user, language, local additions and the existing `system.stateVersion`.

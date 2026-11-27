@@ -52,3 +52,16 @@ under `/etc/nixos` and has both DHCP sources restored. A previous successful
 clock correction is not undone when sources disappear; no-source policy means
 no further external time synchronization, not deliberately making the clock
 incorrect.
+
+## Mutable desktop timezone
+
+The installed Desktop VM previously rejected KDE timezone changes with
+`Failed to set time zone: Read-only file system`: its local configuration
+declared `time.timeZone = "America/New_York"`.
+
+After changing the local option to `null` and rebuilding, `timedatectl
+set-timezone Europe/Berlin` succeeded. A subsequent rebuild preserved
+`Timezone=Europe/Berlin` and reported `NTPSynchronized=yes`. This checks KDE's
+system backend, not a separate GUI interaction or reboot. The installer now
+initializes `/etc/localtime` once after installation for Desktop-derived
+profiles; Base keeps the selected zone declarative.
