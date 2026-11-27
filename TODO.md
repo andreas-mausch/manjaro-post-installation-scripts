@@ -183,6 +183,15 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 5. TUI installer
 
+- [ ] Provide general, installation-UI-independent hooks for post-installation
+  operations such as preserving the initial system generation with a GC root.
+  Support Calamares, manual `nixos-install` and a future TUI installer through
+  the same mechanism. Evaluate native NixOS integration points before adding
+  wrappers; define installation versus update semantics, target-system context,
+  ordering, failure propagation and retry/reinstallation behavior. Validate each
+  supported entry point. The current Calamares call is an interim integration,
+  not the final architecture.
+
 - [ ] Find and validate a suitable TUI installer for server provisioning over SSH, deploying this project's Flake with user-selected identity and disk settings. Check target-disk confirmation and keep target modules independent of the installation UI. Reassess existing Flake support in candidates such as nixos-wizard; the previous evaluation is recorded in [ADR 0001](docs/decisions/0001-installation-interface.md).
 
 ### 6. UKI boot

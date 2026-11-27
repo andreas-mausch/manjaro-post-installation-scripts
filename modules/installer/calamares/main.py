@@ -213,7 +213,19 @@ def deploy(gs, config, context=None):
     # disabling package sources during ordinary installation.
     context["phase"] = _("System installation")
     host(*install_command, stream=True)
+    # Resolve the installed profile inside the target, never the live system.
+    # A fresh installation deliberately replaces any previous installation root.
+    context["phase"] = _("Preserving initial system generation")
+    preserve_installation(root)
     libcalamares.job.setprogress(1.0)
+
+
+def preserve_installation(root):
+    """Keep the installed system closure alive independently of profile cleanup."""
+    host("nixos-enter", "--root", root, "-c",
+         'set -eu; system=$(readlink -e /nix/var/nix/profiles/system); '
+         'case "$system" in /nix/store/*) ;; *) exit 1 ;; esac; '
+         'nix-store --add-root /nix/var/nix/gcroots/nixos-install --realise "$system"')
 
 
 def provision_repository(source, destination, remote):

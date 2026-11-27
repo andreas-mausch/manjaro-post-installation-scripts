@@ -4,6 +4,7 @@
     ../modules/networking.nix
     ../modules/speech.nix
     ../modules/ssh
+    ../modules/uki.nix
   ];
   hardware.bluetooth.enable = true;
   hardware.cpu.amd.updateMicrocode = true;

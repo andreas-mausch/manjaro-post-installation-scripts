@@ -167,6 +167,12 @@ class AdapterTests(unittest.TestCase):
             commands = [tuple(map(str, call.args)) for call in host.call_args_list]
             install = next(command for command in commands if "nixos-install" in command)
             self.assertEqual(install[0], "nixos-install")
+            preserve = next(command for command in commands if command[0] == "nixos-enter")
+            self.assertEqual(preserve[1:4], ("--root", "/tmp/calamares-root-test", "-c"))
+            self.assertIn("readlink -e /nix/var/nix/profiles/system", preserve[4])
+            self.assertIn("--add-root /nix/var/nix/gcroots/nixos-install", preserve[4])
+            self.assertNotIn("/run/current-system", preserve[4])
+            self.assertGreater(commands.index(preserve), commands.index(install))
             self.assertNotIn("unshare", install)
             self.assertNotIn("substituters", install)
             self.assertNotIn("builders", install)
