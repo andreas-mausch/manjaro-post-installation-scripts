@@ -21,6 +21,16 @@
         touch "$out"
       '';
   profile-tests = import ./profiles.nix { inherit pkgs builds profiles; };
+  uki-entry-tests =
+    pkgs.runCommand "uki-entry-tests"
+      {
+        nativeBuildInputs = [ (pkgs.python3.withPackages (packages: [ packages.virt-firmware ])) ];
+      }
+      ''
+        export PYTHONDONTWRITEBYTECODE=1
+        python3 ${./test_uki_entries.py} ${../modules/uki/entries.py}
+        touch "$out"
+      '';
   reusable-module-tests = import ./reusable-modules.nix {
     inherit
       pkgs

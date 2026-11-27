@@ -49,22 +49,30 @@ let
       echo "Prepared direct-boot UKI: $output"
     '';
   };
+  entryManager = pkgs.writeShellApplication {
+    name = "manage-uki-entries";
+    runtimeInputs = [
+      builder
+      config.systemd.package
+    ];
+    text = ''
+      exec ${pkgs.python3.withPackages (packages: [ packages.virt-firmware ])}/bin/python3 \
+        ${./uki/entries.py} "$1" ${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint} \
+        /var/lib/my-os-setup/uki/generations.json /nix/var/nix/gcroots/nixos-install /run/current-system
+    '';
+  };
 in
 {
   config = {
     # Temporary integration: keep systemd-boot as the default while validating
-    # direct boot. Registration is idempotent and appends to BootOrder so that
-    # firmware menus can discover the UKI without changing the existing default.
+    # direct boot. Only the three project roles remain selectable in firmware.
     boot.loader.systemd-boot.extraInstallCommands = lib.mkAfter ''
-      system=$(${pkgs.coreutils}/bin/readlink -e "$1")
-      ${lib.getExe builder} "$system" ${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
-      image=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}/EFI/my-os-setup/"$(${pkgs.coreutils}/bin/basename "$system")".efi
-      PATH=${config.systemd.package}/bin:$PATH \
-        ${pkgs.python3Packages.virt-firmware}/bin/kernel-bootcfg \
-        --add-uki "$image" --title "NixOS UKI $(${pkgs.coreutils}/bin/date -r "$image" '+%Y-%m-%d %H:%M')" \
-        --boot-order last
+      ${lib.getExe entryManager} "$1"
     '';
     # Retain the CLI for inspection and explicit selection during VM validation.
-    environment.systemPackages = [ pkgs.python3Packages.virt-firmware ];
+    environment.systemPackages = [
+      pkgs.python3Packages.virt-firmware
+      entryManager
+    ];
   };
 }

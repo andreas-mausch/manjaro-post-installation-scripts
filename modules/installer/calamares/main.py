@@ -225,7 +225,8 @@ def preserve_installation(root):
     host("nixos-enter", "--root", root, "-c",
          'set -eu; system=$(readlink -e /nix/var/nix/profiles/system); '
          'case "$system" in /nix/store/*) ;; *) exit 1 ;; esac; '
-         'nix-store --add-root /nix/var/nix/gcroots/nixos-install --realise "$system"')
+         'nix-store --add-root /nix/var/nix/gcroots/nixos-install --realise "$system"; '
+         '"$system/sw/bin/manage-uki-entries" "$system"')
 
 
 def provision_repository(source, destination, remote):
