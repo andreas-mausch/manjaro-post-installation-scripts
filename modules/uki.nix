@@ -52,13 +52,19 @@ let
 in
 {
   config = {
-    # Temporary integration: nixos-install and rebuild both pass the actual target
-    # toplevel to the bootloader. Role management and direct UEFI entries follow.
+    # Temporary integration: keep systemd-boot as the default while validating
+    # direct boot. Registration is idempotent and appends to BootOrder so that
+    # firmware menus can discover the UKI without changing the existing default.
     boot.loader.systemd-boot.extraInstallCommands = lib.mkAfter ''
-      ${lib.getExe builder} "$1" ${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
+      system=$(${pkgs.coreutils}/bin/readlink -e "$1")
+      ${lib.getExe builder} "$system" ${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
+      image=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}/EFI/my-os-setup/"$(${pkgs.coreutils}/bin/basename "$system")".efi
+      PATH=${config.systemd.package}/bin:$PATH \
+        ${pkgs.python3Packages.virt-firmware}/bin/kernel-bootcfg \
+        --add-uki "$image" --title "NixOS UKI $(${pkgs.coreutils}/bin/basename "$system" | ${pkgs.coreutils}/bin/cut -d- -f1)" \
+        --boot-order last
     '';
-    # Registration is explicit during the parallel UKI boot test. The final
-    # external bootloader hook will call this tool after preparing the UKI.
+    # Retain the CLI for inspection and explicit selection during VM validation.
     environment.systemPackages = [ pkgs.python3Packages.virt-firmware ];
   };
 }

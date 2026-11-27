@@ -196,6 +196,11 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 6. UKI boot
 
+- Manual direct UKI boot of the rebuilt Desktop generation is confirmed in the
+  user's UEFI VM (2026-11-27). See [UKI evidence and remaining coverage](docs/issues/2026-11-27_direct-uki-boot.md).
+  Automatic registration and the current/previous/installation retention rule
+  remain open; systemd-boot is still the rescue path.
+
 - [ ] Prepare direct UKI boot for the installed system: UEFI starts the Unified Kernel Image without systemd-boot/GRUB. Implement and test UKI generation, installation on the EFI partition, UEFI boot entries and safe updates with fallback/recovery for previous generations. Integrate graphical LUKS password entry through Plymouth in the initrd; test the theme, early GPU drivers and password/text fallback on target hardware. Plymouth can be used independently of direct UKI boot. No automatic LUKS unlocking; Secure Boot signing is a separate task.
 
 ### 7. SBOMs
