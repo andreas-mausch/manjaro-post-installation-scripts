@@ -28,7 +28,7 @@ GC-protected. The installation baseline changes only on full reinstallation.
   protection, not additional custom roots. Only the installation baseline has
   an independent permanent root. Do not implement automatic profile deletion;
   additional stored generations may remain beyond the three firmware-menu roles.
-- The shared hook now manages at most three project UKI entries: `NixOS Aktuell`,
+- The shared hook now manages at most three project UKI entries: `NixOS Current`,
   `NixOS Backup` and `NixOS Installation`, each with a minute-precision timestamp.
   It remembers the selected generations in
   `/var/lib/my-os-setup/uki/generations.json`. Identical rebuilds retain the backup;

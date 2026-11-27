@@ -12,7 +12,7 @@ from virt.firmware.bootcfg import linuxcfg
 from virt.firmware.efi import bootentry, ucs16
 
 
-LABELS = {"current": "Aktuell", "backup": "Backup", "installation": "Installation"}
+LABELS = {"current": "Current", "backup": "Backup", "installation": "Installation"}
 
 
 def next_roles(old, target, installation, fallback):
