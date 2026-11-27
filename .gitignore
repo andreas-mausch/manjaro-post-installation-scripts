@@ -2,6 +2,7 @@ result
 result-*
 __pycache__/
 *.pyc
+/local/
 # Generated non-secret identity/hardware information belongs to the target host.
 installation.json
 hardware-configuration.nix

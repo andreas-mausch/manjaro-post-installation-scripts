@@ -48,20 +48,24 @@ Empty files and comment-only files leave the service disabled. Password, keyboar
 and root login are disabled. Supply public keys explicitly through the `ssh-keys`
 Flake input; no personal keys are read from the build host automatically.
 
-Create a directory outside this repository containing an `authorized_keys` file,
-with one public SSH key per line. For an OpenPGP authentication key:
+Create `local/ssh-keys/authorized_keys` in this checkout, with one public SSH key
+per line. The `/local/` directory is Git-ignored and is not committed. For two
+existing public SSH keys:
 
 ```bash
-mkdir -p ~/.config/nixos-spike/ssh-keys
-gpg --export-ssh-key <KEY-ID> > ~/.config/nixos-spike/ssh-keys/authorized_keys
+mkdir -p local/ssh-keys
+cat ~/.ssh/key1.pub ~/.ssh/key2.pub > local/ssh-keys/authorized_keys
 nix build .#iso-desktop --out-link result-desktop \
   --override-input repository "path:$repository_dir" \
-  --override-input ssh-keys "path:$HOME/.config/nixos-spike/ssh-keys" \
+  --override-input ssh-keys "path:$PWD/local/ssh-keys" \
   --no-write-lock-file
 ```
 
 Use the same override for other ISO variants. Never place private keys in that
 directory: the input and public-key file become part of the ISO/Nix Store.
+For an OpenPGP authentication key, export its public SSH key with
+`gpg --export-ssh-key <KEY-ID>` and add it as a line in `authorized_keys`.
+The explicit `path:` input includes the keys despite the Git ignore rule.
 The default input contains no keys; live SSH remains disabled.
 Rebuilding without the override does not retain previously supplied
 keys. Keep the public-key input directory to reproduce personalized images.
