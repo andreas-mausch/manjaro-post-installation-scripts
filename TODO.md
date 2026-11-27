@@ -36,8 +36,9 @@ Reusable libvirt images remain additional work after these priorities.
     imports profiles through a non-Flake source input, and provisions the Git
     checkout from an explicitly supplied temporary Git folder. Focused installer/Git tests and
     offline Desktop/AI/Full evaluation cover host preservation and source overrides.
-    End-to-end offline installation, online update/reboot, rollback and migration
-    remain unverified; do not consider this task complete before those checks.
+    Desktop VM offline rebuild, local fallback/reboot, GitHub update/reboot and
+    rollback/reboot are confirmed (2026-11-27). Migration, explicit host-setting
+    preservation checks, SSH access and real-hardware validation remain open.
   - Keep local host configuration under `/etc/nixos` and place the shared,
     root-managed Git checkout under `/etc/nixos/my-os-setup`. Provide a small,
     real local `/etc/nixos/flake.nix` that composes reusable project modules with
@@ -222,6 +223,8 @@ Reusable libvirt images remain additional work after these priorities.
 - [ ] Provide NixOS variants directly as reusable libvirt base images: generate additional QCOW2 Flake outputs from the same target modules, for example with `nixos-generators`. Place the implementation under `modules/virtualization/`; configure boot mode, virtual hardware and initial access. Keep individual identity and secrets out of base images; evaluate cloud-init for first-boot configuration. Image/target-system tests do not replace ISO/Calamares installation evidence.
 
 ## Completed
+
+- [x] 2026-11-27: Validate the new Desktop installed-system update workflow in the user's QEMU/KVM VM: offline short rebuild, clean bundled Git checkout with branch/upstream/remote, targeted local source override and reboot, online update to project commit `e42bf9186e4d89659a78783d22e7550690fdfe15`, rebuild/reboot, rollback/reboot and reactivation/reboot. The installed lock confirms the non-Flake GitHub project input; Nixpkgs remained at the ISO revision. No lock backup was used. See [repository-update evidence](docs/issues/2026-11-25_installed-system-repository-updates.md). This does not validate migration, SSH, AI/Full updates or Bosgame hardware.
 
 - [x] 2026-11-26: Verify the [SPICE autostart workaround](docs/issues/2026-11-26_spice-session-autostart.md) in the rebuilt Desktop live ISO; both agents run without manual startup. The underlying issue remains open with status `workaround`.
 

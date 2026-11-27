@@ -74,7 +74,6 @@ sudo nixos-rebuild switch --rollback
 ```
 
 Rollback does not restore configuration files or locks; restore those from backups/Git separately.
-VM update/reboot evidence is in [the offline investigation](issues/solved/2026-11-25_offline-installation.md).
 
 ## Local checkout fallback
 
