@@ -73,7 +73,11 @@ let
     assert !target.boot.loader.grub.enable;
     assert target.boot.loader.external.installHook == target.system.build.installBootLoader;
     assert target.boot.plymouth.enable;
-    assert target.boot.plymouth.theme == "spinner";
+    assert target.boot.plymouth.theme == "abstract_ring";
+    assert lib.elem
+      (build.target.pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "abstract_ring" ]; })
+      .outPath
+      (map toString target.boot.plymouth.themePackages);
     assert lib.elem "splash" target.boot.kernelParams;
     assert lib.elem "quiet" target.boot.kernelParams;
     assert lib.elem "plymouth.ignore-serial-consoles" target.boot.kernelParams;

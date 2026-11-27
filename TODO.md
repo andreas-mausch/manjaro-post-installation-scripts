@@ -207,7 +207,7 @@ Reusable libvirt images remain additional work after these priorities.
   or additional cleanup infrastructure is needed.
 - [x] Integrate graphical LUKS password entry through native NixOS Plymouth
   in the initrd. Completed 2026-11-27: installed profiles use the built-in
-  `spinner` theme; local configuration can select custom theme packages.
+  `abstract_ring` theme; local configuration can select custom theme packages.
   Profile checks, UKI hook builds and the Desktop initrd build passed.
   Encrypted VirtIO GPU VM confirmed graphical unlock, spinner and clean login
   handover without Escape or text flash. See the

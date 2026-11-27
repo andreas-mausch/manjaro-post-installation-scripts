@@ -19,8 +19,11 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.plymouth = {
     enable = lib.mkDefault true;
-    # Built-in theme; local configuration can select or package another theme.
-    theme = lib.mkDefault "spinner";
+    theme = lib.mkDefault "abstract_ring";
+    # Include only the selected theme, not the full animation collection.
+    themePackages = [
+      (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "abstract_ring" ]; })
+    ];
   };
   # Escape exposes boot messages; Plymouth retains its native text fallback.
   boot.kernelParams = [

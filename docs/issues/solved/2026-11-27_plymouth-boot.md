@@ -98,3 +98,16 @@ enabled. The base/server profile retains native quit behavior.
 This preserves SDDM's ordering after Plymouth quit and uses Plymouth's native
 retained final frame. It is not a coordinated compositor handover or a promise
 of flicker-free output on all hardware. Bosgame validation remains pending.
+
+## Theme selection
+
+The user selected Abstract Rings from the adi1090x collection. The theme was
+built and tested locally in the encrypted VM; the user reported that it works
+well after being asked to test animation, password input, Backspace, wrong
+password retry and login handover. No separate logs for those individual
+interactions were captured.
+
+The shared base profile now defaults to `abstract_ring`, including only that
+theme through Nixpkgs' `adi1090x-plymouth-themes` package. Local theme overrides
+remain possible. Its script implements masked password input, but uses a
+generic English prompt rather than displaying the disk name or keyboard layout.
