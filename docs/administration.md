@@ -43,8 +43,11 @@ sudo nixos-rebuild switch --flake path:/etc/nixos#desktop
 This updates within configured branches/tags. Nixpkgs follows `nixos-unstable`, not necessarily every latest upstream
 release. AI/Full already configure the Gufo cache/key in the daemon and need no extra Flake cache approval.
 
-Gufo stays pinned to `github:gufo-org/gufo/v0.36.0`. To upgrade it, edit that tag before updating/rebuilding and
-review changed options/model requirements. **Flake updates do not update the repository's model manifest or copied
+Gufo uses `github:gufo-org/gufo` without a release tag. `nix flake update` selects the current default-branch commit,
+not necessarily a stable release; ordinary rebuilds use the exact commit in `flake.lock`. Existing installations
+whose `flake.nix` still specifies a Gufo release tag must remove that tag to adopt this update policy.
+Review changed options/model requirements before activation. Cache signatures authenticate the cache publisher,
+not the safety of new code. **Flake updates do not update the repository's model manifest or copied
 weights.** New packages and updates may need downloads; offline initial installation does not imply offline updates.
 
 If the build fails, the currently active system remains intact. Restore the previous lock if needed:

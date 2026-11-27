@@ -84,7 +84,9 @@ AI/Full weights alone need roughly 115 GB; store/build requirements exceed image
 
 ## Gufo binary cache
 
-Gufo is pinned to v0.36.0. Its toolchain inputs deliberately do not follow host Nixpkgs, preserving upstream
+Gufo follows its default branch through `github:gufo-org/gufo`; `flake.lock` fixes the exact build revision.
+`nix flake update gufo` advances it without updating unrelated top-level inputs; this does not select stable releases.
+Its toolchain inputs deliberately do not follow host Nixpkgs, preserving upstream
 package/cache compatibility. The Gufo cache supplements the NixOS cache; without it, large local builds may be needed.
 Cache use means trusting builds signed by its key, not proof that those builds are correct or every output is available.
 

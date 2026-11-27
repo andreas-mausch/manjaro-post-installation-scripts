@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    gufo.url = "github:gufo-org/gufo/v0.36.0";
+    gufo.url = "github:gufo-org/gufo";
     ssh-keys = {
       url = "path:./build/ssh-keys";
       flake = false;

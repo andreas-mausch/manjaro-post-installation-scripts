@@ -37,7 +37,7 @@ model weights have separate licenses. This is not a complete license audit or a 
 - **Target:** x86_64 with UEFI; disable Secure Boot. Minimum disk size: 32 GiB, or 256 GiB for AI/Full.
 - **AI/Full storage:** weights alone total about 115 GB. A 256 GB USB drive is a reasonable starting point;
   check the actual ISO size. Building needs substantially more free Nix-store space than the final image.
-- **GPU inference:** pinned Gufo v0.36.0 uses ROCm for AMD Strix Halo (`gfx1151`). Other GPUs need a suitable
+- **GPU inference:** the lock-selected Gufo build uses ROCm for AMD Strix Halo (`gfx1151`). Other GPUs need a suitable
   backend/build.
   Enough RAM/GPU memory is required; installing Gufo does not prove working inference.
 - **Offline scope:** images include prepared systems, locked inputs and assembly tools, not every compiler/source

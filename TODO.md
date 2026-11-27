@@ -91,11 +91,14 @@ Reusable libvirt images remain additional work after these priorities.
     Have the local system composition explicitly provide packages and module
     arguments needed by AI/Gufo; importing a profile alone must not rely on
     implicit wiring from the project Flake. For AI and Full only, have Calamares
-    generate `inputs.gufo.url = "github:gufo-org/gufo/v0.36.0"` in the local
+    generate `inputs.gufo.url = "github:gufo-org/gufo"` in the local
     System Flake as a normal Flake input (not `flake = false`) and wire its
     release package into the AI modules. Omit the Gufo input for other profiles.
-    Keep the explicit version tag; upgrading Gufo requires changing that tag,
-    not merely running `nix flake update`. Validate that shared modules and
+    Do not pin a release tag in the installed system's input URL: an explicit
+    `nix flake update` should advance Gufo to the current default-branch commit,
+    which is not necessarily a stable release. Keep the exact commit locked in
+    the local `flake.lock`; ordinary rebuilds must not update it. Preserve the
+    ISO's tested Gufo revision in the initial offline lock. Validate that shared modules and
     AI/Gufo integration use the intended local dependencies. Define updates for
     managed model payloads separately; do not
     imply that `git pull` alone updates external mutable data.
@@ -129,10 +132,11 @@ Reusable libvirt images remain additional work after these priorities.
 
 ### 12. Gufo updates
 
-- [ ] Design and validate automatic Gufo version updates for AI and Full,
-  replacing the current manually changed release tag with a controlled update
-  mechanism. Prefer stable releases and define whether automation proposes,
-  locks, builds or activates an update; do not silently activate untested code.
+- [ ] Validate Gufo updates for AI and Full through the untagged installed-system
+  input and explicit `nix flake update`. Document that this follows the default
+  branch rather than selecting stable releases. Evaluate additional automation
+  separately and define whether it proposes, locks, builds or activates an
+  update; do not silently activate untested code.
   Preserve offline rebuilds, reproducible locked versions and recovery to the
   previous working version.
 - [ ] Verify updates where possible: investigate developer-signed releases or
@@ -144,8 +148,8 @@ Reusable libvirt images remain additional work after these priorities.
   choose an explicit fallback policy rather than silently weakening checks.
 - [ ] Test Gufo compatibility with the shared AI modules and managed model
   payloads before activation, including failed verification/build handling and
-  rollback. Reconcile this future mechanism with the initially pinned Gufo input
-  in the repository-update workflow.
+  rollback. Keep the initial offline lock at the ISO's tested Gufo revision while
+  allowing later explicit updates independently of the project's ISO lock.
 
 ### 3. Release version tags
 

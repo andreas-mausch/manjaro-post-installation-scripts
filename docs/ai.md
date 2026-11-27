@@ -16,14 +16,14 @@ The service does not start at boot and is not exposed on the LAN. Its OpenAI-com
 the image projector is automatically located beside the model. Stop the service before demanding games to release
 GPU/model memory. Run `gufo diagnose` on actual target hardware.
 
-Pinned Gufo v0.36.0 uses a ROCm `gfx1151` backend. Other GPUs need a suitable backend/build, and memory/context settings
+The lock-selected Gufo build uses a ROCm `gfx1151` backend. Other GPUs need a suitable backend/build, and memory/context settings
 must fit the actual device. Installation or `gufo --version` is not inference evidence; real hardware or passthrough
 testing remains [open](issues/2026-11-25_gufo-hardware-backend-validation.md).
 
 ## Files and integrity
 
 [`modules/generative-ai/models.lock.json`](../modules/generative-ai/models.lock.json) pins six Qwen3.8-Flash-Next files,
-including the Q8_0 MTP sidecar and BF16 image projector. The Flake checks exact equality with the pinned Gufo release
+including the Q8_0 MTP sidecar and BF16 image projector. The Flake checks exact equality with the lock-selected Gufo
 manifest. AI/Full ISO builds download roughly 115 GB (107 GiB) and verify pinned SHA-256 checksums; copying needs no
 network. No automatic model-update timer exists. Flake/package updates do not update the manifest or installed weights.
 
