@@ -48,7 +48,8 @@ class RoleTests(unittest.TestCase):
             efifile.side_effect = lambda image: Mock(dev_path_file=lambda: devicepath("\\EFI\\my-os-setup\\" + Path(image).name))
             keep, partition = roles.register_roles(self.cfg, {role: self.images[target] for role, target in desired.items()})
         roles.remove_superseded(self.cfg, keep, partition)
-        self.assertEqual(self.cfg.blist[0], self.foreign)
+        self.assertTrue(str(self.cfg.bentr[self.cfg.blist[0]].title).startswith("NixOS Current "))
+        self.assertIn(self.foreign, self.cfg.blist)
         self.assertEqual(len(self.cfg.bentr), len(desired) + 1)
         return keep
 
@@ -71,6 +72,15 @@ class RoleTests(unittest.TestCase):
         state = roles.next_roles({}, "b", None, "a")
         self.assertEqual(state, {"current": "b", "backup": "a"})
         self.apply(state)
+
+    def test_identical_rebuild_does_not_write_nvram(self):
+        desired = {"current": "b", "backup": "a", "installation": "a"}
+        self.apply(desired)
+        for method in ["linux_write_entry", "linux_remove_entry", "linux_update_order", "linux_update_next"]:
+            getattr(self.cfg, method).reset_mock()
+        self.apply(desired)
+        for method in ["linux_write_entry", "linux_remove_entry", "linux_update_order", "linux_update_next"]:
+            getattr(self.cfg, method).assert_not_called()
 
     def test_legacy_project_entries_removed_but_other_disk_preserved(self):
         legacy = self.cfg.add_entry(bootentry.BootEntry(

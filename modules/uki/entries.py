@@ -48,6 +48,8 @@ def save_state(path, roles):
 def register_roles(cfg, images):
     keep = set()
     partition = None
+    current = None
+    order = list(cfg.blist)
     for role, image in images.items():
         efifile = linuxcfg.LinuxEfiFile(str(image))
         devicepath = efifile.dev_path_file()
@@ -63,9 +65,19 @@ def register_roles(cfg, images):
             number = cfg.add_entry(entry)
             cfg.linux_write_entry(number)
         keep.add(number)
-        cfg.set_boot_order(number, -1)
+        if role == "current":
+            current = number
+        if number not in order:
+            order.append(number)
+    # Direct boot defaults to Current; preserve the order of all other entries.
+    order = [current] + [number for number in order if number != current]
+    if order != cfg.blist:
+        cfg.blist = order
+        cfg.blist_updated = True
     # Make new entries selectable before removing superseded ones.
-    cfg.linux_update_order()
+    if cfg.blist_updated:
+        cfg.linux_update_order()
+        cfg.blist_updated = False
     return keep, partition
 
 
@@ -83,8 +95,12 @@ def remove_superseded(cfg, keep, partition):
             continue
         cfg.remove_entry(nr)
         cfg.linux_remove_entry(nr)
-    cfg.linux_update_order()
-    cfg.linux_update_next()
+    if cfg.blist_updated:
+        cfg.linux_update_order()
+        cfg.blist_updated = False
+    if cfg.bnext_updated:
+        cfg.linux_update_next()
+        cfg.bnext_updated = False
 
 
 def manage(system, esp, state, installation_root, fallback):
@@ -94,7 +110,7 @@ def manage(system, esp, state, installation_root, fallback):
         fcntl.flock(lock, fcntl.LOCK_EX)
         old = json.loads(state.read_text()) if state.exists() else {}
         installation = str(Path(installation_root).resolve(strict=True)) if Path(installation_root).is_symlink() else None
-        fallback = str(Path(fallback).resolve(strict=True)) if not old else str(system)
+        fallback = str(Path(fallback).resolve(strict=True)) if not old and Path(fallback).exists() else str(system)
         roles = next_roles(old, str(system), installation, fallback)
         cfg = linuxcfg.LinuxEfiBootConfig()
         if cfg.secureboot:

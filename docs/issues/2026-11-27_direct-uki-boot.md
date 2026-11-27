@@ -1,6 +1,6 @@
 ---
 status: open
-status-description: "Three-entry firmware selection implemented with virt-firmware; lifecycle unit tests pass, VM test pending"
+status-description: "Three UKI boots and GC survival verified in Desktop VM; external hook implemented, fresh boot validation pending"
 ---
 
 # Direct UKI boot with three retained system generations
@@ -20,10 +20,11 @@ GC-protected. The installation baseline changes only on full reinstallation.
   `/nix/var/nix/gcroots/nixos-install`. Existing installations do not acquire an
   original baseline through an update. General UI-independent installation
   hooks remain a separate TODO.
-- The temporary systemd-boot post-install hook now also calls the packaged
-  `kernel-bootcfg --add-uki ... --boot-order last`. It keeps the previous default
-  first and does not set BootNext. Automatic registration and repetition without
-  duplicate entries are now VM-validated.
+- The shared boot integration now uses `boot.loader.external.installHook` to
+  invoke the entry manager directly. systemd-boot and GRUB are disabled for all
+  target profiles. Current is first in BootOrder; other entries retain their
+  relative order. BootNext is not set. Existing systemd-boot files and firmware
+  entries are not automatically deleted; fresh installations no longer create them.
 - Current and previous systems use NixOS profile generations' existing GC
   protection, not additional custom roots. Only the installation baseline has
   an independent permanent root. Do not implement automatic profile deletion;
@@ -39,11 +40,11 @@ GC-protected. The installation baseline changes only on full reinstallation.
   installation root so that the installation selection appears immediately.
   Existing installations with no such root receive no invented baseline.
 - NixOS profiles and Store generations are not deleted. Cached UKI files are
-  not yet cleaned up. systemd-boot remains the temporary rescue path; its eventual
-  replacement with the external hook remains open.
+  not yet cleaned up. systemd-stub remains part of each UKI, not a separate boot manager.
 - Unit tests cover lifecycle, identical rebuild, rollback, fresh baseline,
   removal of legacy entries, preservation of foreign/other-disk entries and
-  failure handling. Real firmware lifecycle and new-installation tests are pending.
+  failure handling and identical rebuilds without NVRAM writes. VM evidence below
+  predates the external-hook transition; that transition still needs real boot tests.
 
 ## User VM evidence, 2026-11-27
 
@@ -79,10 +80,38 @@ Boot000A, `NixOS UKI 2026-11-27 13:53`. Direct firmware selection booted that
 entry; BootCurrent was 000A and `/run/booted-system` matched the expected
 `dxk6jdzxq0jhmp41cmqq406bw3mj7gbq` system. These checks do not yet cover GC roots.
 
+### Fresh Desktop installation and update
+
+The personalized Desktop ISO built from `ab17f13` included the supplied public
+SSH key and excluded the local `Plan.md`. The user confirmed SSH access (the
+conversation does not establish separately whether this was live or target SSH).
+
+Fresh UEFI installation created Current and Installation, both labelled
+`2026-11-27 20:28`. The user booted each directly and supplied screenshots showing
+that `/run/current-system` and `/nix/var/nix/gcroots/nixos-install` matched the
+initial system generation. The initially black Installation screen was a delay,
+not a failed boot; the desktop subsequently appeared.
+
+After `nix flake update --flake path:/etc/nixos` and `nixos-rebuild switch`,
+Current was labelled `20:33`, with Backup and Installation retaining `20:28`.
+Screenshots confirmed a new current system path and the unchanged installation
+root. The user confirmed successful direct UEFI boots of all three selections.
+
+`nix-store --gc` deleted 85 Store paths and freed 107.5 MiB; `readlink -e` still
+resolved the installation root. The user's subsequent confirmation indicates
+the Installation boot remained usable. Profile generations were retained, so
+this verifies GC survival but does not isolate protection by the installation
+root alone. Network-disabled installation and LUKS coverage were not established
+by the supplied screenshots.
+
 ### Remaining checks
 
-- Current/previous selection from profile generations, identical rebuild,
-  rollback, unchanged installation root and GC survival with profiles retained.
-- New offline installation with an initial GC root and UKI.
-- Current/previous/installation roles, failure handling and GC tests.
-- Remove systemd-boot only after these paths work without it.
+- External-hook bootloader build and profile checks for every target profile.
+- Fresh UEFI installation without systemd-boot; Current boots by default and all
+  three selections boot after an update, with unchanged Installation and GC survival.
+- External-hook offline rebuild, local Git fallback and rollback.
+- Verify identical rebuilds produce no actual firmware writes in the VM.
+- Deliberate removal of legacy systemd-boot from the existing test VM, or replace
+  it with a fresh virtual disk and firmware variable store.
+- Confirm offline installation, LUKS and target SSH explicitly; real hardware
+  and other profiles' end-to-end boot coverage remain pending.

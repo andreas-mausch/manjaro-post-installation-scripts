@@ -68,6 +68,10 @@ let
         "full"
       ];
     in
+    assert target.boot.loader.external.enable;
+    assert !target.boot.loader.systemd-boot.enable;
+    assert !target.boot.loader.grub.enable;
+    assert target.boot.loader.external.installHook == target.system.build.installBootLoader;
     assert target.services.desktopManager.plasma6.enable == desktop;
     assert target.services.displayManager.sddm.enable == desktop;
     assert target.programs.firefox.enable == desktop;

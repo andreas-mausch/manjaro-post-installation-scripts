@@ -15,7 +15,6 @@
     pulse.enable = true;
   };
   security.rtkit.enable = true;
-  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # Generated hardware configuration selects drivers and CPU microcode.

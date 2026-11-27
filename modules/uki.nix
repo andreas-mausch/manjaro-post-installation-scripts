@@ -28,7 +28,7 @@ let
       cmdline=$(jq -r '.["org.nixos.bootspec.v1"] | (["init=" + .init] + .kernelParams) | join(" ")' "$spec")
       directory="$esp/EFI/my-os-setup"
       mkdir -p "$directory"
-      # Serialize preparation; never touch systemd-boot's own EFI files.
+      # Serialize preparation on the EFI partition.
       exec 9>"$directory/.prepare.lock"
       flock 9
       output="$directory/$(basename "$system").efi"
@@ -64,11 +64,10 @@ let
 in
 {
   config = {
-    # Temporary integration: keep systemd-boot as the default while validating
-    # direct boot. Only the three project roles remain selectable in firmware.
-    boot.loader.systemd-boot.extraInstallCommands = lib.mkAfter ''
-      ${lib.getExe entryManager} "$1"
-    '';
+    boot.loader.external = {
+      enable = true;
+      installHook = lib.getExe entryManager;
+    };
     # Retain the CLI for inspection and explicit selection during VM validation.
     environment.systemPackages = [
       pkgs.python3Packages.virt-firmware

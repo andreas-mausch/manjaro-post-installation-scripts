@@ -21,6 +21,12 @@
         touch "$out"
       '';
   profile-tests = import ./profiles.nix { inherit pkgs builds profiles; };
+  uki-hook-tests = pkgs.runCommand "uki-hook-tests" { } ''
+    ${pkgs.lib.concatMapStringsSep "\n" (name: ''
+      test -x ${builds.${name}.target.config.system.build.installBootLoader}
+    '') (builtins.attrNames profiles)}
+    touch "$out"
+  '';
   uki-entry-tests =
     pkgs.runCommand "uki-entry-tests"
       {
