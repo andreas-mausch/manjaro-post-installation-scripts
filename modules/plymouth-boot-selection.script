@@ -1,0 +1,16 @@
+
+// Keep the boot selection separate from transient messages and password prompts.
+fun BootSelectionMessageCallback(text) {
+    if (text == "my-os-setup:Previous" || text == "my-os-setup:Installation") {
+        if (text == "my-os-setup:Previous")
+            selection.image = Image.Text("Previous", 1, 1, 1);
+        else
+            selection.image = Image.Text("Installation", 1, 1, 1);
+        selection.sprite = Sprite(selection.image);
+        selection.sprite.SetPosition(screen.half.w - selection.image.GetWidth() / 2,
+                                screen.h * 0.1, 100);
+    } else {
+        MessageCallback(text);
+    }
+}
+Plymouth.SetMessageFunction(BootSelectionMessageCallback);

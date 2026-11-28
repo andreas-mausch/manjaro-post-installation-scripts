@@ -84,15 +84,19 @@ let
     assert target.boot.loader.external.installHook == target.system.build.installBootLoader;
     assert target.boot.plymouth.enable;
     assert target.boot.plymouth.theme == "abstract_ring";
-    assert lib.elem
-      (build.target.pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "abstract_ring" ]; })
-      .outPath
-      (map toString target.boot.plymouth.themePackages);
+    assert lib.elem (import ../modules/plymouth-theme.nix { pkgs = build.target.pkgs; }).outPath (
+      map toString target.boot.plymouth.themePackages
+    );
     assert lib.elem "splash" target.boot.kernelParams;
     assert lib.elem "quiet" target.boot.kernelParams;
     assert lib.elem "plymouth.ignore-serial-consoles" target.boot.kernelParams;
     assert target.boot.initrd.systemd.contents ? "/etc/plymouth/themes";
     assert target.boot.initrd.systemd.services.plymouth-start.wantedBy != [ ];
+    assert
+      target.boot.initrd.systemd.services.plymouth-boot-selection.unitConfig.ConditionKernelCommandLine
+      == "my-os-setup.boot-selection";
+    assert lib.elem "cryptsetup-pre.target"
+      target.boot.initrd.systemd.services.plymouth-boot-selection.before;
     assert target.services.desktopManager.plasma6.enable == desktop;
     assert target.time.timeZone == (if desktop then null else "Europe/Berlin");
     assert target.services.displayManager.sddm.enable == desktop;

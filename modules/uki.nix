@@ -31,6 +31,10 @@ let
       kernel=$(jq -r '.["org.nixos.bootspec.v1"].kernel' "$spec")
       initrd=$(jq -r '.["org.nixos.bootspec.v1"].initrd' "$spec")
       cmdline=$(jq -r '.["org.nixos.bootspec.v1"] | (["init=" + .init] + .kernelParams) | join(" ")' "$spec")
+      case "$filename" in
+        nixos-previous.efi) cmdline="$cmdline my-os-setup.boot-selection=previous" ;;
+        nixos-installation.efi) cmdline="$cmdline my-os-setup.boot-selection=installation" ;;
+      esac
       directory="$esp/EFI/my-os-setup"
       mkdir -p "$directory"
       # Serialize preparation on the EFI partition.
@@ -76,6 +80,21 @@ let
 in
 {
   config = {
+    boot.initrd.systemd.services.plymouth-boot-selection = lib.mkIf config.boot.plymouth.enable {
+      wantedBy = [ "initrd.target" ];
+      after = [ "plymouth-start.service" ];
+      before = [ "cryptsetup-pre.target" ];
+      unitConfig.ConditionKernelCommandLine = "my-os-setup.boot-selection";
+      serviceConfig.Type = "oneshot";
+      script = ''
+        case " $(cat /proc/cmdline) " in
+          *" my-os-setup.boot-selection=previous "*) selection=Previous ;;
+          *" my-os-setup.boot-selection=installation "*) selection=Installation ;;
+          *) exit 0 ;;
+        esac
+        ${config.boot.plymouth.package}/bin/plymouth display-message --text="my-os-setup:$selection"
+      '';
+    };
     boot.loader.external = {
       enable = true;
       installHook = lib.getExe entryManager;

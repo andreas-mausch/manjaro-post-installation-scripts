@@ -22,7 +22,7 @@
     theme = lib.mkDefault "abstract_ring";
     # Include only the selected theme, not the full animation collection.
     themePackages = [
-      (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "abstract_ring" ]; })
+      (import ../modules/plymouth-theme.nix { inherit pkgs; })
     ];
   };
   # Escape exposes boot messages; Plymouth retains its native text fallback.
