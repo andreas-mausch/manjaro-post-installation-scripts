@@ -10,6 +10,20 @@
     (import ../modules/spice.nix { inherit pkgs; }).nixosModule
   ];
   hardware.graphics.enable = true;
+  boot.plymouth = {
+    enable = lib.mkDefault true;
+    theme = lib.mkDefault "abstract_ring";
+    # Include only the selected theme, not the full animation collection.
+    themePackages = [
+      (import ../modules/plymouth-theme.nix { inherit pkgs; })
+    ];
+  };
+  # Escape exposes boot messages; Plymouth retains its native text fallback.
+  boot.kernelParams = [
+    "quiet"
+    # QEMU's serial console must not force Plymouth's text-only details view.
+    "plymouth.ignore-serial-consoles"
+  ];
   # Prefer mutable KDE timezone settings over Base's declarative default.
   time.timeZone = lib.mkOverride 900 null;
   services.displayManager.sddm = {

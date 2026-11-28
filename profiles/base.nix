@@ -17,20 +17,6 @@
   security.rtkit.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.plymouth = {
-    enable = lib.mkDefault true;
-    theme = lib.mkDefault "abstract_ring";
-    # Include only the selected theme, not the full animation collection.
-    themePackages = [
-      (import ../modules/plymouth-theme.nix { inherit pkgs; })
-    ];
-  };
-  # Escape exposes boot messages; Plymouth retains its native text fallback.
-  boot.kernelParams = [
-    "quiet"
-    # QEMU's serial console must not force Plymouth's text-only details view.
-    "plymouth.ignore-serial-consoles"
-  ];
   # Generated hardware configuration selects drivers and CPU microcode.
   hardware.enableRedistributableFirmware = true;
 
